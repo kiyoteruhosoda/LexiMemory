@@ -26,3 +26,16 @@ class WordEntry(WordUpsert):
     id: str
     createdAt: str
     updatedAt: str
+
+# --- Auth Models ---
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class MeResponse(BaseModel):
+    userId: str
+    username: str

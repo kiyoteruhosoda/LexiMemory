@@ -1,3 +1,5 @@
+
+```
 backend/
   app/
     __init__.py
@@ -43,6 +45,7 @@ frontend/src/
   App.tsx
   main.tsx
 
+```
 
 ```
 cd /work/project/03.LexiMemory
