@@ -1,10 +1,10 @@
 // src/api/words.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { wordsApi } from './words';
-import * as client from './client';
-import type { Pos } from './types';
+import { wordsApi } from '../../api/words';
+import * as client from '../../api/client';
+import type { Pos } from '../../api/types';
 
-vi.mock('./client', () => ({
+vi.mock('../../api/client', () => ({
   api: {
     get: vi.fn(),
     post: vi.fn(),

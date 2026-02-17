@@ -1,0 +1,103 @@
+// frontend/src/components/Layout.test.tsx
+
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
+import { Layout } from '../../components/Layout';
+import { AuthProvider } from '../../auth/AuthContext';
+import * as authApi from '../../api/auth';
+
+vi.mock('../../api/auth');
+
+function renderWithRouter(ui: React.ReactElement) {
+  return render(
+    <BrowserRouter>
+      <AuthProvider>{ui}</AuthProvider>
+    </BrowserRouter>
+  );
+}
+
+describe('Layout', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    import.meta.env.VITE_APP_VERSION = '1.0.0';
+  });
+
+  it('should render navigation bar with app name', async () => {
+    vi.mocked(authApi.getMe).mockResolvedValue(null as any);
+
+    renderWithRouter(<Layout>Test Content</Layout>);
+
+    expect(screen.getByText('LexiMemory')).toBeInTheDocument();
+  });
+
+  it('should render child content', async () => {
+    vi.mocked(authApi.getMe).mockResolvedValue(null as any);
+
+    renderWithRouter(<Layout><div>Test Content</div></Layout>);
+
+    expect(screen.getByText('Test Content')).toBeInTheDocument();
+  });
+
+  it('should show Words and Study links', async () => {
+    vi.mocked(authApi.getMe).mockResolvedValue(null as any);
+
+    renderWithRouter(<Layout>Content</Layout>);
+
+    expect(screen.getByText('Words')).toBeInTheDocument();
+    expect(screen.getByText('Study')).toBeInTheDocument();
+  });
+
+  it('should show username and logout button when authenticated', async () => {
+    vi.mocked(authApi.getMe).mockResolvedValue({
+      userId: '1',
+      username: 'testuser',
+    });
+
+    renderWithRouter(<Layout>Content</Layout>);
+
+    await screen.findByText('testuser');
+    expect(screen.getByText('Logout')).toBeInTheDocument();
+  });
+
+  it('should show Guest when not authenticated', async () => {
+    vi.mocked(authApi.getMe).mockResolvedValue(null as any);
+
+    renderWithRouter(<Layout>Content</Layout>);
+
+    await screen.findByText('Guest');
+  });
+
+  it('should call logout when logout button is clicked', async () => {
+    vi.mocked(authApi.getMe).mockResolvedValue({
+      userId: '1',
+      username: 'testuser',
+    });
+    vi.mocked(authApi.logout).mockResolvedValue(undefined);
+
+    renderWithRouter(<Layout>Content</Layout>);
+
+    const logoutButton = await screen.findByText('Logout');
+    fireEvent.click(logoutButton);
+
+    // Note: Navigation is mocked, so we can't test the actual navigation
+    expect(authApi.logout).toHaveBeenCalled();
+  });
+
+  it('should display app version', async () => {
+    vi.mocked(authApi.getMe).mockResolvedValue(null as any);
+
+    renderWithRouter(<Layout>Content</Layout>);
+
+    expect(screen.getByText('v1.0.0')).toBeInTheDocument();
+  });
+
+  it('should have hamburger menu button for mobile', async () => {
+    vi.mocked(authApi.getMe).mockResolvedValue(null as any);
+
+    renderWithRouter(<Layout>Content</Layout>);
+
+    const toggleButton = document.querySelector('.navbar-toggler');
+    expect(toggleButton).toBeInTheDocument();
+  });
+});

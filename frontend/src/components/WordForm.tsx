@@ -1,6 +1,6 @@
 // frontend/src/components/WordForm.tsx
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Pos, WordEntry, ExampleSentence } from "../api/types";
 
 const POS: Pos[] = ["noun","verb","adj","adv","prep","conj","pron","det","interj","other"];
@@ -16,8 +16,27 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
   const [pos, setPos] = useState<Pos>(initial?.pos ?? "noun");
   const [meaningJa, setMeaningJa] = useState(initial?.meaningJa ?? "");
   const [memo, setMemo] = useState(initial?.memo ?? "");
-  const [examples, setExamples] = useState<ExampleSentence[]>(initial?.examples ?? []);
+  const [examples, setExamples] = useState<ExampleSentence[]>(
+    initial?.examples && initial.examples.length > 0
+      ? initial.examples
+      : [{ id: crypto.randomUUID(), en: "", ja: null, source: null }]
+  );
   const [busy, setBusy] = useState(false);
+
+  // Update state when initial changes (for edit mode)
+  useEffect(() => {
+    if (initial) {
+      setHeadword(initial.headword);
+      setPos(initial.pos);
+      setMeaningJa(initial.meaningJa);
+      setMemo(initial.memo ?? "");
+      setExamples(
+        initial.examples && initial.examples.length > 0
+          ? initial.examples
+          : [{ id: crypto.randomUUID(), en: "", ja: null, source: null }]
+      );
+    }
+  }, [initial]);
 
   const canSpeak = useMemo(() => typeof window !== "undefined" && "speechSynthesis" in window, []);
 
@@ -66,7 +85,7 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
         setHeadword("");
         setMeaningJa("");
         setMemo("");
-        setExamples([]);
+        setExamples([{ id: crypto.randomUUID(), en: "", ja: null, source: null }]);
         setPos("noun");
       }
     } finally {
@@ -126,23 +145,8 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
           </div>
 
           <div className="col-12">
-            <label className="form-label">
-              <i className="fa-solid fa-memo-circle-info me-2" />
-              Memo (optional)
-            </label>
-            <textarea
-              className="form-control"
-              rows={2}
-              value={memo}
-              onChange={(e) => setMemo(e.target.value)}
-              placeholder="Personal notes about this word..."
-            />
-          </div>
-
-          <div className="col-12">
             <div className="d-flex align-items-center justify-content-between mb-2">
               <label className="form-label mb-0">
-                <i className="fa-solid fa-book-open me-2" />
                 Example Sentences
               </label>
               <button
@@ -155,16 +159,13 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
               </button>
             </div>
 
-            {examples.length === 0 ? (
-              <div className="text-muted small">No examples yet. Click "Add Example" to add one.</div>
-            ) : (
-              <div className="d-flex flex-column gap-3">
-                {examples.map((ex) => (
-                  <div key={ex.id} className="border rounded p-3 bg-light">
-                    <div className="row g-2">
-                      <div className="col-12">
-                        <label className="form-label small mb-1">English</label>
-                        <div className="input-group input-group-sm">
+            <div className="d-flex flex-column gap-3">
+              {examples.map((ex) => (
+                <div key={ex.id} className="border rounded p-3 bg-light">
+                  <div className="row g-2">
+                    <div className="col-12">
+                      <label className="form-label mb-1">English</label>
+                      <div className="input-group">
                           <input
                             className="form-control"
                             value={ex.en}
@@ -183,17 +184,17 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
                         </div>
                       </div>
                       <div className="col-12">
-                        <label className="form-label small mb-1">Japanese (translation)</label>
+                        <label className="form-label mb-1">Japanese (translation)</label>
                         <input
-                          className="form-control form-control-sm"
+                          className="form-control"
                           value={ex.ja ?? ""}
                           onChange={(e) => updateExample(ex.id, "ja", e.target.value)}
                           placeholder="日本語訳..."
                         />
                       </div>
                       <div className="col-12">
-                        <label className="form-label small mb-1">Source (optional)</label>
-                        <div className="input-group input-group-sm">
+                        <label className="form-label mb-1">Source (optional)</label>
+                        <div className="input-group">
                           <input
                             className="form-control"
                             value={ex.source ?? ""}
@@ -214,7 +215,19 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
                   </div>
                 ))}
               </div>
-            )}
+          </div>
+
+          <div className="col-12">
+            <label className="form-label">
+              Memo (optional)
+            </label>
+            <textarea
+              className="form-control"
+              rows={2}
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              placeholder="Personal notes about this word..."
+            />
           </div>
 
           <div className="col-12 d-flex gap-2">

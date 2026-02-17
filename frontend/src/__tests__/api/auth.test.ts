@@ -1,9 +1,9 @@
 // src/api/auth.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { authApi } from './auth';
-import * as client from './client';
+import { authApi } from '../../api/auth';
+import * as client from '../../api/client';
 
-vi.mock('./client', () => ({
+vi.mock('../../api/client', () => ({
   api: {
     post: vi.fn(),
     postAuth: vi.fn(),

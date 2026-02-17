@@ -16,6 +16,19 @@ window.onunhandledrejection = (event) => {
   console.error("Unhandled promise rejection:", event.reason);
 };
 
+// Auto-blur buttons after tap on touch devices (prevents sticky focus/hover)
+if ('ontouchstart' in window) {
+  document.addEventListener('touchend', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.tagName === 'BUTTON' || target.closest('button') || target.classList.contains('btn')) {
+      const button = target.tagName === 'BUTTON' ? target : target.closest('button');
+      if (button) {
+        setTimeout(() => button.blur(), 100);
+      }
+    }
+  }, { passive: true });
+}
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />

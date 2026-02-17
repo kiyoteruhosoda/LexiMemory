@@ -1,9 +1,9 @@
 // src/api/study.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { studyApi } from './study';
-import * as client from './client';
+import { studyApi } from '../../api/study';
+import * as client from '../../api/client';
 
-vi.mock('./client', () => ({
+vi.mock('../../api/client', () => ({
   api: {
     get: vi.fn(),
     post: vi.fn(),

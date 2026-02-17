@@ -21,6 +21,14 @@ export function FlashCard({ word, memory, onRate }: Props) {
     window.speechSynthesis.speak(ut);
   }
 
+  function speakExample(text: string) {
+    if (!canSpeak || !text.trim()) return;
+    const ut = new SpeechSynthesisUtterance(text.trim());
+    ut.lang = "en-US";
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(ut);
+  }
+
   return (
     <div className="card shadow-sm">
       <div className="card-header bg-white d-flex align-items-center justify-content-between">
@@ -38,8 +46,10 @@ export function FlashCard({ word, memory, onRate }: Props) {
       <div className="card-body">
         <div className="text-center">
           <div className="display-6 fw-bold">{word.headword}</div>
+          <div className="mb-1">
+            <span className="badge text-bg-secondary">{word.pos}</span>
+          </div>
           <div className="text-secondary">
-            <span className="badge text-bg-secondary me-2">{word.pos}</span>
             due: <span className="mono">{new Date(memory.dueAt).toLocaleString()}</span>
           </div>
         </div>
@@ -62,25 +72,63 @@ export function FlashCard({ word, memory, onRate }: Props) {
 
             {word.examples?.length ? (
               <div className="alert alert-light border">
-                <div className="fw-semibold mb-1">Example</div>
-                <div className="mb-1">{word.examples[0].en}</div>
-                {word.examples[0].ja ? <div className="text-secondary">{word.examples[0].ja}</div> : null}
+                <div className="d-flex align-items-center justify-content-between mb-2">
+                  <span className="fw-semibold">Example</span>
+                  <button
+                    className="btn btn-outline-secondary btn-sm"
+                    type="button"
+                    onClick={() => speakExample(word.examples[0].en)}
+                    disabled={!canSpeak}
+                    title="Speak example">
+                    <i className="fa-solid fa-volume-high" />
+                  </button>
+                </div>
+
+                <div>
+                  <div className="mb-1">{word.examples[0].en}</div>
+                  {word.examples[0].ja && (
+                    <div className="text-secondary">{word.examples[0].ja}</div>
+                  )}
+                </div>
               </div>
             ) : null}
 
-            <div className="d-flex gap-2 flex-wrap justify-content-center">
-              <button className="btn btn-outline-danger" onClick={() => void onRate("again")}>
-                <i className="fa-solid fa-rotate-left me-1" /> Again
-              </button>
-              <button className="btn btn-outline-warning" onClick={() => void onRate("hard")}>
-                <i className="fa-solid fa-hand me-1" /> Hard
-              </button>
-              <button className="btn btn-outline-primary" onClick={() => void onRate("good")}>
-                <i className="fa-solid fa-thumbs-up me-1" /> Good
-              </button>
-              <button className="btn btn-outline-success" onClick={() => void onRate("easy")}>
-                <i className="fa-solid fa-face-smile me-1" /> Easy
-              </button>
+            <div className="row g-2 justify-content-center">
+              <div className="col-6 col-md-3">
+                <button
+                  className="btn btn-outline-danger w-100"
+                  onClick={() => void onRate("again")}
+                >
+                  <i className="fa-solid fa-rotate-left me-1" /> Again
+                </button>
+              </div>
+
+              <div className="col-6 col-md-3">
+                <button
+                  className="btn btn-outline-warning w-100"
+                  onClick={() => void onRate("hard")}
+                >
+                  <i className="fa-solid fa-hand me-1" /> Hard
+                </button>
+              </div>
+
+              <div className="col-6 col-md-3">
+                <button
+                  className="btn btn-outline-primary w-100"
+                  onClick={() => void onRate("good")}
+                >
+                  <i className="fa-solid fa-thumbs-up me-1" /> Good
+                </button>
+              </div>
+
+              <div className="col-6 col-md-3">
+                <button
+                  className="btn btn-outline-success w-100"
+                  onClick={() => void onRate("easy")}
+                >
+                  <i className="fa-solid fa-face-smile me-1" /> Easy
+                </button>
+              </div>
             </div>
           </div>
         )}

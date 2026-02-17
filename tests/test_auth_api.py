@@ -208,3 +208,129 @@ async def test_protected_endpoints_require_auth(client: AsyncClient, unique_user
         headers={"Authorization": f"Bearer {access_token}"}
     )
     assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_delete_user_account(client: AsyncClient, unique_username):
+    """Test user can delete their own account"""
+    username = unique_username()
+    password = "testpass123"
+    
+    # Register and login
+    await client.post("/api/auth/register", json={
+        "username": username,
+        "password": password
+    })
+    
+    login_resp = await client.post("/api/auth/login", json={
+        "username": username,
+        "password": password
+    })
+    assert login_resp.status_code == 200
+    access_token = login_resp.json()["access_token"]
+    
+    # Delete account
+    resp = await client.delete(
+        "/api/auth/me",
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+    assert resp.status_code == 200
+    
+    # Verify user cannot login anymore
+    resp = await client.post("/api/auth/login", json={
+        "username": username,
+        "password": password
+    })
+    assert resp.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_duplicate_username_registration(client: AsyncClient, unique_username):
+    """Test that duplicate username registration fails"""
+    username = unique_username()
+    password = "testpass123"
+    
+    # First registration succeeds
+    resp = await client.post("/api/auth/register", json={
+        "username": username,
+        "password": password
+    })
+    assert resp.status_code == 200
+    
+    # Second registration fails
+    resp = await client.post("/api/auth/register", json={
+        "username": username,
+        "password": "different_password"
+    })
+    assert resp.status_code == 400
+    error = resp.json()["error"]
+    assert error["error_code"] == "USER_EXISTS"
+
+
+@pytest.mark.asyncio
+async def test_login_with_wrong_password(client: AsyncClient, unique_username):
+    """Test that login fails with wrong password"""
+    username = unique_username()
+    password = "testpass123"
+    
+    # Register user
+    await client.post("/api/auth/register", json={
+        "username": username,
+        "password": password
+    })
+    
+    # Try to login with wrong password
+    resp = await client.post("/api/auth/login", json={
+        "username": username,
+        "password": "wrongpassword"
+    })
+    assert resp.status_code == 401
+    error = resp.json()["error"]
+    assert error["error_code"] == "AUTH_INVALID"
+
+
+@pytest.mark.asyncio
+async def test_login_with_nonexistent_user(client: AsyncClient):
+    """Test that login fails with non-existent user"""
+    resp = await client.post("/api/auth/login", json={
+        "username": "nonexistent_user_12345",
+        "password": "any_password"
+    })
+    assert resp.status_code == 401
+    error = resp.json()["error"]
+    assert error["error_code"] == "AUTH_INVALID"
+
+
+@pytest.mark.asyncio
+async def test_refresh_without_cookie(client: AsyncClient):
+    """Test that refresh fails without refresh token cookie"""
+    resp = await client.post("/api/auth/refresh")
+    assert resp.status_code == 401
+    error = resp.json()["error"]
+    assert error["error_code"] == "REFRESH_MISSING"
+
+
+@pytest.mark.asyncio
+async def test_access_token_expiration_format(client: AsyncClient, unique_username):
+    """Test that access token has proper expiration format"""
+    username = unique_username()
+    password = "testpass123"
+    
+    await client.post("/api/auth/register", json={
+        "username": username,
+        "password": password
+    })
+    
+    resp = await client.post("/api/auth/login", json={
+        "username": username,
+        "password": password
+    })
+    assert resp.status_code == 200
+    data = resp.json()
+    
+    assert "access_token" in data
+    assert "token_type" in data
+    assert data["token_type"] == "Bearer"
+    assert "expires_in" in data
+    assert isinstance(data["expires_in"], int)
+    assert data["expires_in"] > 0

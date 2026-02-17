@@ -5,6 +5,7 @@ Authentication endpoints using JWT access + refresh token rotation.
 
 from __future__ import annotations
 import logging
+from typing import cast, Literal
 from fastapi import APIRouter, HTTPException, Response, status, Depends, Cookie, Request
 from ..models import RegisterRequest, LoginRequest, MeResponse
 from ..services import register_user, delete_user
@@ -74,13 +75,18 @@ async def login(req: LoginRequest, response: Response, request: Request):
     
     access_token, refresh_token, access_expires_at = result
     
-    # Set refresh token in HttpOnly cookie
+    # Set refresh token in HttpOnly cookie with security settings:
+    # - HttpOnly: JavaScript cannot access (XSS protection)
+    # - Secure: HTTPS only (enable in production via VOCAB_COOKIE_SECURE=true)
+    # - SameSite=Lax: CSRF protection (cookie not sent on cross-site requests)
+    # - Path=/api/auth/refresh: Cookie only sent to refresh endpoint
+    # - max_age=30 days: Browser keeps login state for 30 days
     response.set_cookie(
         key=REFRESH_COOKIE_NAME,
         value=refresh_token,
         httponly=True,
         secure=settings.cookie_secure,
-        samesite=settings.cookie_samesite,
+        samesite=cast(Literal["lax", "strict", "none"], settings.cookie_samesite),
         path="/api/auth/refresh",  # Only send to refresh endpoint
         max_age=30 * 24 * 60 * 60,  # 30 days
     )
@@ -146,7 +152,7 @@ async def refresh(
             value=new_refresh_token,
             httponly=True,
             secure=settings.cookie_secure,
-            samesite=settings.cookie_samesite,
+            samesite=cast(Literal["lax", "strict", "none"], settings.cookie_samesite),
             path="/api/auth/refresh",
             max_age=30 * 24 * 60 * 60,  # 30 days
         )

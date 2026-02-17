@@ -66,3 +66,22 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Touch device optimizations - remove sticky hover/focus states on mobile */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove sticky focus outline after tap on touch devices */
+  button:focus:not(:focus-visible),
+  .btn:focus:not(:focus-visible),
+  a:focus:not(:focus-visible),
+  input:focus:not(:focus-visible),
+  textarea:focus:not(:focus-visible),
+  select:focus:not(:focus-visible) {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* Disable hover effects on touch devices (prevents gray/highlight from sticking) */
+  * {
+    -webkit-tap-highlight-color: transparent !important;
+  }
+}

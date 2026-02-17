@@ -1,6 +1,6 @@
 // src/api/client.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { api, ApiError } from './client';
+import { api, ApiError } from '../../api/client';
 
 describe('API Client', () => {
   beforeEach(() => {

@@ -62,6 +62,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  async function initialize() {
+    try {
+      // First, try to refresh access token from refresh token (HttpOnly cookie)
+      logger.info("Attempting to restore session from refresh token");
+      const refreshed = await authApi.refresh();
+      
+      if (refreshed) {
+        logger.info("Session restored successfully");
+        // Now fetch user info with the new access token
+        await refresh();
+      } else {
+        logger.info("No valid refresh token found, starting as guest");
+        setState({ status: "guest" });
+      }
+    } catch (error) {
+      logger.error("Failed to initialize auth", { error });
+      setState({ status: "guest" });
+    }
+  }
+
   async function login(username: string, password: string) {
     try {
       await authApi.login(username, password);
@@ -86,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    void refresh();
+    void initialize();
   }, []);
 
   const value = useMemo(() => ({ state, login, logout, refresh }), [state]);

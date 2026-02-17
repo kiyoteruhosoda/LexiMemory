@@ -24,7 +24,10 @@ def temp_data_dir() -> Generator[Path, None, None]:
         
         # Force reload of settings with new data dir
         from app import settings as settings_module
+        from app import storage
         settings_module.settings = settings_module.Settings()
+        # Update storage module's reference to settings
+        storage.settings = settings_module.settings
         
         yield Path(tmpdir)
         
@@ -35,6 +38,7 @@ def temp_data_dir() -> Generator[Path, None, None]:
         
         # Restore original settings
         settings_module.settings = settings_module.Settings()
+        storage.settings = settings_module.settings
 
 
 @pytest.fixture(scope="function")
