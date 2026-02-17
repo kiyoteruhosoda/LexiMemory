@@ -230,6 +230,7 @@ def grade_card(userId: str, wordId: str, rating: Rating) -> MemoryState:
         due = now + timedelta(days=m.intervalDays)
 
     m.reviewCount += 1
+    m.lastRating = rating
     m.lastReviewedAt = now.isoformat()
     m.dueAt = due.isoformat()
 

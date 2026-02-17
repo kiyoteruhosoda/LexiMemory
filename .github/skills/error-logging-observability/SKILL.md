@@ -67,3 +67,12 @@ Use consistent keys (example set):
 ### Benefits
 - Works with Docker logs, Kubernetes, cloud logging systems
 - Simplifies debugging and monitoring
+
+## OpenAPI Error Visibility
+
+- Stable error response structures must be documented in OpenAPI.
+- Error codes and their meanings should be discoverable via Swagger UI.
+
+### Benefit
+- Faster debugging
+- Clear operational contracts

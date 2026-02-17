@@ -11,7 +11,7 @@ from ..services import load_words, save_words, delete_word
 
 router = APIRouter(prefix="/words", tags=["words"])
 
-@router.get("", response_model=List[WordEntry])
+@router.get("")
 async def list_words_api(
     q: Optional[str] = Query(default=None),
     pos: Optional[str] = Query(default=None),
@@ -26,9 +26,9 @@ async def list_words_api(
             words = [w for w in words if qq in w.headword.lower() or qq in w.meaningJa.lower()]
         if pos:
             words = [w for w in words if w.pos == pos]
-        return words
+        return {"ok": True, "words": words}
 
-@router.post("", response_model=WordEntry)
+@router.post("")
 async def create_word_api(word: WordUpsert, u: dict = Depends(require_user)):  # ★変更
     async with storage.user_lock(u["userId"]):
         now = storage.now_iso()
@@ -41,9 +41,9 @@ async def create_word_api(word: WordUpsert, u: dict = Depends(require_user)):  #
         wf = load_words(u["userId"])
         wf.words.append(w)
         save_words(u["userId"], wf)
-        return w
+        return {"ok": True, "word": w}
 
-@router.put("/{wordId}", response_model=WordEntry)
+@router.put("/{wordId}")
 async def update_word_api(wordId: str, word: WordUpsert, u: dict = Depends(require_user)):  # ★変更
     async with storage.user_lock(u["userId"]):
         wf = load_words(u["userId"])
@@ -70,7 +70,8 @@ async def update_word_api(wordId: str, word: WordUpsert, u: dict = Depends(requi
 
         wf.words = new_list
         save_words(u["userId"], wf)
-        return next(w for w in wf.words if w.id == wordId)
+        updated_word = next(w for w in wf.words if w.id == wordId)
+        return {"ok": True, "word": updated_word}
 
 @router.delete("/{wordId}")
 async def delete_word_api(wordId: str, u: dict = Depends(require_user)):

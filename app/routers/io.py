@@ -6,7 +6,7 @@ from ..models import AppData
 from .. import storage
 from ..services import export_appdata, import_appdata
 
-router = APIRouter(tags=["io"])
+router = APIRouter(prefix="/io", tags=["io"])
 
 @router.get("/export", response_model=AppData)
 async def export_api(u: dict = Depends(require_user)):

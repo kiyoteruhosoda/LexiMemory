@@ -80,3 +80,16 @@ description: Enforce FastAPI project layering and dependency direction. Use when
 - Environment parity between dev and prod
 - Reproducible builds
 - Easier debugging and rollback
+
+## API Contract Discipline
+
+- API behavior must be driven by OpenAPI schema.
+- Breaking changes require:
+  - explicit version bump
+  - schema update
+  - backward compatibility plan when possible
+
+### Rationale
+- Enables reliable client integration
+- Simplifies debugging and testing
+- Supports auditability of API evolution

@@ -83,14 +83,26 @@ def create_app() -> FastAPI:
     # 422時に body をログしたい場合のため（/words系だけ、envでON/OFFする前提）
     app.add_middleware(RequestBodyCaptureMiddleware)
 
-    app.include_router(auth.router)
-    app.include_router(words.router)
-    app.include_router(study.router)
-    app.include_router(io.router)
+    app.include_router(auth.router, prefix="/api")
+    app.include_router(words.router, prefix="/api")
+    app.include_router(study.router, prefix="/api")
+    app.include_router(io.router, prefix="/api")
+
+
+    def get_git_version() -> str:
+        try:
+            with open(os.path.join(os.path.dirname(__file__), "git_version.txt"), "r") as f:
+                return f.read().strip()
+        except Exception:
+            return "unknown"
 
     @app.get("/healthz")
     async def healthz():
-        return {"ok": True, "version": os.getenv("VOCAB_APP_VERSION", "unknown")}
+        return {
+            "ok": True,
+            "version": os.getenv("VOCAB_APP_VERSION", "unknown"),
+            "git_version": get_git_version(),
+        }
 
     # 422 (validation error) も ApiError に統一
     @app.exception_handler(RequestValidationError)

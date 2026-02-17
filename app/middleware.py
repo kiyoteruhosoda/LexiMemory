@@ -16,6 +16,10 @@ _NO_BODY_PATH_PREFIXES = ("/auth",)
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable):
+        # Skip logging for health check endpoint
+        if request.url.path == "/healthz":
+            return await call_next(request)
+
         request_id = request.headers.get("x-request-id") or str(uuid.uuid4())
         request.state.request_id = request_id
 

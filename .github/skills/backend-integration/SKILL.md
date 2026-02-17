@@ -87,3 +87,28 @@ description: Standardize FastAPI endpoints, Pydantic schemas, DI, and HTTP error
 ### Forbidden
 - Reading secrets from files committed to the repository
 - Depending on OS-specific behavior
+
+## OpenAPI & Swagger (API Contract First)
+
+### OpenAPI as Source of Truth
+- OpenAPI schema is the official API contract.
+- All endpoints, request models, response models, and error responses must be represented in OpenAPI.
+
+### Swagger UI Usage
+- Swagger UI must always be enabled for development and debugging.
+- It is the primary interface for:
+  - manual API testing
+  - contract verification
+  - payload inspection
+
+### Schema Discipline
+- Declare response models explicitly.
+- Define error responses where stable.
+- Avoid undocumented side effects.
+
+### Versioning
+- Use API versioning strategy when breaking changes are introduced (e.g., `/api/v1/...`).
+
+### Forbidden
+- Endpoints not exposed in OpenAPI
+- Ad-hoc undocumented response formats

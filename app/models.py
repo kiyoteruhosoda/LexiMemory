@@ -39,3 +39,34 @@ class LoginRequest(BaseModel):
 class MeResponse(BaseModel):
     userId: str
     username: str
+
+# --- Words/Mem/Export Models ---
+class WordsFile(BaseModel):
+    updatedAt: str
+    words: List[WordEntry] = Field(default_factory=list)
+
+class MemoryState(BaseModel):
+    wordId: str
+    dueAt: str
+    lastRating: Optional[Rating] = None
+    lastReviewedAt: Optional[str] = None
+    memoryLevel: int = 0
+    ease: float = 2.5
+    intervalDays: int = 0
+    reviewCount: int = 0
+    lapseCount: int = 0
+
+class MemoryFile(BaseModel):
+    updatedAt: str
+    memory: List[MemoryState] = Field(default_factory=list)
+
+class AppData(BaseModel):
+    schemaVersion: int = 1
+    exportedAt: str
+    words: List[WordEntry] = Field(default_factory=list)
+    memory: List[MemoryState] = Field(default_factory=list)
+
+# --- Study Models ---
+class GradeRequest(BaseModel):
+    wordId: str
+    rating: Rating
