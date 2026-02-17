@@ -3,10 +3,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../../auth/AuthContext';
-import * as authApi from '../../api/auth';
+import { authApi } from '../../api/auth';
 import { tokenManager } from '../../api/client';
 
-vi.mock('../../api/auth');
+vi.mock('../../api/auth', () => ({
+  authApi: {
+    me: vi.fn(),
+    login: vi.fn(),
+    logout: vi.fn(),
+  },
+}));
 vi.mock('../../api/client', () => ({
   tokenManager: {
     setToken: vi.fn(),
@@ -37,7 +43,7 @@ describe('AuthContext', () => {
   });
 
   it('should initialize with loading status', () => {
-    vi.mocked(authApi.getMe).mockResolvedValue({
+    vi.mocked(authApi.me).mockResolvedValue({
       userId: '1',
       username: 'testuser',
     });
@@ -53,6 +59,7 @@ describe('AuthContext', () => {
 
   it('should login successfully', async () => {
     const mockLoginResponse = {
+      ok: true,
       access_token: 'mock-token',
       token_type: 'Bearer',
       expires_in: 900,
@@ -62,9 +69,9 @@ describe('AuthContext', () => {
       username: 'testuser',
     };
 
-    vi.mocked(authApi.getMe).mockResolvedValue(null as any);
+    vi.mocked(authApi.me).mockResolvedValue(null as any);
     vi.mocked(authApi.login).mockResolvedValue(mockLoginResponse);
-    vi.mocked(authApi.getMe).mockResolvedValue(mockUser);
+    vi.mocked(authApi.me).mockResolvedValue(mockUser);
 
     render(
       <AuthProvider>
@@ -92,7 +99,7 @@ describe('AuthContext', () => {
       username: 'testuser',
     };
 
-    vi.mocked(authApi.getMe).mockResolvedValue(mockUser);
+    vi.mocked(authApi.me).mockResolvedValue(mockUser);
     vi.mocked(authApi.logout).mockResolvedValue(undefined);
 
     render(
@@ -115,7 +122,7 @@ describe('AuthContext', () => {
   });
 
   it('should handle login failure', async () => {
-    vi.mocked(authApi.getMe).mockResolvedValue(null as any);
+    vi.mocked(authApi.me).mockResolvedValue(null as any);
     vi.mocked(authApi.login).mockRejectedValue(new Error('Invalid credentials'));
 
     render(

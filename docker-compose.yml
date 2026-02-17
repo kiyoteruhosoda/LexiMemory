@@ -7,11 +7,11 @@ services:
     container_name: leximemory-api
     environment:
       - VOCAB_DATA_DIR=/data
-      - VOCAB_COOKIE_SECURE=${COOKIE_SECURE}
-      - VOCAB_COOKIE_SAMESITE=${COOKIE_SAMESITE}
-      - VOCAB_SESSION_TTL_SECONDS=${SESSION_TTL_SECONDS}
-      - VOCAB_PASSWORD_PEPPER=${PASSWORD_PEPPER}
-      - VOCAB_WEB_ORIGIN=${WEB_ORIGIN}
+      - VOCAB_COOKIE_SECURE=${COOKIE_SECURE:-false}
+      - VOCAB_COOKIE_SAMESITE=${COOKIE_SAMESITE:-lax}
+      - VOCAB_SESSION_TTL_SECONDS=${SESSION_TTL_SECONDS:-86400}
+      - VOCAB_PASSWORD_PEPPER=${PASSWORD_PEPPER:-}
+      - VOCAB_WEB_ORIGIN=${WEB_ORIGIN:-}
     volumes:
       - ${HOST_DATA_DIR}:/data
     restart: unless-stopped

@@ -1,6 +1,6 @@
 // frontend/src/components/WordList.test.tsx
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { WordList } from '../../components/WordList';
 import type { WordEntry } from '../../api/types';

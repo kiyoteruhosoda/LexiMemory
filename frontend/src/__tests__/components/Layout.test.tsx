@@ -5,9 +5,14 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { Layout } from '../../components/Layout';
 import { AuthProvider } from '../../auth/AuthContext';
-import * as authApi from '../../api/auth';
+import { authApi } from '../../api/auth';
 
-vi.mock('../../api/auth');
+vi.mock('../../api/auth', () => ({
+  authApi: {
+    me: vi.fn(),
+    logout: vi.fn(),
+  },
+}));
 
 function renderWithRouter(ui: React.ReactElement) {
   return render(
@@ -24,7 +29,7 @@ describe('Layout', () => {
   });
 
   it('should render navigation bar with app name', async () => {
-    vi.mocked(authApi.getMe).mockResolvedValue(null as any);
+    vi.mocked(authApi.me).mockResolvedValue(null as any);
 
     renderWithRouter(<Layout>Test Content</Layout>);
 
@@ -32,7 +37,7 @@ describe('Layout', () => {
   });
 
   it('should render child content', async () => {
-    vi.mocked(authApi.getMe).mockResolvedValue(null as any);
+    vi.mocked(authApi.me).mockResolvedValue(null as any);
 
     renderWithRouter(<Layout><div>Test Content</div></Layout>);
 
@@ -40,7 +45,7 @@ describe('Layout', () => {
   });
 
   it('should show Words and Study links', async () => {
-    vi.mocked(authApi.getMe).mockResolvedValue(null as any);
+    vi.mocked(authApi.me).mockResolvedValue(null as any);
 
     renderWithRouter(<Layout>Content</Layout>);
 
@@ -49,7 +54,7 @@ describe('Layout', () => {
   });
 
   it('should show username and logout button when authenticated', async () => {
-    vi.mocked(authApi.getMe).mockResolvedValue({
+    vi.mocked(authApi.me).mockResolvedValue({
       userId: '1',
       username: 'testuser',
     });
@@ -61,7 +66,7 @@ describe('Layout', () => {
   });
 
   it('should show Guest when not authenticated', async () => {
-    vi.mocked(authApi.getMe).mockResolvedValue(null as any);
+    vi.mocked(authApi.me).mockResolvedValue(null as any);
 
     renderWithRouter(<Layout>Content</Layout>);
 
@@ -69,7 +74,7 @@ describe('Layout', () => {
   });
 
   it('should call logout when logout button is clicked', async () => {
-    vi.mocked(authApi.getMe).mockResolvedValue({
+    vi.mocked(authApi.me).mockResolvedValue({
       userId: '1',
       username: 'testuser',
     });
@@ -85,7 +90,7 @@ describe('Layout', () => {
   });
 
   it('should display app version', async () => {
-    vi.mocked(authApi.getMe).mockResolvedValue(null as any);
+    vi.mocked(authApi.me).mockResolvedValue(null as any);
 
     renderWithRouter(<Layout>Content</Layout>);
 
@@ -93,7 +98,7 @@ describe('Layout', () => {
   });
 
   it('should have hamburger menu button for mobile', async () => {
-    vi.mocked(authApi.getMe).mockResolvedValue(null as any);
+    vi.mocked(authApi.me).mockResolvedValue(null as any);
 
     renderWithRouter(<Layout>Content</Layout>);
 
