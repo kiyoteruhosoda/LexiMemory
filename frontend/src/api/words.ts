@@ -1,7 +1,11 @@
 import { api } from "./client";
-import type { WordEntry } from "./types";
+import type { WordEntry, MemoryState } from "./types";
 
-type WordsListResponse = { ok: boolean; words: WordEntry[] };
+type WordsListResponse = { 
+  ok: boolean; 
+  words: WordEntry[];
+  memoryMap: Record<string, MemoryState>;
+};
 type WordCreateResponse = { ok: boolean; word: WordEntry };
 type WordUpdateResponse = { ok: boolean; word: WordEntry };
 
@@ -12,7 +16,7 @@ export const wordsApi = {
     if (pos) params.set("pos", pos);
     const qs = params.toString();
     const res = await api.get<WordsListResponse>(`/words${qs ? `?${qs}` : ""}`);
-    return res.words;
+    return { words: res.words, memoryMap: res.memoryMap };
   },
 
   create: async (word: Omit<WordEntry, "id" | "createdAt" | "updatedAt">) => {

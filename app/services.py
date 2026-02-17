@@ -305,3 +305,10 @@ def import_appdata(userId: str, app: AppData, mode: str) -> None:
     mf.memory = list(existing_mem.values())
     save_words(userId, wf)
     save_memory(userId, mf)
+
+
+def reset_memory(userId: str, wordId: str) -> None:
+    """Reset memory state for a specific word"""
+    mf = load_memory(userId)
+    mf.memory = [m for m in mf.memory if m.wordId != wordId]
+    save_memory(userId, mf)

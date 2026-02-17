@@ -3,7 +3,9 @@ import { AuthProvider } from "./auth/AuthContext";
 import { RequireAuth } from "./auth/RequireAuth";
 import { Layout } from "./components/Layout";
 import { LoginPage } from "./pages/LoginPage";
-import { WordsPage } from "./pages/WordsPage";
+import { WordListPage } from "./pages/WordListPage";
+import { WordCreatePage } from "./pages/WordCreatePage";
+import { WordDetailPage } from "./pages/WordDetailPage";
 import { StudyPage } from "./pages/StudyPage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
@@ -19,7 +21,25 @@ export default function App() {
               path="/words"
               element={
                 <RequireAuth>
-                  <Layout><WordsPage /></Layout>
+                  <Layout><WordListPage /></Layout>
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/words/create"
+              element={
+                <RequireAuth>
+                  <Layout><WordCreatePage /></Layout>
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/words/:id"
+              element={
+                <RequireAuth>
+                  <Layout><WordDetailPage /></Layout>
                 </RequireAuth>
               }
             />

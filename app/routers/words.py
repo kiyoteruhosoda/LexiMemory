@@ -7,7 +7,7 @@ from uuid import uuid4
 from ..deps import require_auth
 from ..models import WordEntry, WordUpsert   # ★追加
 from .. import storage
-from ..services import load_words, save_words, delete_word
+from ..services import load_words, save_words, delete_word, load_memory
 
 router = APIRouter(prefix="/words", tags=["words"])
 
@@ -19,6 +19,7 @@ async def list_words_api(
 ):
     async with storage.user_lock(u["userId"]):
         wf = load_words(u["userId"])
+        mf = load_memory(u["userId"])
         words = wf.words
 
         if q:
@@ -26,7 +27,11 @@ async def list_words_api(
             words = [w for w in words if qq in w.headword.lower() or qq in w.meaningJa.lower()]
         if pos:
             words = [w for w in words if w.pos == pos]
-        return {"ok": True, "words": words}
+        
+        # Build memory map by wordId
+        memory_map = {m.wordId: m for m in mf.memory}
+        
+        return {"ok": True, "words": words, "memoryMap": memory_map}
 
 @router.post("")
 async def create_word_api(word: WordUpsert, u: dict = Depends(require_auth)):  # ★変更

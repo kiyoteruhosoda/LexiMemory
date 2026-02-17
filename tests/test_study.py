@@ -159,3 +159,41 @@ async def test_all_words_mastered(authenticated_client: tuple[AsyncClient, dict,
     assert data["ok"] is True
     # Card should be None when all words are mastered and not due
     # (Note: might still return a card if due date has passed)
+
+
+@pytest.mark.asyncio
+async def test_reset_memory(authenticated_client: tuple[AsyncClient, dict, str]):
+    """Test resetting memory state for a word."""
+    client, _, access_token = authenticated_client
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Create a word
+    create_response = await client.post(
+        "/api/words",
+        json={"headword": "reset", "pos": "verb", "meaningJa": "リセット"},
+        headers=headers
+    )
+    word_id = create_response.json()["word"]["id"]
+    
+    # Grade it to create memory state
+    await client.post(
+        "/api/study/grade",
+        json={"wordId": word_id, "rating": "good"},
+        headers=headers
+    )
+    
+    # Reset memory
+    reset_response = await client.post(
+        f"/api/study/reset/{word_id}",
+        headers=headers
+    )
+    assert reset_response.status_code == 200
+    assert reset_response.json()["ok"] is True
+    
+    # Get next card - the word should appear again with default memory state
+    next_response = await client.get("/api/study/next", headers=headers)
+    assert next_response.status_code == 200
+    card = next_response.json()["card"]
+    assert card["word"]["id"] == word_id
+    # Memory should be reset (memoryLevel = 0 or similar initial state)
+    assert card["memory"]["memoryLevel"] == 0
