@@ -1,6 +1,6 @@
 // frontend/src/components/FlashCard.tsx
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { WordEntry, MemoryState, Rating } from "../api/types";
 
 type Props = {
@@ -12,6 +12,11 @@ type Props = {
 export function FlashCard({ word, memory, onRate }: Props) {
   const [showAnswer, setShowAnswer] = useState(false);
   const canSpeak = useMemo(() => typeof window !== "undefined" && "speechSynthesis" in window, []);
+
+  // Reset showAnswer when word changes
+  useEffect(() => {
+    setShowAnswer(false);
+  }, [word.id]);
 
   function speak() {
     if (!canSpeak) return;
@@ -72,23 +77,26 @@ export function FlashCard({ word, memory, onRate }: Props) {
 
             {word.examples?.length ? (
               <div className="alert alert-light border">
-                <div className="d-flex align-items-center justify-content-between mb-2">
-                  <span className="fw-semibold">Example</span>
-                  <button
-                    className="btn btn-outline-secondary btn-sm"
-                    type="button"
-                    onClick={() => speakExample(word.examples[0].en)}
-                    disabled={!canSpeak}
-                    title="Speak example">
-                    <i className="fa-solid fa-volume-high" />
-                  </button>
-                </div>
-
-                <div>
-                  <div className="mb-1">{word.examples[0].en}</div>
-                  {word.examples[0].ja && (
-                    <div className="text-secondary">{word.examples[0].ja}</div>
-                  )}
+                <div className="fw-semibold mb-2">Examples</div>
+                <div className="vstack gap-2">
+                  {word.examples.map((example, idx) => (
+                    <div key={idx} className="border-start border-3 border-primary ps-3">
+                      <div className="d-flex align-items-start justify-content-between gap-2 mb-1">
+                        <div className="flex-grow-1">{example.en}</div>
+                        <button
+                          className="btn btn-outline-secondary btn-sm"
+                          type="button"
+                          onClick={() => speakExample(example.en)}
+                          disabled={!canSpeak}
+                          title="Speak example">
+                          <i className="fa-solid fa-volume-high" />
+                        </button>
+                      </div>
+                      {example.ja && (
+                        <div className="text-secondary small">{example.ja}</div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             ) : null}

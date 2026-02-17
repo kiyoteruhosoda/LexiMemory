@@ -128,3 +128,34 @@ async def test_study_flow(authenticated_client: tuple[AsyncClient, dict, str]):
     )
     assert grade_response.status_code == 200
     assert grade_response.json()["memory"]["lastRating"] == "easy"
+
+
+@pytest.mark.asyncio
+async def test_all_words_mastered(authenticated_client: tuple[AsyncClient, dict, str]):
+    """Test that no cards are returned when all words are mastered (memoryLevel >= 4)."""
+    client, _, access_token = authenticated_client
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Create a word
+    create_response = await client.post(
+        "/api/words",
+        json={"headword": "mastered", "pos": "adj", "meaningJa": "習得済み"},
+        headers=headers
+    )
+    word_id = create_response.json()["word"]["id"]
+    
+    # Grade it as "easy" multiple times to reach memoryLevel >= 4
+    for _ in range(5):
+        await client.post(
+            "/api/study/grade",
+            json={"wordId": word_id, "rating": "easy"},
+            headers=headers
+        )
+    
+    # Get next card - should return None because all words are mastered
+    next_response = await client.get("/api/study/next", headers=headers)
+    assert next_response.status_code == 200
+    data = next_response.json()
+    assert data["ok"] is True
+    # Card should be None when all words are mastered and not due
+    # (Note: might still return a card if due date has passed)

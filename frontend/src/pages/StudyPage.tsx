@@ -61,9 +61,11 @@ export function StudyPage() {
         <div className="alert alert-success border shadow-sm">
           <div className="fw-semibold">
             <i className="fa-solid fa-circle-check me-2" />
-            No cards due
+            学習完了
           </div>
-          <div className="text-secondary small">Add more words or come back later.</div>
+          <div className="text-secondary small">
+            現在復習すべき単語はありません。新しい単語を追加するか、しばらく時間をおいてください。
+          </div>
         </div>
       ) : (
         <FlashCard word={word} memory={memory} onRate={rate} />

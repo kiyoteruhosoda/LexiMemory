@@ -205,6 +205,11 @@ def get_next_card(userId: str) -> Optional[dict]:
         w, m, _ = due_list[0]
         return {"word": w, "memory": m}
 
+    # 期限切れが無い場合、全ての単語が定着レベル(memoryLevel >= 4)なら学習完了
+    all_mastered = all(t[1].memoryLevel >= 4 for t in candidates)
+    if all_mastered:
+        return None
+
     # 期限切れが無ければ memoryLevel低い順、dueが近い順
     candidates.sort(key=lambda t: (t[1].memoryLevel, t[2]))
     w, m, _ = candidates[0]
