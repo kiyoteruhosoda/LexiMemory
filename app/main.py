@@ -1,0 +1,186 @@
+# app/main.py
+from __future__ import annotations
+
+import logging
+import os
+import signal
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from app.middleware_bodylog import RequestBodyCaptureMiddleware
+
+from . import storage
+from .errors import ApiErrorPayload, http_error_code, is_safe_to_echo_detail
+from .logging_setup import setup_logging
+from .middleware import RequestLoggingMiddleware
+from .routers import auth, io, study, words
+from .settings import settings
+
+app_logger = logging.getLogger("app")
+
+
+def _rid(request: Request) -> str | None:
+    return getattr(request.state, "request_id", None)
+
+
+def _install_signal_handlers() -> None:
+    """Docker停止(SIGHUP/SIGTERM)や手動停止(SIGINT)をログに残す。"""
+
+    def _handle(signum, _frame):
+        # uvicorn が止まったのか、落ちたのか、止められたのかを判別できるようにする
+        app_logger.warning(
+            "signal_received",
+            extra={
+                "event": "signal_received",
+                "detail": {"signal": signum},
+            },
+        )
+
+    for s in (signal.SIGTERM, signal.SIGINT):
+        try:
+            signal.signal(s, _handle)
+        except Exception:
+            # 環境によっては signal 登録できない場合がある（稀）
+            pass
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # ===== startup =====
+    # ここで副作用のある初期化を行う（import時に実行しない）
+    storage.ensure_dirs()
+    setup_logging(data_dir=settings.data_dir)
+    _install_signal_handlers()
+
+    app_logger.warning("app_startup", extra={"event": "app_startup"})
+
+    yield
+
+    # ===== shutdown =====
+    app_logger.warning("app_shutdown", extra={"event": "app_shutdown"})
+
+
+def create_app() -> FastAPI:
+    app = FastAPI(title="Vocab App API", version="0.1.0", lifespan=lifespan)
+
+    web_origin = os.getenv("VOCAB_WEB_ORIGIN", "http://localhost:8080")
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[web_origin],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # request_id / duration を付ける（最初に入れる）
+    app.add_middleware(RequestLoggingMiddleware)
+
+    # 422時に body をログしたい場合のため（/words系だけ、envでON/OFFする前提）
+    app.add_middleware(RequestBodyCaptureMiddleware)
+
+    app.include_router(auth.router)
+    app.include_router(words.router)
+    app.include_router(study.router)
+    app.include_router(io.router)
+
+    @app.get("/healthz")
+    async def healthz():
+        return {"ok": True, "version": os.getenv("VOCAB_APP_VERSION", "unknown")}
+
+    # 422 (validation error) も ApiError に統一
+    @app.exception_handler(RequestValidationError)
+    async def validation_exception_handler(request: Request, exc: RequestValidationError):
+        include_details = os.getenv("VOCAB_DEBUG_VALIDATION_DETAILS", "0") == "1"
+        details = exc.errors() if include_details else None
+        body_text = getattr(request.state, "request_body_text", None)
+        request_id = _rid(request)
+
+        app_logger.warning(
+            "validation_error",
+            extra={
+                "event": "validation_error",
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "status": 422,
+                "err_type": "RequestValidationError",
+                "error_code": "VALIDATION_ERROR",
+                # ログには常に errors を残す（調査の主役）
+                "detail": details if details is not None else exc.errors(),
+                "request_body": body_text,
+            },
+        )
+
+        payload = ApiErrorPayload(
+            error_code="VALIDATION_ERROR",
+            message="Validation error",
+            request_id=request_id,
+            details=details,
+        )
+        return JSONResponse(status_code=422, content={"error": payload.__dict__})
+
+    # 4xx/5xx(HTTPException)
+    @app.exception_handler(StarletteHTTPException)
+    async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+        request_id = _rid(request)
+        status_code = exc.status_code
+        code = http_error_code(status_code)
+        detail_value = exc.detail
+
+        app_logger.warning(
+            "http_error",
+            extra={
+                "event": "http_error",
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "status": status_code,
+                "err_type": "HTTPException",
+                "error_code": code,
+                "detail": detail_value,
+            },
+        )
+
+        message = str(detail_value) if is_safe_to_echo_detail(code) else "Request failed"
+
+        payload = ApiErrorPayload(
+            error_code=code,
+            message=message,
+            request_id=request_id,
+        )
+        return JSONResponse(status_code=status_code, content={"error": payload.__dict__})
+
+    # 500（未ハンドル）は stack trace を必ず残し、クライアントには固定メッセージ
+    @app.exception_handler(Exception)
+    async def unhandled_exception_handler(request: Request, exc: Exception):
+        request_id = _rid(request)
+
+        app_logger.exception(
+            "unhandled_exception",
+            extra={
+                "event": "unhandled_exception",
+                "request_id": request_id,
+                "method": request.method,
+                "path": request.url.path,
+                "status": 500,
+                "err_type": type(exc).__name__,
+                "error_code": "INTERNAL_ERROR",
+            },
+        )
+
+        payload = ApiErrorPayload(
+            error_code="INTERNAL_ERROR",
+            message="Internal Server Error",
+            request_id=request_id,
+        )
+        return JSONResponse(status_code=500, content={"error": payload.__dict__})
+
+    return app
+
+
+app = create_app()
