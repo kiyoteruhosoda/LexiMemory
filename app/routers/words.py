@@ -4,7 +4,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional, List
 from uuid import uuid4
-from ..deps import require_user
+from ..deps import require_auth
 from ..models import WordEntry, WordUpsert   # ★追加
 from .. import storage
 from ..services import load_words, save_words, delete_word
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/words", tags=["words"])
 async def list_words_api(
     q: Optional[str] = Query(default=None),
     pos: Optional[str] = Query(default=None),
-    u: dict = Depends(require_user),
+    u: dict = Depends(require_auth),
 ):
     async with storage.user_lock(u["userId"]):
         wf = load_words(u["userId"])
@@ -29,7 +29,7 @@ async def list_words_api(
         return {"ok": True, "words": words}
 
 @router.post("")
-async def create_word_api(word: WordUpsert, u: dict = Depends(require_user)):  # ★変更
+async def create_word_api(word: WordUpsert, u: dict = Depends(require_auth)):  # ★変更
     async with storage.user_lock(u["userId"]):
         now = storage.now_iso()
         w = WordEntry(
@@ -44,7 +44,7 @@ async def create_word_api(word: WordUpsert, u: dict = Depends(require_user)):  #
         return {"ok": True, "word": w}
 
 @router.put("/{wordId}")
-async def update_word_api(wordId: str, word: WordUpsert, u: dict = Depends(require_user)):  # ★変更
+async def update_word_api(wordId: str, word: WordUpsert, u: dict = Depends(require_auth)):  # ★変更
     async with storage.user_lock(u["userId"]):
         wf = load_words(u["userId"])
         found = False
@@ -74,7 +74,7 @@ async def update_word_api(wordId: str, word: WordUpsert, u: dict = Depends(requi
         return {"ok": True, "word": updated_word}
 
 @router.delete("/{wordId}")
-async def delete_word_api(wordId: str, u: dict = Depends(require_user)):
+async def delete_word_api(wordId: str, u: dict = Depends(require_auth)):
     async with storage.user_lock(u["userId"]):
         delete_word(u["userId"], wordId)
         return {"ok": True}

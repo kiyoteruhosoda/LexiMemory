@@ -9,6 +9,7 @@ from typing import Any, Optional
 class ApiErrorPayload:
     error_code: str
     message: str
+    message_key: Optional[str] = None  # i18n message key
     request_id: Optional[str] = None
     details: Any | None = None  # 基本 None（必要時のみ）
 

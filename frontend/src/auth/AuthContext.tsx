@@ -1,8 +1,10 @@
 // frontend/src/auth/AuthContext.tsx
 
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
 import { authApi } from "../api/auth";
+import { tokenManager } from "../api/client";
 import type { MeResponse } from "../api/types";
+import { logger } from "../utils/logger";
 
 type AuthState =
   | { status: "loading" }
@@ -21,32 +23,65 @@ const Ctx = createContext<AuthCtx | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: "loading" });
 
+  const handleUnauthorized = useCallback(async () => {
+    logger.info("Token expired, attempting refresh");
+    const refreshed = await authApi.refresh();
+    
+    if (refreshed) {
+      logger.info("Token refreshed successfully");
+      await refresh();
+    } else {
+      logger.info("Refresh failed, logging out");
+      setState({ status: "guest" });
+      logger.setUserId(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Register unauthorized callback
+    tokenManager.onUnauthorized(handleUnauthorized);
+  }, [handleUnauthorized]);
+
   async function refresh() {
     try {
-      const me = await authApi.me(); // me(): MeResponse | null
+      const me = await authApi.me();
 
-      // ★重要：未ログイン(null)は guest 扱い
       if (me) {
         setState({ status: "authed", me });
+        logger.setUserId(me.userId);
       } else {
         setState({ status: "guest" });
+        logger.setUserId(null);
+        tokenManager.clearToken();
       }
-    } catch {
-      // ここに来るのは 500/通信エラー等（＝本当に異常系）
+    } catch (error) {
+      logger.error("Failed to fetch user info", { error });
       setState({ status: "guest" });
+      logger.setUserId(null);
+      tokenManager.clearToken();
     }
   }
 
   async function login(username: string, password: string) {
-    await authApi.login(username, password);
-    await refresh();
+    try {
+      await authApi.login(username, password);
+      await refresh();
+      logger.info("User logged in successfully", { username });
+    } catch (error) {
+      logger.error("Login failed", { username, error });
+      throw error;
+    }
   }
 
   async function logout() {
     try {
       await authApi.logout();
+      logger.info("User logged out");
+    } catch (error) {
+      logger.error("Logout failed", { error });
     } finally {
       setState({ status: "guest" });
+      logger.setUserId(null);
     }
   }
 

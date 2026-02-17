@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional, List, Dict, Any
 from uuid import uuid4
 from datetime import datetime, timedelta, timezone
+import shutil
 from . import storage
 from .models import WordEntry, WordsFile, MemoryState, MemoryFile, Rating, AppData
 from .security import hash_password, verify_password
@@ -62,6 +63,20 @@ def authenticate(username: str, password: str) -> Optional[dict]:
     if verify_password(password, u["passwordHash"]):
         return u
     return None
+
+def delete_user(userId: str) -> None:
+    """Delete user from users.json and remove user vault directory."""
+    _init_users_if_missing()
+    p = storage.users_file_path()
+    data = storage.read_json(p)
+    users = data.get("users", [])
+    data["users"] = [u for u in users if u.get("userId") != userId]
+    storage.atomic_write_json(p, data)
+    
+    # Remove user vault directory
+    ud = storage.user_dir(userId)
+    if ud.exists():
+        shutil.rmtree(ud)
 
 # ---------- Vault files ----------
 def _ensure_user_files(userId: str) -> None:

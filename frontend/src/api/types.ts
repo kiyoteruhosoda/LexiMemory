@@ -19,6 +19,7 @@ export interface WordEntry {
   meaningJa: string;
   examples: ExampleSentence[];
   tags: string[];
+  memo?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -29,6 +30,7 @@ export interface MemoryState {
   ease: number;
   intervalDays: number;
   dueAt: string;
+  lastRating?: Rating | null;
   lastReviewedAt?: string | null;
   lapseCount: number;
   reviewCount: number;
@@ -42,4 +44,11 @@ export interface MeResponse {
 export interface NextCardResponse {
   ok: boolean;
   card: null | { word: WordEntry; memory: MemoryState };
+}
+
+export interface AppData {
+  schemaVersion: number;
+  exportedAt: string;
+  words: WordEntry[];
+  memory: MemoryState[];
 }

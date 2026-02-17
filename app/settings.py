@@ -16,5 +16,14 @@ class Settings(BaseSettings):
     cookie_samesite: str = "lax"
     session_ttl_seconds: int = 60 * 60 * 24
     password_pepper: str = ""
+    
+    # JWT settings
+    jwt_secret_key: str = Field(default="development-secret-key-change-in-production")
+    jwt_algorithm: str = "HS256"
+    access_token_ttl_minutes: int = 15
+    
+    # Refresh token settings
+    refresh_token_salt: str = Field(default="development-refresh-salt-change-in-production")
+    refresh_token_ttl_days: int = 30
 
 settings = Settings()

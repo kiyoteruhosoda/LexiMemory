@@ -14,12 +14,15 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.middleware_bodylog import RequestBodyCaptureMiddleware
 
-from . import storage
+from . import storage, deps
 from .errors import ApiErrorPayload, http_error_code, is_safe_to_echo_detail
 from .logging_setup import setup_logging
 from .middleware import RequestLoggingMiddleware
-from .routers import auth, io, study, words
+from .routers import auth, io, logs, study, words
 from .settings import settings
+from .infra.jwt_provider import JWTProvider
+from .infra.token_store_json import JsonTokenStore
+from .service.auth_service import AuthService
 
 app_logger = logging.getLogger("app")
 
@@ -56,6 +59,24 @@ async def lifespan(app: FastAPI):
     storage.ensure_dirs()
     setup_logging(data_dir=settings.data_dir)
     _install_signal_handlers()
+    
+    # Initialize auth service
+    jwt_provider = JWTProvider(
+        secret_key=settings.jwt_secret_key,
+        algorithm=settings.jwt_algorithm,
+        access_ttl_minutes=settings.access_token_ttl_minutes
+    )
+    token_store = JsonTokenStore(data_dir=str(settings.data_dir))
+    auth_service = AuthService(
+        jwt_provider=jwt_provider,
+        token_store=token_store,
+        refresh_salt=settings.refresh_token_salt,
+        refresh_ttl_days=settings.refresh_token_ttl_days
+    )
+    
+    # Set auth service globally
+    deps.set_auth_service(auth_service)
+    auth.set_auth_service(auth_service)
 
     app_logger.warning("app_startup", extra={"event": "app_startup"})
 
@@ -87,6 +108,7 @@ def create_app() -> FastAPI:
     app.include_router(words.router, prefix="/api")
     app.include_router(study.router, prefix="/api")
     app.include_router(io.router, prefix="/api")
+    app.include_router(logs.router, prefix="/api")
 
 
     def get_git_version() -> str:
@@ -149,7 +171,7 @@ def create_app() -> FastAPI:
             extra={
                 "event": "http_error",
                 "request_id": request_id,
-                "method": request.method,
+                "method": "request.method",
                 "path": request.url.path,
                 "status": status_code,
                 "err_type": "HTTPException",
@@ -157,6 +179,10 @@ def create_app() -> FastAPI:
                 "detail": detail_value,
             },
         )
+
+        # If detail is a dict with error structure, use it directly
+        if isinstance(detail_value, dict) and "error" in detail_value:
+            return JSONResponse(status_code=status_code, content=detail_value)
 
         message = str(detail_value) if is_safe_to_echo_detail(code) else "Request failed"
 

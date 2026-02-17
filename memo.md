@@ -61,3 +61,34 @@ Build
 ```
 ./scripts/bump_version.sh && sudo docker compose up -d --build
 ```
+
+
+
+cd /work/project/03.LexiMemory/frontend
+
+# 1. TypeScriptの型チェック（エラー確認）
+npx tsc --noEmit
+
+# 2. テストを実行（watch mode）
+npm test
+
+# 3. テストを1回実行（CI用）
+npm test -- --run
+
+# 4. カバレッジ付きテスト実行
+npm run test:coverage
+
+# 5. UI付きテスト実行（ブラウザで確認）
+npm run test:ui
+
+# 6. 特定のファイルのみテスト
+npm test -- auth.test.ts
+
+# 7. 特定のテスト名でフィルタ
+npm test -- -t "should login"
+
+
+run_tests.sh
+
+
+./scripts/run_tests.sh

@@ -1,7 +1,7 @@
 // frontend/src/components/WordForm.tsx
 
 import { useMemo, useState } from "react";
-import type { Pos, WordEntry } from "../api/types";
+import type { Pos, WordEntry, ExampleSentence } from "../api/types";
 
 const POS: Pos[] = ["noun","verb","adj","adv","prep","conj","pron","det","interj","other"];
 
@@ -15,16 +15,38 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
   const [headword, setHeadword] = useState(initial?.headword ?? "");
   const [pos, setPos] = useState<Pos>(initial?.pos ?? "noun");
   const [meaningJa, setMeaningJa] = useState(initial?.meaningJa ?? "");
+  const [memo, setMemo] = useState(initial?.memo ?? "");
+  const [examples, setExamples] = useState<ExampleSentence[]>(initial?.examples ?? []);
   const [busy, setBusy] = useState(false);
 
   const canSpeak = useMemo(() => typeof window !== "undefined" && "speechSynthesis" in window, []);
 
-  function speak() {
+  function speakHeadword() {
     if (!canSpeak || !headword.trim()) return;
     const ut = new SpeechSynthesisUtterance(headword.trim());
     ut.lang = "en-US";
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(ut);
+  }
+
+  function speakExample(text: string) {
+    if (!canSpeak || !text.trim()) return;
+    const ut = new SpeechSynthesisUtterance(text.trim());
+    ut.lang = "en-US";
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(ut);
+  }
+
+  function addExample() {
+    setExamples([...examples, { id: crypto.randomUUID(), en: "", ja: null, source: null }]);
+  }
+
+  function updateExample(id: string, field: keyof ExampleSentence, value: string) {
+    setExamples(examples.map(ex => ex.id === id ? { ...ex, [field]: value || null } : ex));
+  }
+
+  function removeExample(id: string) {
+    setExamples(examples.filter(ex => ex.id !== id));
   }
 
   async function submit(e: React.FormEvent) {
@@ -37,11 +59,14 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
         meaningJa: meaningJa.trim(),
         pronunciation: initial?.pronunciation ?? null,
         tags: initial?.tags ?? [],
-        examples: initial?.examples ?? [],
+        examples: examples.filter(ex => ex.en.trim()),
+        memo: memo.trim() || null,
       });
       if (!initial) {
         setHeadword("");
         setMeaningJa("");
+        setMemo("");
+        setExamples([]);
         setPos("noun");
       }
     } finally {
@@ -74,9 +99,9 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
               <button
                 className="btn btn-outline-secondary"
                 type="button"
-                onClick={speak}
+                onClick={speakHeadword}
                 disabled={!canSpeak || !headword.trim()}
-                title="Speak"
+                title="Speak word"
               >
                 <i className="fa-solid fa-volume-high" />
               </button>
@@ -98,6 +123,98 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
               onChange={(e) => setMeaningJa(e.target.value)}
               required
             />
+          </div>
+
+          <div className="col-12">
+            <label className="form-label">
+              <i className="fa-solid fa-memo-circle-info me-2" />
+              Memo (optional)
+            </label>
+            <textarea
+              className="form-control"
+              rows={2}
+              value={memo}
+              onChange={(e) => setMemo(e.target.value)}
+              placeholder="Personal notes about this word..."
+            />
+          </div>
+
+          <div className="col-12">
+            <div className="d-flex align-items-center justify-content-between mb-2">
+              <label className="form-label mb-0">
+                <i className="fa-solid fa-book-open me-2" />
+                Example Sentences
+              </label>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-primary"
+                onClick={addExample}
+              >
+                <i className="fa-solid fa-plus me-1" />
+                Add Example
+              </button>
+            </div>
+
+            {examples.length === 0 ? (
+              <div className="text-muted small">No examples yet. Click "Add Example" to add one.</div>
+            ) : (
+              <div className="d-flex flex-column gap-3">
+                {examples.map((ex) => (
+                  <div key={ex.id} className="border rounded p-3 bg-light">
+                    <div className="row g-2">
+                      <div className="col-12">
+                        <label className="form-label small mb-1">English</label>
+                        <div className="input-group input-group-sm">
+                          <input
+                            className="form-control"
+                            value={ex.en}
+                            onChange={(e) => updateExample(ex.id, "en", e.target.value)}
+                            placeholder="Example sentence in English..."
+                          />
+                          <button
+                            className="btn btn-outline-secondary"
+                            type="button"
+                            onClick={() => speakExample(ex.en)}
+                            disabled={!canSpeak || !ex.en.trim()}
+                            title="Speak English sentence"
+                          >
+                            <i className="fa-solid fa-volume-high" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="col-12">
+                        <label className="form-label small mb-1">Japanese (translation)</label>
+                        <input
+                          className="form-control form-control-sm"
+                          value={ex.ja ?? ""}
+                          onChange={(e) => updateExample(ex.id, "ja", e.target.value)}
+                          placeholder="日本語訳..."
+                        />
+                      </div>
+                      <div className="col-12">
+                        <label className="form-label small mb-1">Source (optional)</label>
+                        <div className="input-group input-group-sm">
+                          <input
+                            className="form-control"
+                            value={ex.source ?? ""}
+                            onChange={(e) => updateExample(ex.id, "source", e.target.value)}
+                            placeholder="Book, article, etc..."
+                          />
+                          <button
+                            className="btn btn-outline-danger"
+                            type="button"
+                            onClick={() => removeExample(ex.id)}
+                            title="Remove example"
+                          >
+                            <i className="fa-solid fa-trash" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="col-12 d-flex gap-2">

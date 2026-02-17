@@ -1,3 +1,5 @@
+import { logger } from "../utils/logger";
+
 export class ApiError extends Error {
   status: number;
   errorCode?: string;
@@ -20,7 +22,24 @@ type ApiErrorEnvelope = {
     request_id?: string;
     details?: unknown;
   };
-  detail?: string; // 旧形式互換
+  detail?: string;
+};
+
+// JWT token storage (in-memory)
+let accessToken: string | null = null;
+let onUnauthorizedCallback: (() => void) | null = null;
+
+export const tokenManager = {
+  setToken: (token: string | null) => {
+    accessToken = token;
+  },
+  getToken: () => accessToken,
+  clearToken: () => {
+    accessToken = null;
+  },
+  onUnauthorized: (callback: () => void) => {
+    onUnauthorizedCallback = callback;
+  },
 };
 
 async function parseError(res: Response): Promise<ApiError> {
@@ -31,14 +50,11 @@ async function parseError(res: Response): Promise<ApiError> {
   try {
     const data = (await res.json()) as ApiErrorEnvelope;
 
-    // 新形式: {"error": {...}}
     if (data?.error) {
       if (typeof data.error.message === "string") msg = data.error.message;
       if (typeof data.error.error_code === "string") errorCode = data.error.error_code;
       if (typeof data.error.request_id === "string") requestId = data.error.request_id;
-    }
-    // 旧形式: {"detail": "..."}
-    else if (typeof data?.detail === "string") {
+    } else if (typeof data?.detail === "string") {
       msg = data.detail;
     }
   } catch {
@@ -52,22 +68,58 @@ async function request<T>(
   method: HttpMethod,
   path: string,
   body?: unknown,
-  opts?: { allow401?: boolean } // ←追加（/me用）
+  opts?: { skipAuth?: boolean; allow401?: boolean }
 ): Promise<T> {
+  const headers: Record<string, string> = {};
+  
+  // Add Authorization header if token exists
+  if (!opts?.skipAuth && accessToken) {
+    headers["Authorization"] = `Bearer ${accessToken}`;
+  }
+  
+  if (body) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const res = await fetch(`/api${path}`, {
     method,
-    headers: body ? { "Content-Type": "application/json" } : undefined,
+    headers,
     body: body ? JSON.stringify(body) : undefined,
-    credentials: "include", // Cookieセッション必須
+    credentials: "include",
   });
 
-  // /auth/me など “未ログインは正常” のケース
   if (opts?.allow401 && res.status === 401) {
     return undefined as T;
   }
 
+  // Handle 401 Unauthorized
+  if (res.status === 401 && !opts?.skipAuth) {
+    const error = await parseError(res);
+    logger.warn("Unauthorized - token expired", {
+      method,
+      path,
+      errorCode: error.errorCode,
+    });
+    
+    accessToken = null;
+    if (onUnauthorizedCallback) {
+      onUnauthorizedCallback();
+    }
+    
+    throw error;
+  }
+
   if (!res.ok) {
-    throw await parseError(res);
+    const error = await parseError(res);
+    logger.error("API request failed", {
+      method,
+      path,
+      status: error.status,
+      errorCode: error.errorCode,
+      requestId: error.requestId,
+      message: error.message,
+    });
+    throw error;
   }
 
   if (res.status === 204) return undefined as T;
@@ -75,11 +127,11 @@ async function request<T>(
 }
 
 export const api = {
-  get:  <T>(path: string) => request<T>("GET", path),
+  get: <T>(path: string) => request<T>("GET", path),
   post: <T>(path: string, body?: unknown) => request<T>("POST", path, body),
-  put:  <T>(path: string, body?: unknown) => request<T>("PUT", path, body),
-  del:  <T>(path: string) => request<T>("DELETE", path),
-
-  // 未ログイン判定用（401を例外にしない）
+  put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body),
+  del: <T>(path: string) => request<T>("DELETE", path),
   getAllow401: <T>(path: string) => request<T>("GET", path, undefined, { allow401: true }),
+  postAuth: <T>(path: string, body?: unknown) =>
+    request<T>("POST", path, body, { skipAuth: true }),
 };

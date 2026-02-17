@@ -21,6 +21,7 @@ class WordUpsert(BaseModel):
     meaningJa: str
     examples: List[ExampleSentence] = Field(default_factory=list)
     tags: List[str] = Field(default_factory=list)
+    memo: Optional[str] = None
 
 class WordEntry(WordUpsert):
     id: str
@@ -70,3 +71,14 @@ class AppData(BaseModel):
 class GradeRequest(BaseModel):
     wordId: str
     rating: Rating
+
+# --- Client Logging Models ---
+class ClientLogEntry(BaseModel):
+    timestamp: str
+    level: str  # DEBUG, INFO, WARN, ERROR
+    message: str
+    userId: Optional[str] = None
+    extra: Optional[dict] = None
+
+class ClientLogBatch(BaseModel):
+    logs: List[ClientLogEntry] = Field(default_factory=list)
