@@ -5,6 +5,24 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { FlashCard } from '../../components/FlashCard';
 import type { WordEntry, MemoryState } from '../../api/types';
 
+// Mock SpeechSynthesisUtterance for test environment
+beforeEach(() => {
+  if (typeof window !== 'undefined') {
+    if (!window.SpeechSynthesisUtterance) {
+      (window as any).SpeechSynthesisUtterance = class {
+        constructor(_text: string) {}
+        lang = 'en-US';
+      };
+    }
+    if (!window.speechSynthesis) {
+      (window as any).speechSynthesis = {
+        speak: vi.fn(),
+        cancel: vi.fn(),
+      };
+    }
+  }
+});
+
 describe('FlashCard', () => {
   const mockOnRate = vi.fn();
 

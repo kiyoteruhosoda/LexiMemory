@@ -65,12 +65,12 @@ export function WordListPage() {
         const data: AppData = JSON.parse(text);
         
         const mode = confirm(
-          "インポートモードを選択してください：\n\nOK = データをマージ\nキャンセル = すべて上書き"
+          "Choose import mode:\n\nOK = Merge with existing data\nCancel = Overwrite all data"
         ) ? "merge" : "overwrite";
         
         await importData(data, mode);
         await reload();
-        alert("インポート成功！");
+        alert("Import successful.");
       } catch (e) {
         setError(e instanceof ApiError ? e.message : "Import failed");
       } finally {
@@ -89,7 +89,7 @@ export function WordListPage() {
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <h2 className="mb-0">
           <i className="fa-solid fa-list-check me-2 text-primary" />
-          単語リスト
+          Words
         </h2>
 
         <div className="d-flex gap-2 align-items-center">
@@ -98,10 +98,10 @@ export function WordListPage() {
             onClick={() => navigate("/words/create")}
           >
             <i className="fa-solid fa-plus me-1" />
-            登録
+            Add
           </button>
 
-          <div className="btn-group">
+          <div className="btn-group d-none d-md-flex">
             <button
               className="btn btn-sm btn-outline-secondary"
               onClick={() => void handleExport()}
@@ -132,7 +132,7 @@ export function WordListPage() {
               </span>
               <input
                 className="form-control"
-                placeholder="検索 (EN/JA)"
+                placeholder="Search (EN/JA)"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
               />
@@ -154,26 +154,29 @@ export function WordListPage() {
       {items.length === 0 ? (
         <div className="alert alert-info">
           <i className="fa-solid fa-circle-info me-2" />
-          単語がありません。登録ボタンから追加してください。
+          No words yet. Click "Add" to create one.
         </div>
       ) : (
         <div className="table-responsive">
           <table className="table table-hover align-middle">
             <thead className="table-light">
               <tr>
-                <th style={{ width: "20%" }}>単語</th>
-                <th style={{ width: "10%" }}>品詞</th>
-                <th style={{ width: "30%" }}>意味</th>
-                <th style={{ width: "15%" }}>例文数</th>
-                <th style={{ width: "15%" }}>記憶レベル</th>
-                <th style={{ width: "10%" }}>操作</th>
+                <th style={{ width: "20%" }}>Word</th>
+                <th style={{ width: "10%" }}>POS</th>
+                <th style={{ width: "30%" }}>Meaning</th>
+                <th style={{ width: "15%" }}>Examples</th>
+                <th style={{ width: "15%" }}>Level</th>
               </tr>
             </thead>
             <tbody>
               {items.map((word) => {
                 const level = getMemoryLevel(word.id);
                 return (
-                  <tr key={word.id}>
+                  <tr
+                    key={word.id}
+                    onClick={() => navigate(`/words/${word.id}`)}
+                    style={{ cursor: "pointer" }}
+                  >
                     <td className="fw-semibold">{word.headword}</td>
                     <td>
                       <span className="badge text-bg-secondary">{word.pos}</span>
@@ -195,15 +198,6 @@ export function WordListPage() {
                         <i className="fa-solid fa-layer-group me-1" />
                         Lv {level}
                       </span>
-                    </td>
-                    <td>
-                      <button
-                        className="btn btn-sm btn-outline-primary"
-                        onClick={() => navigate(`/words/${word.id}`)}
-                      >
-                        <i className="fa-solid fa-edit me-1" />
-                        詳細
-                      </button>
                     </td>
                   </tr>
                 );

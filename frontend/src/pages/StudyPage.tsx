@@ -61,10 +61,10 @@ export function StudyPage() {
         <div className="alert alert-success border shadow-sm">
           <div className="fw-semibold">
             <i className="fa-solid fa-circle-check me-2" />
-            学習完了
+            Study Complete
           </div>
           <div className="text-secondary small">
-            現在復習すべき単語はありません。新しい単語を追加するか、しばらく時間をおいてください。
+            No words to study yet. Add new words or check back later.
           </div>
         </div>
       ) : (

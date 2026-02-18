@@ -24,14 +24,14 @@ export function WordCreatePage() {
       <div className="d-flex align-items-center justify-content-between">
         <h2 className="mb-0">
           <i className="fa-solid fa-plus me-2 text-primary" />
-          単語登録
+          Add Word
         </h2>
         <button
           className="btn btn-outline-secondary"
           onClick={() => navigate("/words")}
         >
           <i className="fa-solid fa-arrow-left me-1" />
-          リストに戻る
+          Back
         </button>
       </div>
 

@@ -21,7 +21,7 @@ export function WordDetailPage() {
       const result = await wordsApi.list();
       const found = result.words.find((w) => w.id === id);
       if (!found) {
-        setError("単語が見つかりません");
+        setError("Word not found");
         return;
       }
       setWord(found);
@@ -49,7 +49,7 @@ export function WordDetailPage() {
 
   async function handleDelete() {
     if (!word) return;
-    if (!confirm(`「${word.headword}」を削除しますか？\n\nこの操作は取り消せません。`)) return;
+    if (!confirm(`Delete "${word.headword}"? This cannot be undone.`)) return;
     
     setError(null);
     try {
@@ -62,12 +62,12 @@ export function WordDetailPage() {
 
   async function handleResetMemory() {
     if (!word) return;
-    if (!confirm(`「${word.headword}」の記憶レベルをリセットしますか？\n\n記憶状態がすべてクリアされます。`)) return;
+    if (!confirm(`Reset memory level for "${word.headword}"?`)) return;
     
     setError(null);
     try {
       await studyApi.resetMemory(word.id);
-      alert("記憶レベルをリセットしました");
+      alert("Memory level reset.");
     } catch (e) {
       setError(e instanceof ApiError ? e.message : "Failed to reset memory");
     }
@@ -91,7 +91,7 @@ export function WordDetailPage() {
           onClick={() => navigate("/words")}
         >
           <i className="fa-solid fa-arrow-left me-1" />
-          リストに戻る
+          Back
         </button>
         <div className="alert alert-danger">
           <i className="fa-solid fa-triangle-exclamation me-2" />
@@ -108,14 +108,14 @@ export function WordDetailPage() {
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <h2 className="mb-0">
           <i className="fa-solid fa-edit me-2 text-primary" />
-          単語詳細
+          Edit Word
         </h2>
         <button
           className="btn btn-outline-secondary"
           onClick={() => navigate("/words")}
         >
           <i className="fa-solid fa-arrow-left me-1" />
-          リストに戻る
+          Back
         </button>
       </div>
 
@@ -132,40 +132,47 @@ export function WordDetailPage() {
         onCancel={() => navigate("/words")}
       />
 
-      <div className="card border-danger">
-        <div className="card-header bg-danger text-white">
-          <i className="fa-solid fa-triangle-exclamation me-2" />
-          危険な操作
-        </div>
-        <div className="card-body">
-          <div className="row g-3">
-            <div className="col-md-6">
-              <h5 className="card-title">記憶レベルをリセット</h5>
-              <p className="card-text text-secondary">
-                この単語の記憶状態（レベル、復習間隔など）をすべてクリアします。単語自体は削除されません。
-              </p>
-              <button
-                className="btn btn-warning"
-                onClick={() => void handleResetMemory()}
-              >
-                <i className="fa-solid fa-rotate-left me-1" />
-                記憶レベルをリセット
-              </button>
-            </div>
-            <div className="col-md-6">
-              <h5 className="card-title">単語を削除</h5>
-              <p className="card-text text-secondary">
-                この単語を完全に削除します。この操作は取り消せません。
-              </p>
-              <button
-                className="btn btn-danger"
-                onClick={() => void handleDelete()}
-              >
-                <i className="fa-solid fa-trash me-1" />
-                単語を削除
-              </button>
-            </div>
+      <div className="d-none d-md-block">
+        <div className="row g-3">
+          <div className="col-md-6">
+            <button
+              className="btn btn-warning w-100"
+              onClick={() => void handleResetMemory()}
+            >
+              <i className="fa-solid fa-rotate-left me-1" />
+              Reset Memory Level
+            </button>
           </div>
+          <div className="col-md-6">
+            <button
+              className="btn btn-danger w-100"
+              onClick={() => void handleDelete()}
+            >
+              <i className="fa-solid fa-trash me-1" />
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="d-md-none">
+        <div className="btn-group w-100" role="group">
+          <button
+            type="button"
+            className="btn btn-sm btn-warning"
+            onClick={() => void handleResetMemory()}
+          >
+            <i className="fa-solid fa-rotate-left me-1" />
+            Reset
+          </button>
+          <button
+            type="button"
+            className="btn btn-sm btn-danger"
+            onClick={() => void handleDelete()}
+          >
+            <i className="fa-solid fa-trash me-1" />
+            Delete
+          </button>
         </div>
       </div>
     </div>

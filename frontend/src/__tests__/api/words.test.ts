@@ -21,13 +21,14 @@ describe('Words API', () => {
   describe('list', () => {
     it('should return list of words', async () => {
       const mockWords = [
-        { wordId: '1', headword: 'hello', meaning: 'こんにちは' },
-        { wordId: '2', headword: 'world', meaning: '世界' },
+        { id: '1', headword: 'hello', meaningJa: 'こんにちは', pos: 'noun' as Pos, pronunciation: null, examples: [], tags: [], createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
+        { id: '2', headword: 'world', meaningJa: '世界', pos: 'noun' as Pos, pronunciation: null, examples: [], tags: [], createdAt: '2024-01-01T00:00:00Z', updatedAt: '2024-01-01T00:00:00Z' },
       ];
-      vi.mocked(client.api.get).mockResolvedValueOnce({ ok: true, words: mockWords });
+      const mockMemoryMap = {};
+      vi.mocked(client.api.get).mockResolvedValueOnce({ ok: true, words: mockWords, memoryMap: mockMemoryMap });
 
       const result = await wordsApi.list();
-      expect(result).toEqual(mockWords);
+      expect(result).toEqual({ words: mockWords, memoryMap: mockMemoryMap });
       expect(client.api.get).toHaveBeenCalledWith('/words');
     });
   });

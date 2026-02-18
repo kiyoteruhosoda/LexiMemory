@@ -104,12 +104,13 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
       <div className="card-body">
         <form onSubmit={submit} className="row g-3">
           <div className="col-12 col-md-5">
-            <label className="form-label">Word</label>
+            <label htmlFor="headword-input" className="form-label">Word</label>
             <div className="input-group">
               <span className="input-group-text">
                 <i className="fa-solid fa-spell-check" />
               </span>
               <input
+                id="headword-input"
                 className="form-control"
                 value={headword}
                 onChange={(e) => setHeadword(e.target.value)}
@@ -128,15 +129,16 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
           </div>
 
           <div className="col-12 col-md-3">
-            <label className="form-label">POS</label>
-            <select className="form-select" value={pos} onChange={(e) => setPos(e.target.value as Pos)}>
+            <label htmlFor="pos-select" className="form-label">POS</label>
+            <select id="pos-select" className="form-select" value={pos} onChange={(e) => setPos(e.target.value as Pos)}>
               {POS.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
 
           <div className="col-12 col-md-4">
-            <label className="form-label">Meaning (JA)</label>
+            <label htmlFor="meaning-ja-input" className="form-label">Meaning (JA)</label>
             <input
+              id="meaning-ja-input"
               className="form-control"
               value={meaningJa}
               onChange={(e) => setMeaningJa(e.target.value)}

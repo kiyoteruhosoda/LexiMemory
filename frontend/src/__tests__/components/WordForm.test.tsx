@@ -3,7 +3,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { WordForm } from '../../components/WordForm';
-import type { WordEntry } from '../../api/types';
+// Mock SpeechSynthesisUtterance
+if (typeof window !== 'undefined' && !window.SpeechSynthesisUtterance) {
+  window.SpeechSynthesisUtterance = class {
+    constructor(_text: string) {}
+    lang = 'en-US';
+  } as any;
+  window.speechSynthesis = {
+    speak: vi.fn(),
+    cancel: vi.fn(),
+  } as any;
+}import type { WordEntry } from '../../api/types';
 
 describe('WordForm', () => {
   const mockOnSave = vi.fn();
