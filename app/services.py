@@ -4,9 +4,12 @@ from typing import Optional, List, Dict, Any
 from uuid import uuid4
 from datetime import datetime, timedelta, timezone
 import shutil
+import logging
 from . import storage
-from .models import WordEntry, WordsFile, MemoryState, MemoryFile, Rating, AppData, AppDataForImport, ExampleSentence
+from .models import WordEntry, WordsFile, MemoryState, MemoryFile, Rating, AppData, AppDataForImport, ExampleSentence, Pos
 from .security import hash_password, verify_password
+
+logger = logging.getLogger("app.service.import")
 
 UTC = timezone.utc
 
@@ -285,6 +288,101 @@ def grade_card(userId: str, wordId: str, rating: Rating) -> MemoryState:
     return m
 
 # ---------- Import / Export ----------
+
+def validate_import_data(app_data: AppDataForImport) -> Dict[str, Any]:
+    """
+    Validate import data and collect warnings/errors.
+    Returns a dict with 'valid', 'errors', 'warnings', and 'details'.
+    """
+    valid_pos_values = {"noun", "verb", "adj", "adv", "prep", "conj", "pron", "det", "interj", "other"}
+    errors: List[str] = []
+    warnings: List[str] = []
+    details: Dict[str, Any] = {}
+    
+    # Check schemaVersion
+    if app_data.schemaVersion != 1:
+        errors.append(f"Invalid schemaVersion: {app_data.schemaVersion} (expected 1)")
+    
+    words = app_data.words
+    if not words:
+        warnings.append("No words to import")
+        return {
+            "valid": len(errors) == 0,
+            "errors": errors,
+            "warnings": warnings,
+            "details": details
+        }
+    
+    # Track headwords and IDs
+    headwords_seen: Dict[str, int] = {}
+    ids_seen: Dict[str, int] = {}
+    invalid_pos_words: List[Dict[str, Any]] = []
+    
+    for idx, word in enumerate(words):
+        # Check required fields
+        if not word.headword:
+            errors.append(f"Word at index {idx}: missing or empty headword")
+            continue
+        
+        if not word.meaningJa:
+            errors.append(f"Word '{word.headword}': missing or empty meaningJa")
+            continue
+        
+        if not word.pos:
+            errors.append(f"Word '{word.headword}': missing pos")
+            continue
+        
+        # Check pos is valid
+        if word.pos not in valid_pos_values:
+            invalid_pos_words.append({
+                "index": idx,
+                "headword": word.headword,
+                "invalid_pos": word.pos,
+                "valid_options": list(valid_pos_values)
+            })
+            errors.append(
+                f"Word '{word.headword}' at index {idx}: "
+                f"invalid pos='{word.pos}' (valid: {', '.join(sorted(valid_pos_values))})"
+            )
+        
+        # Check for duplicate headwords
+        headwords_seen[word.headword] = headwords_seen.get(word.headword, 0) + 1
+        if headwords_seen[word.headword] > 1:
+            warnings.append(
+                f"Word '{word.headword}' appears {headwords_seen[word.headword]} times in import file"
+            )
+        
+        # Check for duplicate IDs
+        if word.id:
+            ids_seen[word.id] = ids_seen.get(word.id, 0) + 1
+            if ids_seen[word.id] > 1:
+                warnings.append(
+                    f"ID '{word.id}' is duplicated in import file"
+                )
+        
+        # Validate example sentences
+        if word.examples:
+            for ex_idx, example in enumerate(word.examples):
+                if not example.en:
+                    errors.append(
+                        f"Word '{word.headword}' example {ex_idx}: missing en (English)"
+                    )
+    
+    # Summary details
+    details["total_words"] = len(words)
+    details["invalid_pos_count"] = len(invalid_pos_words)
+    details["duplicate_headwords"] = {hw: count for hw, count in headwords_seen.items() if count > 1}
+    details["duplicate_ids"] = {id: count for id, count in ids_seen.items() if count > 1}
+    
+    if invalid_pos_words:
+        details["invalid_pos_examples"] = invalid_pos_words[:3]  # First 3 examples
+    
+    return {
+        "valid": len(errors) == 0,
+        "errors": errors,
+        "warnings": warnings,
+        "details": details
+    }
 def _normalize_app_data_for_import(app_data: AppDataForImport) -> AppData:
     """Convert AppDataForImport to AppData, generating missing IDs and timestamps"""
     now = storage.now_iso()
@@ -353,48 +451,85 @@ def export_appdata(userId: str) -> AppData:
 
 def import_appdata(userId: str, app: AppData | AppDataForImport, mode: str) -> None:
     """Import application data, supporting both full export format and manually-created files"""
+    import logging
+    logger = logging.getLogger("app.service.import")
+    
+    logger.debug(f"import_appdata: userId={userId}, mode={mode}, app={app}")
+    
     # Normalize AppDataForImport to AppData
     if isinstance(app, AppDataForImport):
+        logger.debug(f"Normalizing AppDataForImport with {len(app.words)} words")
         app = _normalize_app_data_for_import(app)
+        logger.debug(f"After normalization: {len(app.words)} words")
 
     # mode: overwrite | merge
     if mode == "overwrite":
+        logger.info(f"Overwrite mode: saving {len(app.words)} words and {len(app.memory)} memory states")
         save_words(userId, WordsFile(updatedAt=storage.now_iso(), words=app.words))
         save_memory(userId, MemoryFile(updatedAt=storage.now_iso(), memory=app.memory))
+        logger.info("Overwrite completed successfully")
         return
 
     # merge: idベースで更新（updatedAtが新しい方を採用）
+    import logging
+    logger = logging.getLogger("app.service.import")
+    
+    logger.debug(f"Merge mode: starting with imported {len(app.words)} words and {len(app.memory)} memory states")
     wf = load_words(userId)
     mf = load_memory(userId)
+    logger.debug(f"Existing data: {len(wf.words)} words and {len(mf.memory)} memory states")
 
     existing_words = {w.id: w for w in wf.words}
+    added_words = 0
+    updated_words = 0
     for w in app.words:
         cur = existing_words.get(w.id)
         if not cur:
+            logger.debug(f"Adding new word: {w.id}")
             existing_words[w.id] = w
+            added_words += 1
         else:
             # updatedAt 比較（無い場合は上書き）
             try:
                 if _parse_iso(w.updatedAt) >= _parse_iso(cur.updatedAt):
+                    logger.debug(f"Updating word {w.id} (new timestamp >= old timestamp)")
                     existing_words[w.id] = w
-            except Exception:
+                    updated_words += 1
+                else:
+                    logger.debug(f"Skipping word {w.id} (existing is newer)")
+            except Exception as e:
+                logger.debug(f"Error comparing timestamps for {w.id}: {e}, updating anyway")
                 existing_words[w.id] = w
+                updated_words += 1
 
     existing_mem = {m.wordId: m for m in mf.memory}
+    added_mem = 0
+    updated_mem = 0
     for m in app.memory:
         cur = existing_mem.get(m.wordId)
         if not cur:
+            logger.debug(f"Adding new memory state: {m.wordId}")
             existing_mem[m.wordId] = m
+            added_mem += 1
         else:
             # dueAtが新しい方を採用（簡易）
             try:
                 if _parse_iso(m.dueAt) >= _parse_iso(cur.dueAt):
+                    logger.debug(f"Updating memory state {m.wordId} (new due date >= old due date)")
                     existing_mem[m.wordId] = m
-            except Exception:
+                    updated_mem += 1
+                else:
+                    logger.debug(f"Skipping memory state {m.wordId} (existing is newer)")
+            except Exception as e:
+                logger.debug(f"Error comparing due dates for {m.wordId}: {e}, updating anyway")
                 existing_mem[m.wordId] = m
+                updated_mem += 1
 
+    logger.info(f"Merge results: added {added_words} words, updated {updated_words} words, added {added_mem} memory states, updated {updated_mem} memory states")
+    
     wf.words = list(existing_words.values())
     mf.memory = list(existing_mem.values())
+    logger.debug(f"Saving {len(wf.words)} words and {len(mf.memory)} memory states")
     save_words(userId, wf)
     save_memory(userId, mf)
 

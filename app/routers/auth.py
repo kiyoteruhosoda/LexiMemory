@@ -15,6 +15,7 @@ from ..settings import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 logger = logging.getLogger(__name__)
+audit_logger = logging.getLogger("app.audit")
 
 # Global auth service (set by main.py)
 _auth_service = None
@@ -51,11 +52,37 @@ REFRESH_COOKIE_NAME = "refresh_token"
 async def register(req: RegisterRequest, request: Request):
     """Register a new user (no authentication required)"""
     lang = get_request_lang(request)
+    request_id = getattr(request.state, "request_id", None)
     
     try:
         u = register_user(req.username, req.password)
+        
+        # Audit log
+        audit_logger.info(
+            "User registered",
+            extra={
+                "event": "user.register",
+                "user_id": u["userId"],
+                "username": u["username"],
+                "request_id": request_id,
+                "result": "success"
+            }
+        )
+        
         return {"ok": True, "userId": u["userId"], "username": u["username"]}
     except ValueError:
+        # Audit log for failure
+        audit_logger.warning(
+            "User registration failed",
+            extra={
+                "event": "user.register",
+                "username": req.username,
+                "request_id": request_id,
+                "result": "failure",
+                "error_code": "USER_EXISTS"
+            }
+        )
+        
         raise HTTPException(
             status_code=400,
             detail={
@@ -95,12 +122,25 @@ async def login(req: LoginRequest, response: Response, request: Request):
     Returns access token in body, refresh token in HttpOnly cookie.
     """
     lang = get_request_lang(request)
+    request_id = getattr(request.state, "request_id", None)
     
     if not _auth_service:
         raise HTTPException(status_code=500, detail="Auth service not initialized")
     
     result = await _auth_service.login(req.username, req.password)
     if not result:
+        # Audit log for failure
+        audit_logger.warning(
+            "User login failed",
+            extra={
+                "event": "user.login",
+                "username": req.username,
+                "request_id": request_id,
+                "result": "failure",
+                "error_code": "AUTH_INVALID"
+            }
+        )
+        
         raise HTTPException(
             status_code=401,
             detail={
@@ -113,6 +153,23 @@ async def login(req: LoginRequest, response: Response, request: Request):
         )
     
     access_token, refresh_token, access_expires_at = result
+    
+    # Get user info for audit log
+    from ..services import find_user_by_username
+    user = find_user_by_username(req.username)
+    
+    if user:
+        # Audit log for success
+        audit_logger.info(
+            "User logged in",
+            extra={
+                "event": "user.login",
+                "user_id": user["userId"],
+                "username": req.username,
+                "request_id": request_id,
+                "result": "success"
+            }
+        )
     
     # Set refresh token in HttpOnly cookie with security settings:
     # - HttpOnly: JavaScript cannot access (XSS protection)
@@ -257,6 +314,7 @@ async def refresh(
 )
 async def logout(
     response: Response,
+    request: Request,
     user: dict = Depends(require_auth),
     refresh_token: str | None = Cookie(default=None, alias=REFRESH_COOKIE_NAME)
 ):
@@ -266,12 +324,26 @@ async def logout(
     if not _auth_service:
         raise HTTPException(status_code=500, detail="Auth service not initialized")
     
+    request_id = getattr(request.state, "request_id", None)
+    
     # Revoke refresh token
     if refresh_token:
         await _auth_service.logout(refresh_token)
     
     # Clear cookie
     response.delete_cookie(REFRESH_COOKIE_NAME, path="/api/auth/refresh")
+    
+    # Audit log
+    audit_logger.info(
+        "User logged out",
+        extra={
+            "event": "user.logout",
+            "user_id": user["userId"],
+            "username": user["username"],
+            "request_id": request_id,
+            "result": "success"
+        }
+    )
     
     return {"ok": True}
 
@@ -327,6 +399,7 @@ async def delete_me(
         raise HTTPException(status_code=500, detail="Auth service not initialized")
     
     user_id = user["userId"]
+    request_id = getattr(request.state, "request_id", None)
     
     # Revoke refresh token
     if refresh_token:
@@ -338,8 +411,34 @@ async def delete_me(
     # Delete user and all associated data
     try:
         delete_user(user_id)
+        
+        # Audit log for success
+        audit_logger.info(
+            "User account deleted",
+            extra={
+                "event": "user.delete",
+                "user_id": user_id,
+                "username": user["username"],
+                "request_id": request_id,
+                "result": "success"
+            }
+        )
     except Exception as e:
         logger.error(f"Failed to delete user {user_id}: {e}", exc_info=True)
+        
+        # Audit log for failure
+        audit_logger.error(
+            "User account deletion failed",
+            extra={
+                "event": "user.delete",
+                "user_id": user_id,
+                "username": user["username"],
+                "request_id": request_id,
+                "result": "failure",
+                "error_code": "DELETE_FAILED"
+            }
+        )
+        
         raise HTTPException(
             status_code=500,
             detail={

@@ -30,11 +30,16 @@ class JsonFormatter(logging.Formatter):
             "user_id",
             "username",
             "word_id",
+            "headword",
             "rating",
             "err_type",
             "error_code",
             "detail",
             "request_body",
+            "result",
+            "word_count",
+            "mode",
+            "error_count",
         ):
             if hasattr(record, k):
                 v = getattr(record, k)

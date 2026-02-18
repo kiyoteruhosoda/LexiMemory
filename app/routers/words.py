@@ -1,13 +1,17 @@
 # app/routers/words.py
 
 from __future__ import annotations
-from fastapi import APIRouter, Depends, HTTPException, Query
+import logging
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from typing import Optional, List
 from uuid import uuid4
 from ..deps import require_auth
 from ..models import WordEntry, WordUpsert, ExampleSentence
 from .. import storage
 from ..services import load_words, save_words, delete_word, load_memory
+
+logger = logging.getLogger(__name__)
+audit_logger = logging.getLogger("app.audit")
 
 # Helper to ensure examples have IDs
 def _normalize_examples(examples: List[ExampleSentence]) -> List[ExampleSentence]:
@@ -93,7 +97,9 @@ async def list_words_api(
         422: {"description": "Validation error"},
     }
 )
-async def create_word_api(word: WordUpsert, u: dict = Depends(require_auth)):
+async def create_word_api(word: WordUpsert, request: Request, u: dict = Depends(require_auth)):
+    request_id = getattr(request.state, "request_id", None)
+    
     async with storage.user_lock(u["userId"]):
         now = storage.now_iso()
         # Normalize examples to ensure all have IDs
@@ -113,6 +119,21 @@ async def create_word_api(word: WordUpsert, u: dict = Depends(require_auth)):
         wf = load_words(u["userId"])
         wf.words.append(w)
         save_words(u["userId"], wf)
+        
+        # Audit log
+        audit_logger.info(
+            "Word created",
+            extra={
+                "event": "word.create",
+                "user_id": u["userId"],
+                "username": u["username"],
+                "word_id": w.id,
+                "headword": w.headword,
+                "request_id": request_id,
+                "result": "success"
+            }
+        )
+        
         return {"ok": True, "word": w}
 
 @router.put(
@@ -130,10 +151,13 @@ async def create_word_api(word: WordUpsert, u: dict = Depends(require_auth)):
     }
 )
 async def update_word_api(
-    wordId: str = None,
-    word: WordUpsert = None,
+    wordId: str,
+    word: WordUpsert,
+    request: Request,
     u: dict = Depends(require_auth),
 ):
+    request_id = getattr(request.state, "request_id", None)
+    
     async with storage.user_lock(u["userId"]):
         wf = load_words(u["userId"])
         found = False
@@ -167,6 +191,21 @@ async def update_word_api(
         wf.words = new_list
         save_words(u["userId"], wf)
         updated_word = next(w for w in wf.words if w.id == wordId)
+        
+        # Audit log
+        audit_logger.info(
+            "Word updated",
+            extra={
+                "event": "word.update",
+                "user_id": u["userId"],
+                "username": u["username"],
+                "word_id": wordId,
+                "headword": word.headword,
+                "request_id": request_id,
+                "result": "success"
+            }
+        )
+        
         return {"ok": True, "word": updated_word}
 
 @router.delete(
@@ -179,7 +218,31 @@ async def update_word_api(
         404: {"description": "Word not found"},
     }
 )
-async def delete_word_api(wordId: str, u: dict = Depends(require_auth)):
+async def delete_word_api(wordId: str, request: Request, u: dict = Depends(require_auth)):
+    request_id = getattr(request.state, "request_id", None)
+    
     async with storage.user_lock(u["userId"]):
+        # Get word info before deleting for audit log
+        wf = load_words(u["userId"])
+        word = next((w for w in wf.words if w.id == wordId), None)
+        
+        if not word:
+            raise HTTPException(status_code=404, detail="Word not found")
+        
         delete_word(u["userId"], wordId)
+        
+        # Audit log
+        audit_logger.info(
+            "Word deleted",
+            extra={
+                "event": "word.delete",
+                "user_id": u["userId"],
+                "username": u["username"],
+                "word_id": wordId,
+                "headword": word.headword,
+                "request_id": request_id,
+                "result": "success"
+            }
+        )
+        
         return {"ok": True}
