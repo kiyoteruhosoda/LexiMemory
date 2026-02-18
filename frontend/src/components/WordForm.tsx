@@ -95,12 +95,7 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
 
   return (
     <div className="card shadow-sm">
-      <div className="card-header bg-white">
-        <div className="d-flex align-items-center gap-2">
-          <i className={`fa-solid ${initial ? "fa-pen-to-square" : "fa-circle-plus"} text-primary`} />
-          <span className="fw-semibold">{initial ? "Edit word" : "Add a new word"}</span>
-        </div>
-      </div>
+
       <div className="card-body">
         <form onSubmit={submit} className="row g-3">
           <div className="col-12 col-md-5">

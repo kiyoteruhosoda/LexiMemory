@@ -64,7 +64,6 @@ export function FlashCard({ word, memory, onRate }: Props) {
         {!showAnswer ? (
           <div className="d-grid">
             <button className="btn btn-primary" onClick={() => setShowAnswer(true)}>
-              <i className="fa-solid fa-eye me-2" />
               Show Answer
             </button>
           </div>

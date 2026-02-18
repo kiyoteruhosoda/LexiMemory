@@ -28,7 +28,26 @@ def set_auth_service(auth_service):
 REFRESH_COOKIE_NAME = "refresh_token"
 
 
-@router.post("/register")
+@router.post(
+    "/register",
+    summary="Register a new user",
+    description="Create a new user account with username and password. No authentication required.",
+    responses={
+        200: {
+            "description": "User registered successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "ok": True,
+                        "userId": "550e8400-e29b-41d4-a716-446655440000",
+                        "username": "john_doe"
+                    }
+                }
+            }
+        },
+        400: {"description": "User already exists or invalid input"},
+    }
+)
 async def register(req: RegisterRequest, request: Request):
     """Register a new user (no authentication required)"""
     lang = get_request_lang(request)
@@ -49,7 +68,27 @@ async def register(req: RegisterRequest, request: Request):
         )
 
 
-@router.post("/login")
+@router.post(
+    "/login",
+    summary="Login user",
+    description="Authenticate with username and password. Returns JWT access token in body and refresh token in HttpOnly cookie.",
+    responses={
+        200: {
+            "description": "Login successful",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "ok": True,
+                        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                        "token_type": "Bearer",
+                        "expires_in": 3600
+                    }
+                }
+            }
+        },
+        401: {"description": "Invalid credentials"},
+    }
+)
 async def login(req: LoginRequest, response: Response, request: Request):
     """
     Login with username and password.
@@ -103,7 +142,27 @@ async def login(req: LoginRequest, response: Response, request: Request):
     }
 
 
-@router.post("/refresh")
+@router.post(
+    "/refresh",
+    summary="Refresh access token",
+    description="Use refresh token (from HttpOnly cookie) to obtain a new access token. Implements token rotation.",
+    responses={
+        200: {
+            "description": "Token refreshed successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "ok": True,
+                        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                        "token_type": "Bearer",
+                        "expires_in": 3600
+                    }
+                }
+            }
+        },
+        401: {"description": "Refresh token missing or invalid"},
+    }
+)
 async def refresh(
     response: Response,
     request: Request,
@@ -187,7 +246,15 @@ async def refresh(
         raise
 
 
-@router.post("/logout")
+@router.post(
+    "/logout",
+    summary="Logout user",
+    description="Revoke refresh token and clear authentication cookies.",
+    responses={
+        200: {"description": "Logout successful"},
+        401: {"description": "Unauthorized"},
+    }
+)
 async def logout(
     response: Response,
     user: dict = Depends(require_auth),
@@ -209,13 +276,41 @@ async def logout(
     return {"ok": True}
 
 
-@router.get("/me", response_model=MeResponse)
+@router.get(
+    "/me",
+    response_model=MeResponse,
+    summary="Get current user",
+    description="Retrieve information about the authenticated user.",
+    responses={
+        200: {
+            "description": "Current user info",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "userId": "550e8400-e29b-41d4-a716-446655440000",
+                        "username": "john_doe"
+                    }
+                }
+            }
+        },
+        401: {"description": "Unauthorized"},
+    }
+)
 async def me(user: dict = Depends(require_auth)):
     """Get current user info (requires access token)"""
     return MeResponse(userId=user["userId"], username=user["username"])
 
 
-@router.delete("/me")
+@router.delete(
+    "/me",
+    summary="Delete user account",
+    description="Permanently delete the current user account and all associated data (words, memory states). This action cannot be undone.",
+    responses={
+        200: {"description": "Account deleted successfully"},
+        401: {"description": "Unauthorized"},
+        500: {"description": "Failed to delete account"},
+    }
+)
 async def delete_me(
     response: Response,
     request: Request,

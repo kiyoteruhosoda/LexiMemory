@@ -87,10 +87,6 @@ export function WordListPage() {
   return (
     <div className="vstack gap-3">
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <h2 className="mb-0">
-          <i className="fa-solid fa-list-check me-2 text-primary" />
-          Words
-        </h2>
 
         <div className="d-flex gap-2 align-items-center">
           <button

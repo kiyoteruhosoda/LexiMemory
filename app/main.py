@@ -5,11 +5,13 @@ import logging
 import os
 import signal
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.openapi.utils import get_openapi
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.middleware_bodylog import RequestBodyCaptureMiddleware
@@ -52,6 +54,94 @@ def _install_signal_handlers() -> None:
             pass
 
 
+def _get_git_version() -> str:
+    """Get git version from git_version.txt file"""
+    try:
+        with open(os.path.join(os.path.dirname(__file__), "git_version.txt"), "r") as f:
+            return f.read().strip()
+    except Exception:
+        return "unknown"
+
+
+def _get_custom_openapi(app: FastAPI) -> dict[str, Any]:
+    """Generate custom OpenAPI schema with security and tag information"""
+    if app.openapi_schema:
+        return app.openapi_schema
+    
+    output = get_openapi(
+        title=app.title,
+        version=app.version,
+        description="API for vocabulary learning with spaced repetition memory scheduling",
+        routes=app.routes,
+    )
+    
+    # Define security scheme
+    output["components"]["securitySchemes"] = {
+        "HTTPBearer": {
+            "type": "http",
+            "scheme": "bearer",
+            "description": "JWT access token (from /api/auth/login)",
+        },
+        "RefreshCookie": {
+            "type": "apiKey",
+            "in": "cookie",
+            "name": "refresh_token",
+            "description": "Refresh token stored in HttpOnly cookie",
+        },
+    }
+    
+    # Add tags documentation
+    output["tags"] = [
+        {
+            "name": "auth",
+            "description": "User authentication and token management. Login returns access token in body and refresh token in HttpOnly cookie.",
+        },
+        {
+            "name": "words",
+            "description": "Manage vocabulary words and entries. Requires authentication.",
+        },
+        {
+            "name": "study",
+            "description": "Spaced repetition study session management using FSRS algorithm.",
+        },
+        {
+            "name": "io",
+            "description": "Import/export vocabulary data in JSON format.",
+        },
+        {
+            "name": "logs",
+            "description": "Client-side logging and diagnostics.",
+        },
+    ]
+    
+    # Add servers
+    output["servers"] = [
+        {
+            "url": "http://localhost:8000",
+            "description": "Development server",
+        },
+        {
+            "url": "{protocol}://{host}:{port}",
+            "variables": {
+                "protocol": {
+                    "default": "http",
+                    "enum": ["http", "https"],
+                },
+                "host": {
+                    "default": "localhost",
+                },
+                "port": {
+                    "default": "8000",
+                },
+            },
+            "description": "Custom server",
+        },
+    ]
+    
+    app.openapi_schema = output
+    return app.openapi_schema
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # ===== startup =====
@@ -87,7 +177,15 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="Vocab App API", version="0.1.0", lifespan=lifespan)
+    app = FastAPI(
+        title="LexiMemory API",
+        version=os.getenv("VOCAB_APP_VERSION", "0.1.0"),
+        description="Vocabulary learning application with spaced repetition (FSRS algorithm)",
+        lifespan=lifespan,
+    )
+    
+    # Set custom OpenAPI schema
+    app.openapi = lambda: _get_custom_openapi(app)
 
     web_origin = os.getenv("VOCAB_WEB_ORIGIN", "http://localhost:8080")
     app.add_middleware(
@@ -110,20 +208,32 @@ def create_app() -> FastAPI:
     app.include_router(io.router, prefix="/api")
     app.include_router(logs.router, prefix="/api")
 
-
-    def get_git_version() -> str:
-        try:
-            with open(os.path.join(os.path.dirname(__file__), "git_version.txt"), "r") as f:
-                return f.read().strip()
-        except Exception:
-            return "unknown"
-
-    @app.get("/healthz")
+    @app.get(
+        "/healthz",
+        tags=["health"],
+        summary="Health check",
+        description="Check application health status",
+        responses={
+            200: {
+                "description": "Application is healthy",
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "ok": True,
+                            "version": "0.1.0",
+                            "git_version": "abc123def456",
+                        }
+                    }
+                },
+            }
+        },
+    )
     async def healthz():
+        """Health check endpoint returning application version info"""
         return {
             "ok": True,
             "version": os.getenv("VOCAB_APP_VERSION", "unknown"),
-            "git_version": get_git_version(),
+            "git_version": _get_git_version(),
         }
 
     # 422 (validation error) も ApiError に統一

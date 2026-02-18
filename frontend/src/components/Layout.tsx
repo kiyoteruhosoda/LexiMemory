@@ -18,7 +18,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
         <div className="container">
           <Link className="navbar-brand fw-bold" to="/words">
-            <i className="fa-solid fa-book me-2" />
             LexiMemory
           </Link>
 
@@ -38,13 +37,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <ul className="navbar-nav me-auto mb-2 mb-lg-0">
               <li className="nav-item">
                 <NavLink className="nav-link" to="/words">
-                  <i className="fa-solid fa-list-check me-1" />
                   Words
                 </NavLink>
               </li>
               <li className="nav-item">
                 <NavLink className="nav-link" to="/study">
-                  <i className="fa-solid fa-layer-group me-1" />
                   Study
                 </NavLink>
               </li>

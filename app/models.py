@@ -8,76 +8,105 @@ Pos = Literal["noun","verb","adj","adv","prep","conj","pron","det","interj","oth
 Rating = Literal["again","hard","good","easy"]
 
 class ExampleSentence(BaseModel):
-    id: str
-    en: str
-    ja: Optional[str] = None
-    source: Optional[str] = None
+    """Example sentence for a word"""
+    id: str = Field(..., description="Unique identifier for the example")
+    en: str = Field(..., description="Example sentence in English")
+    ja: Optional[str] = Field(None, description="Example sentence in Japanese (optional)")
+    source: Optional[str] = Field(None, description="Source of the example (book, website, etc.)")
+
 
 # ★追加：作成/更新入力用（id/createdAt/updatedAt を含めない）
 class WordUpsert(BaseModel):
-    headword: str
-    pronunciation: Optional[str] = None
-    pos: Pos
-    meaningJa: str
-    examples: List[ExampleSentence] = Field(default_factory=list)
-    tags: List[str] = Field(default_factory=list)
-    memo: Optional[str] = None
+    """Create or update a word entry"""
+    headword: str = Field(..., description="The word to learn", min_length=1)
+    pronunciation: Optional[str] = Field(None, description="Phonetic pronunciation (e.g., IPA)")
+    pos: Pos = Field(..., description="Part of speech")
+    meaningJa: str = Field(..., description="Japanese meaning", min_length=1)
+    examples: List[ExampleSentence] = Field(default_factory=list, description="Example sentences")
+    tags: List[str] = Field(default_factory=list, description="Custom tags for categorization")
+    memo: Optional[str] = Field(None, description="Personal notes or memory aids")
+
 
 class WordEntry(WordUpsert):
-    id: str
-    createdAt: str
-    updatedAt: str
+    """Complete word entry with metadata"""
+    id: str = Field(..., description="Unique word ID (UUID)")
+    createdAt: str = Field(..., description="Creation timestamp (ISO 8601)")
+    updatedAt: str = Field(..., description="Last update timestamp (ISO 8601)")
+
 
 # --- Auth Models ---
 class RegisterRequest(BaseModel):
-    username: str
-    password: str
+    """User registration request"""
+    username: str = Field(..., description="Username (unique identifier)", min_length=1, max_length=255)
+    password: str = Field(..., description="Password for the account", min_length=1)
+
 
 class LoginRequest(BaseModel):
-    username: str
-    password: str
+    """User login request"""
+    username: str = Field(..., description="Username")
+    password: str = Field(..., description="Password")
+
 
 class MeResponse(BaseModel):
-    userId: str
-    username: str
+    """Current user information"""
+    userId: str = Field(..., description="Unique user identifier (UUID)")
+    username: str = Field(..., description="Username")
+
 
 # --- Words/Mem/Export Models ---
 class WordsFile(BaseModel):
-    updatedAt: str
-    words: List[WordEntry] = Field(default_factory=list)
+    """Exported words data"""
+    updatedAt: str = Field(..., description="Last update timestamp (ISO 8601)")
+    words: List[WordEntry] = Field(default_factory=list, description="List of word entries")
+
 
 class MemoryState(BaseModel):
-    wordId: str
-    dueAt: str
-    lastRating: Optional[Rating] = None
-    lastReviewedAt: Optional[str] = None
-    memoryLevel: int = 0
-    ease: float = 2.5
-    intervalDays: int = 0
-    reviewCount: int = 0
-    lapseCount: int = 0
+    """Memory state for FSRS (Free Spaced Repetition Scheduler) algorithm"""
+    wordId: str = Field(..., description="Reference to word ID")
+    dueAt: str = Field(..., description="Next scheduled review (ISO 8601 timestamp)")
+    lastRating: Optional[Rating] = Field(None, description="Last rating response (again/hard/good/easy)")
+    lastReviewedAt: Optional[str] = Field(None, description="Last review timestamp (ISO 8601)")
+    memoryLevel: int = Field(default=0, description="Memory proficiency level")
+    ease: float = Field(default=2.5, description="FSRS ease factor (affects interval growth)")
+    intervalDays: int = Field(default=0, description="Current review interval in days")
+    reviewCount: int = Field(default=0, description="Total number of reviews")
+    lapseCount: int = Field(default=0, description="Number of times forgotten (lapsed)")
+
 
 class MemoryFile(BaseModel):
-    updatedAt: str
-    memory: List[MemoryState] = Field(default_factory=list)
+    """Exported memory state data"""
+    updatedAt: str = Field(..., description="Last update timestamp (ISO 8601)")
+    memory: List[MemoryState] = Field(default_factory=list, description="List of memory states")
+
 
 class AppData(BaseModel):
-    schemaVersion: int = 1
-    exportedAt: str
-    words: List[WordEntry] = Field(default_factory=list)
-    memory: List[MemoryState] = Field(default_factory=list)
+    """Complete application data export format"""
+    schemaVersion: int = Field(default=1, description="Data schema version for compatibility")
+    exportedAt: str = Field(..., description="Export timestamp (ISO 8601)")
+    words: List[WordEntry] = Field(default_factory=list, description="All word entries")
+    memory: List[MemoryState] = Field(default_factory=list, description="All memory states")
+
 
 # --- Study Models ---
 class GradeRequest(BaseModel):
-    wordId: str
-    rating: Rating
+    """Grade request for a studied word"""
+    wordId: str = Field(..., description="Word ID that was studied")
+    rating: Rating = Field(..., description="How well you remembered (again/hard/good/easy)")
+
 
 # --- Client Logging Models ---
 class ClientLogEntry(BaseModel):
-    timestamp: str
-    level: str  # DEBUG, INFO, WARN, ERROR
-    message: str
-    userId: Optional[str] = None
+    """Client-side log entry"""
+    timestamp: str = Field(..., description="Log timestamp (ISO 8601)")
+    level: str = Field(..., description="Log level (DEBUG/INFO/WARN/ERROR)")
+    message: str = Field(..., description="Log message")
+    userId: Optional[str] = Field(None, description="User ID (if authenticated)")
+    extra: Optional[dict] = Field(None, description="Additional context fields")
+
+
+class ClientLogBatch(BaseModel):
+    """Batch of client-side log entries"""
+    logs: List[ClientLogEntry] = Field(..., description="Array of log entries")
     extra: Optional[dict] = None
 
 class ClientLogBatch(BaseModel):

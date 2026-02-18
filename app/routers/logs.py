@@ -1,16 +1,33 @@
 # app/routers/logs.py
 
 import logging
-from fastapi import APIRouter, Request
+from fastapi import APIRouter
 from app.models import ClientLogBatch
 
 router = APIRouter(prefix="/logs", tags=["logs"])
 logger = logging.getLogger(__name__)
 
-@router.post("/client")
+@router.post(
+    "/client",
+    summary="Receive client-side logs",
+    description="Accept and aggregate client-side logs for centralized logging and monitoring. No authentication required.",
+    responses={
+        200: {
+            "description": "Logs received successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "ok": True,
+                        "received": 5
+                    }
+                }
+            }
+        },
+        422: {"description": "Validation error"},
+    }
+)
 async def receive_client_logs(
     batch: ClientLogBatch,
-    request: Request,
 ):
     """
     Receive frontend logs and write them to the server-side logger.
@@ -18,8 +35,6 @@ async def receive_client_logs(
     This endpoint allows the client-side logger to send buffered logs
     to the backend for centralized logging and monitoring.
     """
-    request_id = getattr(request.state, "request_id", "unknown")
-    
     for entry in batch.logs:
         level_name = entry.level.upper()
         log_level = getattr(logging, level_name, logging.INFO)
@@ -27,7 +42,6 @@ async def receive_client_logs(
         # Build structured log message
         log_msg = f"[CLIENT] {entry.message}"
         extra_fields = {
-            "request_id": request_id,
             "timestamp": entry.timestamp,
             "userId": entry.userId,
         }
