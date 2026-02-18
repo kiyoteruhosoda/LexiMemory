@@ -5,9 +5,22 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional, List
 from uuid import uuid4
 from ..deps import require_auth
-from ..models import WordEntry, WordUpsert
+from ..models import WordEntry, WordUpsert, ExampleSentence
 from .. import storage
 from ..services import load_words, save_words, delete_word, load_memory
+
+# Helper to ensure examples have IDs
+def _normalize_examples(examples: List[ExampleSentence]) -> List[ExampleSentence]:
+    """Ensure all examples have IDs, generating UUIDs if missing"""
+    return [
+        ExampleSentence(
+            id=ex.id or str(uuid4()),
+            en=ex.en,
+            ja=ex.ja,
+            source=ex.source
+        )
+        for ex in examples
+    ]
 
 router = APIRouter(prefix="/words", tags=["words"])
 
@@ -83,11 +96,19 @@ async def list_words_api(
 async def create_word_api(word: WordUpsert, u: dict = Depends(require_auth)):
     async with storage.user_lock(u["userId"]):
         now = storage.now_iso()
+        # Normalize examples to ensure all have IDs
+        normalized_examples = _normalize_examples(word.examples)
         w = WordEntry(
             id=str(uuid4()),
             createdAt=now,
             updatedAt=now,
-            **word.model_dump(),
+            headword=word.headword,
+            pronunciation=word.pronunciation,
+            pos=word.pos,
+            meaningJa=word.meaningJa,
+            examples=normalized_examples,
+            tags=word.tags,
+            memo=word.memo,
         )
         wf = load_words(u["userId"])
         wf.words.append(w)
@@ -121,12 +142,20 @@ async def update_word_api(
         for w in wf.words:
             if w.id == wordId:
                 found = True
+                # Normalize examples to ensure all have IDs
+                normalized_examples = _normalize_examples(word.examples)
                 new_list.append(
                     WordEntry(
                         id=wordId,
                         createdAt=w.createdAt,
                         updatedAt=now,
-                        **word.model_dump(),
+                        headword=word.headword,
+                        pronunciation=word.pronunciation,
+                        pos=word.pos,
+                        meaningJa=word.meaningJa,
+                        examples=normalized_examples,
+                        tags=word.tags,
+                        memo=word.memo,
                     )
                 )
             else:

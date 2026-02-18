@@ -5,7 +5,7 @@ from uuid import uuid4
 from datetime import datetime, timedelta, timezone
 import shutil
 from . import storage
-from .models import WordEntry, WordsFile, MemoryState, MemoryFile, Rating, AppData
+from .models import WordEntry, WordsFile, MemoryState, MemoryFile, Rating, AppData, AppDataForImport, ExampleSentence
 from .security import hash_password, verify_password
 
 UTC = timezone.utc
@@ -142,19 +142,30 @@ def create_word(
     meaningJa: str,
     pronunciation: Optional[str] = None,
     tags: Optional[list[str]] = None,
-    examples: Optional[list[dict]] = None,
+    examples: Optional[List[ExampleSentence]] = None,
+    memo: Optional[str] = None,
 ) -> WordEntry:
     now = storage.now_iso()
     wid = str(uuid4())
-    ex_list = examples or []
+    # Normalize examples to ensure all have IDs
+    ex_list: List[ExampleSentence] = []
+    if examples:
+        for ex in examples:
+            ex_list.append(ExampleSentence(
+                id=ex.id or str(uuid4()),
+                en=ex.en,
+                ja=ex.ja,
+                source=ex.source
+            ))
     word = WordEntry(
         id=wid,
         headword=headword.strip(),
-        pos=pos,  # Pydanticで検証される前提（routerで WordEntry にする場合はOK）
+        pos=pos,  # type: ignore[arg-type] # pos is expected to be Pos type from router validation
         meaningJa=meaningJa.strip(),
         pronunciation=(pronunciation.strip() if pronunciation else None),
         tags=tags or [],
         examples=ex_list,
+        memo=memo,
         createdAt=now,
         updatedAt=now,
     )
@@ -163,7 +174,12 @@ def create_word(
     # memory初期化（必要に応じて）
     mf = load_memory(userId)
     if not any(m.wordId == wid for m in mf.memory):
-        mf.memory.append(MemoryState(wordId=wid, dueAt=now))
+        mf.memory.append(MemoryState(
+            wordId=wid,
+            dueAt=now,
+            lastRating=None,
+            lastReviewedAt=None
+        ))
         save_memory(userId, mf)
     return word
 
@@ -191,7 +207,12 @@ def get_next_card(userId: str) -> Optional[dict]:
     # wordsに存在するものだけ対象
     candidates = []
     for w in wf.words:
-        m = mem_by_id.get(w.id) or MemoryState(wordId=w.id, dueAt=storage.now_iso())
+        m = mem_by_id.get(w.id) or MemoryState(
+            wordId=w.id,
+            dueAt=storage.now_iso(),
+            lastRating=None,
+            lastReviewedAt=None
+        )
         due = _parse_iso(m.dueAt)
         candidates.append((w, m, due))
 
@@ -221,7 +242,12 @@ def grade_card(userId: str, wordId: str, rating: Rating) -> MemoryState:
 
     idx = next((i for i, m in enumerate(mf.memory) if m.wordId == wordId), None)
     if idx is None:
-        m = MemoryState(wordId=wordId, dueAt=storage.now_iso())
+        m = MemoryState(
+            wordId=wordId,
+            dueAt=storage.now_iso(),
+            lastRating=None,
+            lastReviewedAt=None
+        )
         mf.memory.append(m)
         idx = len(mf.memory) - 1
 
@@ -259,12 +285,78 @@ def grade_card(userId: str, wordId: str, rating: Rating) -> MemoryState:
     return m
 
 # ---------- Import / Export ----------
+def _normalize_app_data_for_import(app_data: AppDataForImport) -> AppData:
+    """Convert AppDataForImport to AppData, generating missing IDs and timestamps"""
+    now = storage.now_iso()
+
+    # Normalize words
+    normalized_words: List[WordEntry] = []
+    for w in app_data.words:
+        # Generate ID if missing
+        word_id = w.id or str(uuid4())
+
+        # Generate timestamps if missing
+        created_at = w.createdAt or now
+        updated_at = w.updatedAt or now
+
+        # Normalize examples
+        normalized_examples: List[ExampleSentence] = []
+        for ex in w.examples:
+            example_id = ex.id or str(uuid4())
+            normalized_examples.append(ExampleSentence(
+                id=example_id,
+                en=ex.en,
+                ja=ex.ja,
+                source=ex.source
+            ))
+
+        normalized_words.append(WordEntry(
+            id=word_id,
+            headword=w.headword,
+            pronunciation=w.pronunciation,
+            pos=w.pos,
+            meaningJa=w.meaningJa,
+            examples=normalized_examples,
+            tags=w.tags,
+            memo=w.memo,
+            createdAt=created_at,
+            updatedAt=updated_at
+        ))
+
+    # Convert memory states (MemoryStateForImport -> MemoryState)
+    normalized_memory: List[MemoryState] = []
+    for m in app_data.memory:
+        normalized_memory.append(MemoryState(
+            wordId=m.wordId,
+            dueAt=m.dueAt,
+            lastRating=m.lastRating,
+            lastReviewedAt=m.lastReviewedAt,
+            memoryLevel=m.memoryLevel,
+            ease=m.ease,
+            intervalDays=m.intervalDays,
+            reviewCount=m.reviewCount,
+            lapseCount=m.lapseCount
+        ))
+
+    return AppData(
+        schemaVersion=app_data.schemaVersion,
+        exportedAt=app_data.exportedAt or now,
+        words=normalized_words,
+        memory=normalized_memory
+    )
+
+
 def export_appdata(userId: str) -> AppData:
     wf = load_words(userId)
     mf = load_memory(userId)
     return AppData(exportedAt=storage.now_iso(), words=wf.words, memory=mf.memory)
 
-def import_appdata(userId: str, app: AppData, mode: str) -> None:
+def import_appdata(userId: str, app: AppData | AppDataForImport, mode: str) -> None:
+    """Import application data, supporting both full export format and manually-created files"""
+    # Normalize AppDataForImport to AppData
+    if isinstance(app, AppDataForImport):
+        app = _normalize_app_data_for_import(app)
+
     # mode: overwrite | merge
     if mode == "overwrite":
         save_words(userId, WordsFile(updatedAt=storage.now_iso(), words=app.words))

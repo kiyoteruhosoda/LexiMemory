@@ -2,7 +2,7 @@
 from __future__ import annotations
 from fastapi import APIRouter, Depends, Query, HTTPException
 from ..deps import require_auth
-from ..models import AppData
+from ..models import AppData, AppDataForImport
 from .. import storage
 from ..services import export_appdata, import_appdata
 
@@ -28,7 +28,7 @@ async def export_api(u: dict = Depends(require_auth)):
 @router.post(
     "/import",
     summary="Import vocabulary data",
-    description="Import vocabulary data from a exported JSON file. Supports 'merge' (add new items) or 'overwrite' (replace all data) modes.",
+    description="Import vocabulary data from a exported JSON file or manually-created JSON file. Supports 'merge' (add new items) or 'overwrite' (replace all data) modes. Optional fields like ID and timestamps will be auto-generated if missing.",
     responses={
         200: {"description": "Data imported successfully"},
         400: {"description": "Invalid schema version or data format"},
@@ -37,7 +37,7 @@ async def export_api(u: dict = Depends(require_auth)):
     }
 )
 async def import_api(
-    app: AppData,
+    app: AppDataForImport,
     mode: str = Query(
         default="merge",
         pattern="^(overwrite|merge)$",
@@ -45,7 +45,7 @@ async def import_api(
     ),
     u: dict = Depends(require_auth),
 ):
-    """Import vocabulary data (merge or overwrite)"""
+    """Import vocabulary data (merge or overwrite). Supports both exported data and manually-created files."""
     async with storage.user_lock(u["userId"]):
         if app.schemaVersion != 1:
             raise HTTPException(status_code=400, detail="Unsupported schemaVersion")
