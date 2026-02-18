@@ -32,57 +32,57 @@ class ErrorResponse(BaseModel):
 
 class UnauthorizedError(BaseModel):
     """401 Unauthorized response"""
-    error: ErrorDetail = Field(..., example={
+    error: ErrorDetail = Field(..., examples=[{
         "error_code": "UNAUTHORIZED",
         "message": "Unauthorized",
         "request_id": "req-123456",
-    })
+    }])
 
 
 class BadRequestError(BaseModel):
     """400 Bad Request response"""
-    error: ErrorDetail = Field(..., example={
+    error: ErrorDetail = Field(..., examples=[{
         "error_code": "BAD_REQUEST",
         "message": "Invalid request",
         "details": {"field": "error details"},
         "request_id": "req-123456",
-    })
+    }])
 
 
 class ValidationError(BaseModel):
     """422 Unprocessable Entity response"""
-    error: ErrorDetail = Field(..., example={
+    error: ErrorDetail = Field(..., examples=[{
         "error_code": "VALIDATION_ERROR",
         "message": "Validation error",
         "request_id": "req-123456",
-    })
+    }])
 
 
 class NotFoundError(BaseModel):
     """404 Not Found response"""
-    error: ErrorDetail = Field(..., example={
+    error: ErrorDetail = Field(..., examples=[{
         "error_code": "NOT_FOUND",
         "message": "Resource not found",
         "request_id": "req-123456",
-    })
+    }])
 
 
 class ConflictError(BaseModel):
     """409 Conflict response"""
-    error: ErrorDetail = Field(..., example={
+    error: ErrorDetail = Field(..., examples=[{
         "error_code": "CONFLICT",
         "message": "Resource conflict",
         "request_id": "req-123456",
-    })
+    }])
 
 
 class InternalServerError(BaseModel):
     """500 Internal Server Error response"""
-    error: ErrorDetail = Field(..., example={
+    error: ErrorDetail = Field(..., examples=[{
         "error_code": "INTERNAL_ERROR",
         "message": "Internal Server Error",
         "request_id": "req-123456",
-    })
+    }])
 
 
 def http_error_code(status_code: int) -> str:
