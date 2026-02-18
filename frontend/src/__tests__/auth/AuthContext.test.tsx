@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../../auth/AuthContext';
 import { authApi } from '../../api/auth';
-import { tokenManager } from '../../api/client';
 
 vi.mock('../../api/auth', () => ({
   authApi: {
@@ -87,7 +86,12 @@ describe('AuthContext', () => {
     vi.mocked(authApi.refresh).mockResolvedValue(false);
     // me() always returns mockUser (after login in refresh())
     vi.mocked(authApi.me).mockResolvedValue(mockUser);
-    vi.mocked(authApi.login).mockResolvedValue(undefined);
+    vi.mocked(authApi.login).mockResolvedValue({
+      ok: true,
+      access_token: 'mock-token',
+      token_type: 'Bearer',
+      expires_in: 900,
+    });
 
     render(
       <AuthProvider>
