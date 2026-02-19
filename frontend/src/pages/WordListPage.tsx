@@ -4,6 +4,7 @@ import { wordsApi } from "../api/words.offline";
 import { ioApi } from "../api/io.offline";
 import type { WordEntry, MemoryState } from "../api/types";
 import { ImportModal } from "../components/ImportModal";
+import SyncButton from "../components/SyncButton";
 
 export function WordListPage() {
   const navigate = useNavigate();
@@ -13,6 +14,7 @@ export function WordListPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
   async function reload() {
     setError(null);
@@ -62,14 +64,29 @@ export function WordListPage() {
   return (
     <div className="vstack gap-3">
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-
-        <div className="d-flex gap-2 align-items-center">
+        <div className="d-flex gap-2 align-items-center flex-wrap">
           <button
             className="btn btn-primary"
             onClick={() => navigate("/words/create")}
           >
             <i className="fa-solid fa-plus me-1" />
             Add
+          </button>
+
+          <button
+            className="btn btn-outline-primary"
+            onClick={() => navigate("/study")}
+          >
+            <i className="fa-solid fa-graduation-cap me-1" />
+            Study
+          </button>
+
+          <button
+            className="btn btn-outline-secondary"
+            onClick={() => setShowSearch(!showSearch)}
+            title="Toggle search"
+          >
+            <i className="fa-solid fa-magnifying-glass" />
           </button>
 
           <div className="btn-group d-none d-md-flex">
@@ -92,28 +109,45 @@ export function WordListPage() {
               Import
             </button>
           </div>
-
-          <form
-            className="d-flex gap-2"
-            onSubmit={(e) => { e.preventDefault(); void reload(); }}
-          >
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="fa-solid fa-magnifying-glass" />
-              </span>
-              <input
-                className="form-control"
-                placeholder="Search (EN/JA)"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-              />
-            </div>
-            <button className="btn btn-outline-primary" type="submit" disabled={busy}>
-              {busy ? <span className="spinner-border spinner-border-sm" /> : <i className="fa-solid fa-filter" />}
-            </button>
-          </form>
         </div>
+
+        <SyncButton />
       </div>
+
+      {/* Search Form - Collapsible */}
+      {showSearch && (
+        <form
+          className="card border shadow-sm"
+          onSubmit={(e) => { e.preventDefault(); void reload(); }}
+        >
+          <div className="card-body">
+            <div className="d-flex gap-2">
+              <div className="input-group">
+                <span className="input-group-text">
+                  <i className="fa-solid fa-magnifying-glass" />
+                </span>
+                <input
+                  className="form-control"
+                  placeholder="Search (EN/JA)"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <button className="btn btn-outline-primary" type="submit" disabled={busy}>
+                {busy ? <span className="spinner-border spinner-border-sm" /> : <i className="fa-solid fa-filter" />}
+              </button>
+              <button 
+                type="button"
+                className="btn btn-outline-secondary" 
+                onClick={() => { setQ(""); setShowSearch(false); void reload(); }}
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
 
       {error ? (
         <div className="alert alert-danger" role="alert">

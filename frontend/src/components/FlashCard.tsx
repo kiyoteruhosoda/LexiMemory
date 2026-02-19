@@ -18,6 +18,12 @@ export function FlashCard({ word, memory, onRate }: Props) {
     setShowAnswer(false);
   }, [word.id]);
 
+  // Wrapper to reset showAnswer before calling onRate
+  async function handleRate(rating: Rating) {
+    setShowAnswer(false);
+    await onRate(rating);
+  }
+
   function speak() {
     if (!canSpeak) return;
     const ut = new SpeechSynthesisUtterance(word.headword);
@@ -104,7 +110,7 @@ export function FlashCard({ word, memory, onRate }: Props) {
               <div className="col-6 col-md-3">
                 <button
                   className="btn btn-outline-danger w-100"
-                  onClick={() => void onRate("again")}
+                  onClick={() => void handleRate("again")}
                 >
                   <i className="fa-solid fa-rotate-left me-1" /> Again
                 </button>
@@ -113,7 +119,7 @@ export function FlashCard({ word, memory, onRate }: Props) {
               <div className="col-6 col-md-3">
                 <button
                   className="btn btn-outline-warning w-100"
-                  onClick={() => void onRate("hard")}
+                  onClick={() => void handleRate("hard")}
                 >
                   <i className="fa-solid fa-hand me-1" /> Hard
                 </button>
@@ -122,7 +128,7 @@ export function FlashCard({ word, memory, onRate }: Props) {
               <div className="col-6 col-md-3">
                 <button
                   className="btn btn-outline-primary w-100"
-                  onClick={() => void onRate("good")}
+                  onClick={() => void handleRate("good")}
                 >
                   <i className="fa-solid fa-thumbs-up me-1" /> Good
                 </button>
@@ -131,7 +137,7 @@ export function FlashCard({ word, memory, onRate }: Props) {
               <div className="col-6 col-md-3">
                 <button
                   className="btn btn-outline-success w-100"
-                  onClick={() => void onRate("easy")}
+                  onClick={() => void handleRate("easy")}
                 >
                   <i className="fa-solid fa-face-smile me-1" /> Easy
                 </button>

@@ -148,7 +148,7 @@ export function ImportModal({ show, onClose, onSuccess }: ImportModalProps) {
               </>
             ) : (
               <>
-                <i className="fa-solid fa-upload me-2" />
+                <i className="fa-solid fa-download me-2" />
                 Import
               </>
             )}

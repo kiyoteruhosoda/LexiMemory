@@ -356,3 +356,264 @@ async def test_next_card_word_with_multiple_tags(authenticated_client: tuple[Asy
     response = await client.get("/api/study/next?tags=work", headers=headers)
     assert response.status_code == 200
     assert response.json()["card"]["word"]["headword"] == "meeting"
+
+
+@pytest.mark.asyncio
+async def test_memory_level_progression_with_ratings(authenticated_client: tuple[AsyncClient, dict, str]):
+    """Test detailed memory level progression with different ratings.
+    
+    This ensures that the spaced repetition algorithm correctly updates
+    memoryLevel based on user ratings.
+    """
+    client, _, access_token = authenticated_client
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Create a test word
+    create_response = await client.post(
+        "/api/words",
+        json={"headword": "progress", "pos": "noun", "meaningJa": "進捗"},
+        headers=headers
+    )
+    word_id = create_response.json()["word"]["id"]
+    
+    # Initial state: memoryLevel should be 0
+    next_response = await client.get("/api/study/next", headers=headers)
+    initial_memory = next_response.json()["card"]["memory"]
+    assert initial_memory["memoryLevel"] == 0, "Initial memoryLevel should be 0"
+    
+    # Test "again" rating - should keep level low or reset
+    grade_response = await client.post(
+        "/api/study/grade",
+        json={"wordId": word_id, "rating": "again"},
+        headers=headers
+    )
+    memory_after_again = grade_response.json()["memory"]
+    assert memory_after_again["lastRating"] == "again"
+    # After "again", memoryLevel should stay at 0 or remain low
+    assert memory_after_again["memoryLevel"] <= 1, "After 'again', memoryLevel should stay low"
+    
+    # Test "good" rating - should increase level
+    grade_response = await client.post(
+        "/api/study/grade",
+        json={"wordId": word_id, "rating": "good"},
+        headers=headers
+    )
+    memory_after_good = grade_response.json()["memory"]
+    assert memory_after_good["lastRating"] == "good"
+    assert memory_after_good["memoryLevel"] >= memory_after_again["memoryLevel"], \
+        "'good' rating should maintain or increase memoryLevel"
+    
+    # Test "easy" rating - should increase level more
+    prev_level = memory_after_good["memoryLevel"]
+    grade_response = await client.post(
+        "/api/study/grade",
+        json={"wordId": word_id, "rating": "easy"},
+        headers=headers
+    )
+    memory_after_easy = grade_response.json()["memory"]
+    assert memory_after_easy["lastRating"] == "easy"
+    assert memory_after_easy["memoryLevel"] > prev_level, \
+        "'easy' rating should increase memoryLevel"
+    
+    # Continue with "easy" multiple times to reach mastery (level >= 4)
+    for i in range(5):
+        grade_response = await client.post(
+            "/api/study/grade",
+            json={"wordId": word_id, "rating": "easy"},
+            headers=headers
+        )
+        memory = grade_response.json()["memory"]
+        if memory["memoryLevel"] >= 4:
+            break
+    
+    # Verify that we reached mastery level
+    final_response = await client.post(
+        "/api/study/grade",
+        json={"wordId": word_id, "rating": "good"},
+        headers=headers
+    )
+    final_memory = final_response.json()["memory"]
+    assert final_memory["memoryLevel"] >= 4, \
+        "After multiple 'easy' ratings, should reach mastery (level >= 4)"
+
+
+@pytest.mark.asyncio
+async def test_memory_level_decreases_with_again(authenticated_client: tuple[AsyncClient, dict, str]):
+    """Test that memoryLevel decreases or resets when 'again' is selected.
+    
+    This is a regression test to ensure the algorithm correctly handles
+    forgetting a word.
+    """
+    client, _, access_token = authenticated_client
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Create a word
+    create_response = await client.post(
+        "/api/words",
+        json={"headword": "forget", "pos": "verb", "meaningJa": "忘れる"},
+        headers=headers
+    )
+    word_id = create_response.json()["word"]["id"]
+    
+    # Build up memoryLevel with "good" ratings
+    for _ in range(3):
+        await client.post(
+            "/api/study/grade",
+            json={"wordId": word_id, "rating": "good"},
+            headers=headers
+        )
+    
+    # Get current memoryLevel
+    next_response = await client.get("/api/study/next", headers=headers)
+    if next_response.json()["card"] and next_response.json()["card"]["word"]["id"] == word_id:
+        high_level = next_response.json()["card"]["memory"]["memoryLevel"]
+    else:
+        # Word might not be due yet, grade again to get memory state
+        grade_response = await client.post(
+            "/api/study/grade",
+            json={"wordId": word_id, "rating": "good"},
+            headers=headers
+        )
+        high_level = grade_response.json()["memory"]["memoryLevel"]
+    
+    assert high_level > 0, "After 'good' ratings, memoryLevel should be > 0"
+    
+    # Now select "again" - should decrease level by 1
+    again_response = await client.post(
+        "/api/study/grade",
+        json={"wordId": word_id, "rating": "again"},
+        headers=headers
+    )
+    low_level = again_response.json()["memory"]["memoryLevel"]
+    
+    # memoryLevel should decrease by 1 (but not go below 0)
+    assert low_level == max(0, high_level - 1), \
+        f"'again' rating should decrease memoryLevel by 1 (was {high_level}, now {low_level})"
+    
+    # Select "again" multiple times to reach 0
+    while low_level > 0:
+        again_response = await client.post(
+            "/api/study/grade",
+            json={"wordId": word_id, "rating": "again"},
+            headers=headers
+        )
+        new_level = again_response.json()["memory"]["memoryLevel"]
+        assert new_level == max(0, low_level - 1), \
+            f"Each 'again' should decrease by 1 (was {low_level}, now {new_level})"
+        low_level = new_level
+    
+    # Verify we reached 0
+    assert low_level == 0, "Multiple 'again' ratings should eventually reach memoryLevel 0"
+
+
+@pytest.mark.asyncio
+async def test_interval_increases_with_level(authenticated_client: tuple[AsyncClient, dict, str]):
+    """Test that intervalDays increases as memoryLevel increases.
+    
+    This ensures the spaced repetition intervals are working correctly.
+    """
+    client, _, access_token = authenticated_client
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Create a word
+    create_response = await client.post(
+        "/api/words",
+        json={"headword": "interval", "pos": "noun", "meaningJa": "間隔"},
+        headers=headers
+    )
+    word_id = create_response.json()["word"]["id"]
+    
+    prev_interval = 0
+    
+    # Grade with "good" multiple times and track interval growth
+    for i in range(5):
+        grade_response = await client.post(
+            "/api/study/grade",
+            json={"wordId": word_id, "rating": "good"},
+            headers=headers
+        )
+        memory = grade_response.json()["memory"]
+        current_interval = memory["intervalDays"]
+        
+        if i > 0:
+            # Interval should increase or stay the same (but usually increase)
+            assert current_interval >= prev_interval, \
+                f"intervalDays should increase or stay same (iteration {i})"
+        
+        prev_interval = current_interval
+    
+    # After multiple "good" ratings, interval should be significantly larger than initial
+    assert prev_interval > 0, "intervalDays should increase with successful reviews"
+
+
+@pytest.mark.asyncio
+async def test_review_count_increments(authenticated_client: tuple[AsyncClient, dict, str]):
+    """Test that reviewCount increments with each grade."""
+    client, _, access_token = authenticated_client
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Create a word
+    create_response = await client.post(
+        "/api/words",
+        json={"headword": "count", "pos": "noun", "meaningJa": "数"},
+        headers=headers
+    )
+    word_id = create_response.json()["word"]["id"]
+    
+    # Grade multiple times
+    for i in range(1, 6):
+        grade_response = await client.post(
+            "/api/study/grade",
+            json={"wordId": word_id, "rating": "good"},
+            headers=headers
+        )
+        memory = grade_response.json()["memory"]
+        assert memory["reviewCount"] == i, \
+            f"reviewCount should be {i} after {i} reviews"
+
+
+@pytest.mark.asyncio
+async def test_lapse_count_increments_with_again(authenticated_client: tuple[AsyncClient, dict, str]):
+    """Test that lapseCount increments when 'again' is selected."""
+    client, _, access_token = authenticated_client
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Create a word
+    create_response = await client.post(
+        "/api/words",
+        json={"headword": "lapse", "pos": "noun", "meaningJa": "失敗"},
+        headers=headers
+    )
+    word_id = create_response.json()["word"]["id"]
+    
+    # Initial lapse count should be 0
+    next_response = await client.get("/api/study/next", headers=headers)
+    initial_memory = next_response.json()["card"]["memory"]
+    assert initial_memory["lapseCount"] == 0, "Initial lapseCount should be 0"
+    
+    # Grade with "again" - lapseCount should increment
+    grade_response = await client.post(
+        "/api/study/grade",
+        json={"wordId": word_id, "rating": "again"},
+        headers=headers
+    )
+    memory = grade_response.json()["memory"]
+    assert memory["lapseCount"] == 1, "lapseCount should increment after 'again'"
+    
+    # Grade with "again" again
+    grade_response = await client.post(
+        "/api/study/grade",
+        json={"wordId": word_id, "rating": "again"},
+        headers=headers
+    )
+    memory = grade_response.json()["memory"]
+    assert memory["lapseCount"] == 2, "lapseCount should increment again"
+    
+    # Grade with "good" - lapseCount should not increment
+    grade_response = await client.post(
+        "/api/study/grade",
+        json={"wordId": word_id, "rating": "good"},
+        headers=headers
+    )
+    memory = grade_response.json()["memory"]
+    assert memory["lapseCount"] == 2, "lapseCount should not change for non-'again' ratings"

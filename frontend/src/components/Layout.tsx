@@ -3,7 +3,6 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../auth/AuthContext";
-import SyncButton from "./SyncButton";
 import { SyncDetailsModal } from "./SyncDetailsModal";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -80,14 +79,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <i className="fa-solid fa-user me-1" />
                   {state.me.username}
                 </span>
-                <SyncButton />
                 <button className="btn btn-outline-light btn-sm" onClick={() => void onLogout()}>
                   <i className="fa-solid fa-right-from-bracket me-1" />
                   Logout
                 </button>
               </div>
             ) : (
-              <span className="text-secondary small">Guest</span>
+              <div className="d-flex align-items-center gap-2">
+                <span className="text-secondary small">
+                  <i className="fa-solid fa-user me-1" />
+                  Guest
+                </span>
+                <button 
+                  className="btn btn-outline-light btn-sm" 
+                  onClick={() => nav("/login")}
+                >
+                  <i className="fa-solid fa-right-to-bracket me-1" />
+                  Login
+                </button>
+              </div>
             )}
           </div>
         </div>

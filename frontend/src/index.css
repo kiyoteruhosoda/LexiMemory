@@ -18,8 +18,18 @@ a {
   color: #646cff;
   text-decoration: inherit;
 }
-a:hover {
-  color: #535bf2;
+/* Only apply hover effects on devices that support hover (not touch devices) */
+@media (hover: hover) and (pointer: fine) {
+  a:hover {
+    color: #535bf2;
+  }
+}
+
+/* For touch devices, use active state instead */
+@media (hover: none) and (pointer: coarse) {
+  a:active {
+    color: #535bf2;
+  }
 }
 
 body {
@@ -46,8 +56,18 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
-  border-color: #646cff;
+/* Only apply hover effects on devices that support hover (not touch devices) */
+@media (hover: hover) and (pointer: fine) {
+  button:hover {
+    border-color: #646cff;
+  }
+}
+
+/* For touch devices, use active state instead */
+@media (hover: none) and (pointer: coarse) {
+  button:active {
+    border-color: #646cff;
+  }
 }
 button:focus,
 button:focus-visible {
@@ -59,8 +79,11 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
-  a:hover {
-    color: #747bff;
+  /* Only apply hover on devices that support hover */
+  @media (hover: hover) and (pointer: fine) {
+    a:hover {
+      color: #747bff;
+    }
   }
   button {
     background-color: #f9f9f9;
@@ -83,5 +106,18 @@ button:focus-visible {
   /* Disable hover effects on touch devices (prevents gray/highlight from sticking) */
   * {
     -webkit-tap-highlight-color: transparent !important;
+  }
+  
+  /* Prevent Bootstrap hover states from sticking on touch devices */
+  .btn:hover,
+  .btn-outline-primary:hover,
+  .btn-outline-secondary:hover,
+  .btn-outline-danger:hover,
+  .btn-outline-warning:hover,
+  .btn-outline-success:hover,
+  .btn-outline-light:hover {
+    color: inherit;
+    background-color: transparent;
+    border-color: inherit;
   }
 }

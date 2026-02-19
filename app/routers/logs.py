@@ -35,6 +35,9 @@ async def receive_client_logs(
     This endpoint allows the client-side logger to send buffered logs
     to the backend for centralized logging and monitoring.
     """
+    # Batch-level extra fields (shared by all entries)
+    batch_extra = batch.extra or {}
+    
     for entry in batch.logs:
         level_name = entry.level.upper()
         log_level = getattr(logging, level_name, logging.INFO)
@@ -46,8 +49,9 @@ async def receive_client_logs(
             "userId": entry.userId,
         }
         
-        if entry.extra:
-            extra_fields.update(entry.extra)
+        # Add batch-level extra fields
+        if batch_extra:
+            extra_fields.update(batch_extra)
         
         # Log to server logger with appropriate level
         logger.log(log_level, log_msg, extra=extra_fields)

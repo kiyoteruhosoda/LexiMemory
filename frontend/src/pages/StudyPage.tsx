@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { studyApi } from "../api/study.offline";
 import type { WordEntry, MemoryState, Rating } from "../api/types";
 import { FlashCard } from "../components/FlashCard";
+import SyncButton from "../components/SyncButton";
 
 export function StudyPage() {
+  const navigate = useNavigate();
   const [word, setWord] = useState<WordEntry | null>(null);
   const [memory, setMemory] = useState<MemoryState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -75,60 +78,76 @@ export function StudyPage() {
 
   return (
     <div className="vstack gap-3">
-      {/* Tag Filter */}
-      {allTags.length > 0 && (
+      {/* Header with actions */}
+      <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <div className="d-flex gap-2 align-items-center">
+          <button
+            className="btn btn-outline-primary"
+            onClick={() => navigate("/words")}
+          >
+            <i className="fa-solid fa-book me-1" />
+            Words
+          </button>
+
+          {/* Tag Filter Button */}
+          {allTags.length > 0 && (
+            <button
+              className={`btn ${appliedTags && appliedTags.length > 0 ? 'btn-primary' : 'btn-outline-secondary'}`}
+              onClick={() => setIsFilterExpanded(!isFilterExpanded)}
+              title="Filter by tags"
+            >
+              <i className="fa-solid fa-tag me-1" />
+              {appliedTags && appliedTags.length > 0 ? `${appliedTags.length}` : 'Tags'}
+            </button>
+          )}
+        </div>
+
+        <SyncButton />
+      </div>
+
+      {/* Tag Filter Panel - Collapsible */}
+      {isFilterExpanded && allTags.length > 0 && (
         <div className="card border shadow-sm">
           <div className="card-body">
-            <div className="d-flex align-items-center justify-content-between">
-              <div>
-                <strong>Tag Filter</strong>
-                {appliedTags && appliedTags.length > 0 && (
-                  <span className="ms-2 text-muted small">
-                    Filtering by {appliedTags.length} tag{appliedTags.length > 1 ? 's' : ''}
-                  </span>
-                )}
-              </div>
+            <div className="d-flex align-items-center justify-content-between mb-3">
+              <strong>Filter by Tags</strong>
               <button
                 className="btn btn-sm btn-outline-secondary"
-                onClick={() => setIsFilterExpanded(!isFilterExpanded)}
+                onClick={() => setIsFilterExpanded(false)}
               >
-                {isFilterExpanded ? "Close" : "Open"}
+                <i className="fa-solid fa-times" />
               </button>
             </div>
-
-            {isFilterExpanded && (
-              <div className="mt-3">
-                <div className="d-flex flex-wrap gap-2 mb-3">
-                  {allTags.map((tag) => (
-                    <button
-                      key={tag}
-                      className={`btn btn-sm ${
-                        selectedTags.includes(tag)
-                          ? "btn-primary"
-                          : "btn-outline-secondary"
-                      }`}
-                      onClick={() => toggleTagSelection(tag)}
-                    >
-                      {tag}
-                    </button>
-                  ))}
-                </div>
-                <div className="d-flex gap-2 justify-content-end">
-                  <button
-                    className="btn btn-sm btn-outline-secondary"
-                    onClick={clearFilter}
-                  >
-                    Clear
-                  </button>
-                  <button
-                    className="btn btn-sm btn-primary"
-                    onClick={applyFilter}
-                  >
-                    Apply
-                  </button>
-                </div>
-              </div>
-            )}
+            
+            <div className="d-flex flex-wrap gap-2 mb-3">
+              {allTags.map((tag) => (
+                <button
+                  key={tag}
+                  className={`btn btn-sm ${
+                    selectedTags.includes(tag)
+                      ? "btn-primary"
+                      : "btn-outline-secondary"
+                  }`}
+                  onClick={() => toggleTagSelection(tag)}
+                >
+                  {tag}
+                </button>
+              ))}
+            </div>
+            <div className="d-flex gap-2 justify-content-end">
+              <button
+                className="btn btn-sm btn-outline-secondary"
+                onClick={clearFilter}
+              >
+                Clear
+              </button>
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={applyFilter}
+              >
+                Apply
+              </button>
+            </div>
           </div>
         </div>
       )}
