@@ -65,20 +65,20 @@ export default function SyncButton() {
         // Success
         await loadStatus();
         setError(null);
-        setSuccessMessage("同期が完了しました");
+        setSuccessMessage("Sync completed successfully");
       } else if (result.status === "conflict") {
         // Conflict - show resolution dialog
         setConflict(result);
       } else {
         // Error
-        setError(result.message || "同期に失敗しました");
+        setError(result.message || "Sync failed");
       }
     } catch (err: any) {
       // Check if authentication error
       if (err.status === 401) {
         setShowLoginPrompt(true);
       } else {
-        setError(err.message || "同期に失敗しました");
+        setError(err.message || "Sync failed");
       }
     } finally {
       setSyncing(false);
@@ -94,9 +94,9 @@ export default function SyncButton() {
       await resolveConflict(strategy);
       setConflict(null);
       await loadStatus();
-      setSuccessMessage("競合を解決しました");
+      setSuccessMessage("Conflict resolved successfully");
     } catch (err: any) {
-      setError(err.message || "競合の解決に失敗しました");
+      setError(err.message || "Failed to resolve conflict");
     } finally {
       setSyncing(false);
     }
@@ -107,7 +107,7 @@ export default function SyncButton() {
   }
 
   const formatLastSync = (lastSyncAt: string | null) => {
-    if (!lastSyncAt) return "未同期";
+    if (!lastSyncAt) return "Never synced";
 
     try {
       const date = new Date(lastSyncAt);
@@ -115,14 +115,14 @@ export default function SyncButton() {
       const diffMs = now.getTime() - date.getTime();
       const diffMins = Math.floor(diffMs / 60000);
 
-      if (diffMins < 1) return "たった今";
-      if (diffMins < 60) return `${diffMins}分前`;
+      if (diffMins < 1) return "Just now";
+      if (diffMins < 60) return `${diffMins} min ago`;
 
       const diffHours = Math.floor(diffMins / 60);
-      if (diffHours < 24) return `${diffHours}時間前`;
+      if (diffHours < 24) return `${diffHours} hours ago`;
 
       const diffDays = Math.floor(diffHours / 24);
-      return `${diffDays}日前`;
+      return `${diffDays} days ago`;
     } catch {
       return lastSyncAt;
     }
@@ -133,12 +133,12 @@ export default function SyncButton() {
       <div className="sync-panel border rounded p-3 bg-light">
         <div className="d-flex justify-content-between align-items-center mb-2">
           <div>
-            <strong>同期状態</strong>
+            <strong>Sync Status</strong>
             <div className="small text-muted">
               {status.online ? (
-                <span className="text-success">● オンライン</span>
+                <span className="text-success">● Online</span>
               ) : (
-                <span className="text-secondary">● オフライン</span>
+                <span className="text-secondary">● Offline</span>
               )}
             </div>
           </div>
@@ -154,12 +154,12 @@ export default function SyncButton() {
                   role="status"
                   aria-hidden="true"
                 ></span>
-                同期中...
+                Syncing...
               </>
             ) : (
               <>
                 <i className="fas fa-sync-alt me-2"></i>
-                同期
+                Sync
               </>
             )}
           </button>
@@ -167,12 +167,12 @@ export default function SyncButton() {
 
         <div className="small">
           <div>
-            最終同期: {formatLastSync(status.lastSyncAt)}
+            Last sync: {formatLastSync(status.lastSyncAt)}
           </div>
           {status.dirty && (
             <div className="text-warning">
               <i className="fas fa-exclamation-circle me-1"></i>
-              未同期の変更があります
+              Unsaved changes pending
             </div>
           )}
         </div>
@@ -195,19 +195,19 @@ export default function SyncButton() {
         <Modal
           show={showLoginPrompt}
           onClose={() => setShowLoginPrompt(false)}
-          title="ログインが必要です"
+          title="Login Required"
         >
-          <p>同期を行うにはログインが必要です。</p>
+          <p>You need to login to sync your data.</p>
           <div className="modal-footer">
             <button
               type="button"
               className="btn btn-secondary"
               onClick={() => setShowLoginPrompt(false)}
             >
-              キャンセル
+              Cancel
             </button>
             <a href="/login" className="btn btn-primary">
-              ログインページへ
+              Go to Login
             </a>
           </div>
         </Modal>
@@ -218,27 +218,27 @@ export default function SyncButton() {
         <Modal
           show={true}
           onClose={() => setConflict(null)}
-          title="競合が発生しました"
+          title="Sync Conflict Detected"
         >
           <div>
             <p>
-              サーバー上のデータが別の端末から更新されています。
-              どちらのバージョンを採用しますか？
+              The server data has been updated from another device.
+              Which version would you like to keep?
             </p>
 
             <div className="alert alert-warning">
-              <strong>注意:</strong> 選択しなかった方のデータは失われます。
+              <strong>Warning:</strong> The unselected version will be lost.
             </div>
 
             <div className="row">
               <div className="col-md-6">
                 <div className="card">
                   <div className="card-body">
-                    <h6 className="card-title">ローカル版</h6>
+                    <h6 className="card-title">Local Version</h6>
                     <p className="small">
-                      単語数: {conflict.localFile.words.length}
+                      Words: {conflict.localFile.words.length}
                       <br />
-                      更新日時:{" "}
+                      Updated:{" "}
                       {new Date(
                         conflict.localFile.updatedAt
                       ).toLocaleString()}
@@ -249,16 +249,16 @@ export default function SyncButton() {
               <div className="col-md-6">
                 <div className="card">
                   <div className="card-body">
-                    <h6 className="card-title">サーバー版</h6>
+                    <h6 className="card-title">Server Version</h6>
                     <p className="small">
-                      単語数: {conflict.serverData.file.words.length}
+                      Words: {conflict.serverData.file.words.length}
                       <br />
-                      更新日時:{" "}
+                      Updated:{" "}
                       {new Date(
                         conflict.serverData.updatedAt
                       ).toLocaleString()}
                       <br />
-                      更新元: {conflict.serverData.updatedByClientId.slice(0, 8)}...
+                      Client: {conflict.serverData.updatedByClientId.slice(0, 8)}...
                     </p>
                   </div>
                 </div>
@@ -272,7 +272,7 @@ export default function SyncButton() {
                 onClick={() => handleResolveConflict("fetch-server")}
                 disabled={syncing}
               >
-                サーバー版を取得
+                Use Server Version
               </button>
               <button
                 type="button"
@@ -280,7 +280,7 @@ export default function SyncButton() {
                 onClick={() => handleResolveConflict("force-local")}
                 disabled={syncing}
               >
-                ローカル版で上書き
+                Use Local Version
               </button>
             </div>
           </div>

@@ -79,7 +79,7 @@ export function WordListPage() {
               disabled={busy}
               title="Export all data"
             >
-              <i className="fa-solid fa-download me-1" />
+              <i className="fa-solid fa-upload me-1" />
               Export
             </button>
             <button
@@ -88,7 +88,7 @@ export function WordListPage() {
               disabled={busy}
               title="Import data from file"
             >
-              <i className="fa-solid fa-upload me-1" />
+              <i className="fa-solid fa-download me-1" />
               Import
             </button>
           </div>

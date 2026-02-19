@@ -27,7 +27,7 @@ export function ImportModal({ show, onClose, onSuccess }: ImportModalProps) {
 
   const handleImport = async () => {
     if (!file) {
-      setError("ファイルを選択してください");
+      setError("Please select a file");
       return;
     }
 
@@ -43,7 +43,7 @@ export function ImportModal({ show, onClose, onSuccess }: ImportModalProps) {
       setFile(null);
       setMode("merge");
     } catch (e: any) {
-      setError(e?.message || "インポートに失敗しました");
+      setError(e?.message || "Import failed");
     } finally {
       setBusy(false);
     }
@@ -59,11 +59,11 @@ export function ImportModal({ show, onClose, onSuccess }: ImportModalProps) {
   };
 
   return (
-    <Modal show={show} onClose={handleClose} title="データをインポート">
+    <Modal show={show} onClose={handleClose} title="Import Data">
       <div className="vstack gap-3">
         <div>
           <label htmlFor="import-file" className="form-label">
-            JSONファイルを選択
+            Select JSON File
           </label>
           <input
             id="import-file"
@@ -82,7 +82,7 @@ export function ImportModal({ show, onClose, onSuccess }: ImportModalProps) {
         </div>
 
         <div>
-          <label className="form-label">インポートモード</label>
+          <label className="form-label">Import Mode</label>
           <div className="form-check">
             <input
               className="form-check-input"
@@ -95,9 +95,9 @@ export function ImportModal({ show, onClose, onSuccess }: ImportModalProps) {
               disabled={busy}
             />
             <label className="form-check-label" htmlFor="mode-merge">
-              <strong>マージ</strong>
+              <strong>Merge</strong>
               <div className="text-muted small">
-                既存データと統合します。IDが重複する場合は新しいデータで上書きされます。
+                Merge with existing data. Duplicates will be overwritten by new data.
               </div>
             </label>
           </div>
@@ -113,9 +113,9 @@ export function ImportModal({ show, onClose, onSuccess }: ImportModalProps) {
               disabled={busy}
             />
             <label className="form-check-label" htmlFor="mode-overwrite">
-              <strong>上書き</strong>
+              <strong>Overwrite</strong>
               <div className="text-muted small">
-                既存の全データを削除してインポートします。（注意: 既存データは失われます）
+                Delete all existing data and import. (Warning: existing data will be lost)
               </div>
             </label>
           </div>
@@ -134,7 +134,7 @@ export function ImportModal({ show, onClose, onSuccess }: ImportModalProps) {
             onClick={handleClose}
             disabled={busy}
           >
-            キャンセル
+            Cancel
           </button>
           <button
             className="btn btn-primary"
@@ -144,12 +144,12 @@ export function ImportModal({ show, onClose, onSuccess }: ImportModalProps) {
             {busy ? (
               <>
                 <span className="spinner-border spinner-border-sm me-2" />
-                インポート中...
+                Importing...
               </>
             ) : (
               <>
                 <i className="fa-solid fa-upload me-2" />
-                インポート
+                Import
               </>
             )}
           </button>

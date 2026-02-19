@@ -81,10 +81,10 @@ export function StudyPage() {
           <div className="card-body">
             <div className="d-flex align-items-center justify-content-between">
               <div>
-                <strong>タグフィルター</strong>
+                <strong>Tag Filter</strong>
                 {appliedTags && appliedTags.length > 0 && (
                   <span className="ms-2 text-muted small">
-                    {appliedTags.length}個のタグで絞り込み中
+                    Filtering by {appliedTags.length} tag{appliedTags.length > 1 ? 's' : ''}
                   </span>
                 )}
               </div>
@@ -92,7 +92,7 @@ export function StudyPage() {
                 className="btn btn-sm btn-outline-secondary"
                 onClick={() => setIsFilterExpanded(!isFilterExpanded)}
               >
-                {isFilterExpanded ? "閉じる" : "開く"}
+                {isFilterExpanded ? "Close" : "Open"}
               </button>
             </div>
 
@@ -118,13 +118,13 @@ export function StudyPage() {
                     className="btn btn-sm btn-outline-secondary"
                     onClick={clearFilter}
                   >
-                    クリア
+                    Clear
                   </button>
                   <button
                     className="btn btn-sm btn-primary"
                     onClick={applyFilter}
                   >
-                    適用
+                    Apply
                   </button>
                 </div>
               </div>

@@ -87,12 +87,14 @@ describe('ConfirmModal', () => {
         show={true}
         onClose={mockOnClose}
         onConfirm={mockOnConfirm}
-        title="確認"
-        message="本当に削除しますか？"
+        title="Confirm"
+        message="Are you sure you want to delete?"
+        confirmText="Delete"
+        cancelText="Cancel"
       />
     );
 
-    expect(screen.getByText('確認')).toBeInTheDocument();
+    expect(screen.getByText('Confirm')).toBeInTheDocument();
     expect(screen.getByText('本当に削除しますか？')).toBeInTheDocument();
   });
 

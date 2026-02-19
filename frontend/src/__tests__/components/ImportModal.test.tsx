@@ -22,20 +22,20 @@ describe('ImportModal', () => {
   it('should render when show is true', () => {
     render(<ImportModal show={true} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
     
-    expect(screen.getByText('データをインポート')).toBeInTheDocument();
-    expect(screen.getByLabelText('JSONファイルを選択')).toBeInTheDocument();
+    expect(screen.getByText('Import Data')).toBeInTheDocument();
+    expect(screen.getByLabelText('Select JSON File')).toBeInTheDocument();
   });
 
   it('should not render when show is false', () => {
     render(<ImportModal show={false} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
     
-    expect(screen.queryByText('データをインポート')).not.toBeInTheDocument();
+    expect(screen.queryByText('Import Data')).not.toBeInTheDocument();
   });
 
   it('should default to merge mode', () => {
     render(<ImportModal show={true} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
     
-    const mergeRadio = screen.getByRole('radio', { name: /マージ/i });
+    const mergeRadio = screen.getByRole('radio', { name: /Merge/i });
     expect(mergeRadio).toBeChecked();
   });
 
@@ -54,7 +54,7 @@ describe('ImportModal', () => {
     render(<ImportModal show={true} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
     
     const file = new File(['{"schemaVersion":1,"words":[]}'], 'test.json', { type: 'application/json' });
-    const input = screen.getByLabelText('JSONファイルを選択') as HTMLInputElement;
+    const input = screen.getByLabelText('Select JSON File') as HTMLInputElement;
     
     await user.upload(input, file);
     
@@ -64,7 +64,7 @@ describe('ImportModal', () => {
   it('should disable import button when no file selected', () => {
     render(<ImportModal show={true} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
     
-    const importButton = screen.getByRole('button', { name: /インポート/i });
+    const importButton = screen.getByRole('button', { name: /Import/i });
     expect(importButton).toBeDisabled();
   });
 
@@ -73,11 +73,11 @@ describe('ImportModal', () => {
     render(<ImportModal show={true} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
     
     const file = new File(['{"schemaVersion":1,"words":[]}'], 'test.json', { type: 'application/json' });
-    const input = screen.getByLabelText('JSONファイルを選択') as HTMLInputElement;
+    const input = screen.getByLabelText('Select JSON File') as HTMLInputElement;
     
     await user.upload(input, file);
     
-    const importButton = screen.getByRole('button', { name: /インポート/i });
+    const importButton = screen.getByRole('button', { name: /Import/i });
     expect(importButton).not.toBeDisabled();
   });
 
@@ -119,11 +119,11 @@ describe('ImportModal', () => {
     
     const mockData = { schemaVersion: 1, words: [{ headword: 'test', pos: 'noun', meaningJa: 'テスト' }], memory: [] };
     const file = new File([JSON.stringify(mockData)], 'test.json', { type: 'application/json' });
-    const input = screen.getByLabelText('JSONファイルを選択') as HTMLInputElement;
+    const input = screen.getByLabelText('Select JSON File') as HTMLInputElement;
     
     await user.upload(input, file);
     
-    const importButton = screen.getByRole('button', { name: /インポート/i });
+    const importButton = screen.getByRole('button', { name: /Import/i });
     await user.click(importButton);
     
     await waitFor(() => {
@@ -133,18 +133,18 @@ describe('ImportModal', () => {
 
   it('should display error message on import failure', async () => {
     const user = userEvent.setup();
-    const errorMsg = 'インポートエラー';
+    const errorMsg = 'Import error';
     vi.mocked(ioOffline.ioApi.import).mockRejectedValueOnce(new Error(errorMsg));
     
     render(<ImportModal show={true} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
     
     const mockData = { schemaVersion: 1, words: [], memory: [] };
     const file = new File([JSON.stringify(mockData)], 'test.json', { type: 'application/json' });
-    const input = screen.getByLabelText('JSONファイルを選択') as HTMLInputElement;
+    const input = screen.getByLabelText('Select JSON File') as HTMLInputElement;
     
     await user.upload(input, file);
     
-    const importButton = screen.getByRole('button', { name: /インポート/i });
+    const importButton = screen.getByRole('button', { name: /Import/i });
     await user.click(importButton);
     
     await waitFor(() => {
@@ -156,7 +156,7 @@ describe('ImportModal', () => {
     const user = userEvent.setup();
     render(<ImportModal show={true} onClose={mockOnClose} onSuccess={mockOnSuccess} />);
     
-    const cancelButton = screen.getByRole('button', { name: /キャンセル/i });
+    const cancelButton = screen.getByRole('button', { name: /Cancel/i });
     await user.click(cancelButton);
     
     expect(mockOnClose).toHaveBeenCalled();
@@ -180,22 +180,22 @@ describe('ImportModal', () => {
     
     const mockData = { schemaVersion: 1, words: [], memory: [] };
     const file = new File([JSON.stringify(mockData)], 'test.json', { type: 'application/json' });
-    const input = screen.getByLabelText('JSONファイルを選択') as HTMLInputElement;
+    const input = screen.getByLabelText('Select JSON File') as HTMLInputElement;
     
     await user.upload(input, file);
     
-    const importButton = screen.getByRole('button', { name: /インポート$/i });
+    const importButton = screen.getByRole('button', { name: /Import$/i });
     await user.click(importButton);
     
     // Check for spinner or disabled state
     await waitFor(() => {
       const buttons = screen.getAllByRole('button');
-      const importingButton = buttons.find(btn => btn.textContent?.includes('インポート中'));
+      const importingButton = buttons.find(btn => btn.textContent?.includes('Importing'));
       expect(importingButton).toBeDefined();
       expect(importingButton).toBeDisabled();
     });
     
-    const cancelButton = screen.getByRole('button', { name: /キャンセル/i });
+    const cancelButton = screen.getByRole('button', { name: /Cancel/i });
     expect(cancelButton).toBeDisabled();
   });
 });

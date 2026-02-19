@@ -180,10 +180,10 @@ export function WordDetailPage() {
         show={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
-        title="単語を削除"
-        message={`"${word.headword}" を削除しますか？この操作は取り消せません。`}
-        confirmText="削除"
-        cancelText="キャンセル"
+        title="Delete Word"
+        message={`Are you sure you want to delete "${word.headword}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
         variant="danger"
       />
 
@@ -191,10 +191,10 @@ export function WordDetailPage() {
         show={showResetModal}
         onClose={() => setShowResetModal(false)}
         onConfirm={handleResetMemory}
-        title="メモリーレベルをリセット"
-        message={`"${word.headword}" のメモリーレベルをリセットしますか？`}
-        confirmText="リセット"
-        cancelText="キャンセル"
+        title="Reset Memory Level"
+        message={`Are you sure you want to reset the memory level for "${word.headword}"?`}
+        confirmText="Reset"
+        cancelText="Cancel"
         variant="warning"
       />
     </div>
