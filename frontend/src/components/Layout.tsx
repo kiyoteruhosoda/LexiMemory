@@ -1,13 +1,16 @@
 // frontend/src/components/Layout.tsx
 
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useAuth } from "../auth/AuthContext";
 import SyncButton from "./SyncButton";
+import { SyncDetailsModal } from "./SyncDetailsModal";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { state, logout } = useAuth();
   const nav = useNavigate();
   const appVersion = import.meta.env.VITE_APP_VERSION ?? "unknown";
+  const [showSyncDetails, setShowSyncDetails] = useState(false);
 
   async function onLogout() {
     await logout();
@@ -46,14 +49,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   Study
                 </NavLink>
               </li>
+              <li className="nav-item dropdown">
+                <a
+                  className="nav-link dropdown-toggle"
+                  href="#"
+                  id="navbarDropdown"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  Menu
+                </a>
+                <ul className="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => setShowSyncDetails(true)}
+                    >
+                      <i className="fas fa-info-circle me-2" />
+                      Sync Details
+                    </button>
+                  </li>
+                </ul>
+              </li>
             </ul>
 
             {state.status === "authed" ? (
-              <div className="d-flex align-items-center gap-3">
+              <div className="d-flex align-items-center gap-2">
                 <span className="text-light small">
                   <i className="fa-solid fa-user me-1" />
                   {state.me.username}
                 </span>
+                <SyncButton />
                 <button className="btn btn-outline-light btn-sm" onClick={() => void onLogout()}>
                   <i className="fa-solid fa-right-from-bracket me-1" />
                   Logout
@@ -67,18 +94,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </nav>
 
       <div className="container my-4">
-        {/* Sync panel at the top */}
-        <div className="row mb-3">
-          <div className="col-12">
-            <SyncButton />
-          </div>
-        </div>
-        
         {children}
       </div>
+      
       <footer className="text-center mt-4">
         LexiMemory <span className="ms-2 badge text-bg-secondary">v{appVersion}</span>
       </footer>
+      
+      {/* Sync Details Modal */}
+      <SyncDetailsModal 
+        show={showSyncDetails} 
+        onClose={() => setShowSyncDetails(false)} 
+      />
     </>
   );
 }

@@ -1,7 +1,7 @@
 /**
  * SyncButton component for offline-first vocabulary synchronization
  * 
- * Displays sync status and handles synchronization flow including conflict resolution
+ * Minimal sync button with unified status indicator
  */
 
 import { useState, useEffect } from "react";
@@ -21,7 +21,6 @@ export default function SyncButton() {
   const isAuthenticated = state.status === "authed";
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const [syncing, setSyncing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [conflict, setConflict] = useState<SyncConflict | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
@@ -55,7 +54,6 @@ export default function SyncButton() {
     }
 
     setSyncing(true);
-    setError(null);
     setSuccessMessage(null);
 
     try {
@@ -64,22 +62,18 @@ export default function SyncButton() {
       if (result.status === "success") {
         // Success
         await loadStatus();
-        setError(null);
         setSuccessMessage("Sync completed successfully");
       } else if (result.status === "conflict") {
         // Conflict - show resolution dialog
         setConflict(result);
-      } else {
-        // Error
-        setError(result.message || "Sync failed");
       }
+      // Errors are silently ignored in this minimal button
     } catch (err: any) {
       // Check if authentication error
       if (err.status === 401) {
         setShowLoginPrompt(true);
-      } else {
-        setError(err.message || "Sync failed");
       }
+      // Other errors are silently ignored
     } finally {
       setSyncing(false);
     }
@@ -87,7 +81,6 @@ export default function SyncButton() {
 
   const handleResolveConflict = async (strategy: ConflictResolution) => {
     setSyncing(true);
-    setError(null);
     setSuccessMessage(null);
 
     try {
@@ -96,7 +89,8 @@ export default function SyncButton() {
       await loadStatus();
       setSuccessMessage("Conflict resolved successfully");
     } catch (err: any) {
-      setError(err.message || "Failed to resolve conflict");
+      // Errors are silently ignored in this minimal button
+      console.error("Failed to resolve conflict:", err);
     } finally {
       setSyncing(false);
     }
@@ -106,89 +100,50 @@ export default function SyncButton() {
     return null;
   }
 
-  const formatLastSync = (lastSyncAt: string | null) => {
-    if (!lastSyncAt) return "Never synced";
-
-    try {
-      const date = new Date(lastSyncAt);
-      const now = new Date();
-      const diffMs = now.getTime() - date.getTime();
-      const diffMins = Math.floor(diffMs / 60000);
-
-      if (diffMins < 1) return "Just now";
-      if (diffMins < 60) return `${diffMins} min ago`;
-
-      const diffHours = Math.floor(diffMins / 60);
-      if (diffHours < 24) return `${diffHours} hours ago`;
-
-      const diffDays = Math.floor(diffHours / 24);
-      return `${diffDays} days ago`;
-    } catch {
-      return lastSyncAt;
-    }
-  };
+  // Determine status badge color: yellow (dirty) takes priority over green (online)
+  const statusColor = status.dirty ? "warning" : status.online ? "success" : "secondary";
+  const statusTitle = status.dirty 
+    ? "Unsaved changes" 
+    : status.online 
+    ? "Online" 
+    : "Offline";
 
   return (
     <>
-      <div className="sync-panel border rounded p-3 bg-light">
-        <div className="d-flex justify-content-between align-items-center mb-2">
-          <div>
-            <strong>Sync Status</strong>
-            <div className="small text-muted">
-              {status.online ? (
-                <span className="text-success">● Online</span>
-              ) : (
-                <span className="text-secondary">● Offline</span>
-              )}
+      {/* Minimal sync button with unified status indicator */}
+      <button
+        className="btn btn-sm btn-link text-light position-relative p-1"
+        onClick={handleSync}
+        disabled={syncing || !status.online}
+        title={statusTitle}
+        style={{ textDecoration: 'none' }}
+      >
+        {syncing ? (
+          <span className="spinner-border spinner-border-sm" role="status" />
+        ) : (
+          <i className="fas fa-sync-alt" />
+        )}
+        
+        {/* Unified status dot indicator (yellow > green > gray) */}
+        <span
+          className={`position-absolute top-0 start-100 translate-middle p-1 border border-dark rounded-circle bg-${statusColor}`}
+          style={{ marginLeft: "-0.5rem" }}
+        >
+          <span className="visually-hidden">{statusTitle}</span>
+        </span>
+      </button>
+
+      {/* Success toast (minimal) */}
+      {successMessage && (
+        <div className="position-fixed top-0 end-0 p-3" style={{ zIndex: 9999 }}>
+          <div className="toast show bg-success text-white" role="alert">
+            <div className="toast-body">
+              <i className="fas fa-check-circle me-2" />
+              {successMessage}
             </div>
           </div>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={handleSync}
-            disabled={syncing || !status.online}
-          >
-            {syncing ? (
-              <>
-                <span
-                  className="spinner-border spinner-border-sm me-2"
-                  role="status"
-                  aria-hidden="true"
-                ></span>
-                Syncing...
-              </>
-            ) : (
-              <>
-                <i className="fas fa-sync-alt me-2"></i>
-                Sync
-              </>
-            )}
-          </button>
         </div>
-
-        <div className="small">
-          <div>
-            Last sync: {formatLastSync(status.lastSyncAt)}
-          </div>
-          {status.dirty && (
-            <div className="text-warning">
-              <i className="fas fa-exclamation-circle me-1"></i>
-              Unsaved changes pending
-            </div>
-          )}
-        </div>
-
-        {error && (
-          <div className="alert alert-danger mt-2 mb-0 py-2" role="alert">
-            <small>{error}</small>
-          </div>
-        )}
-
-        {successMessage && (
-          <div className="alert alert-success mt-2 mb-0 py-2" role="alert">
-            <small>{successMessage}</small>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Login Prompt Modal */}
       {showLoginPrompt && (

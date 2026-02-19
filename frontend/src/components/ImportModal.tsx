@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Modal } from "./Modal";
 import { ioApi } from "../api/io.offline";
-import type { AppData } from "../api/types";
+import type { AppDataForImport } from "../api/types";
 
 type ImportModalProps = {
   show: boolean;
@@ -35,7 +35,7 @@ export function ImportModal({ show, onClose, onSuccess }: ImportModalProps) {
     setBusy(true);
     try {
       const text = await file.text();
-      const data: AppData = JSON.parse(text);
+      const data: AppDataForImport = JSON.parse(text);
       await ioApi.import(data, mode);
       onSuccess();
       onClose();

@@ -3,7 +3,7 @@
  * Import/Export API functions for backing up and restoring user data.
  */
 
-import type { AppData } from "./types";
+import type { AppData, AppDataForImport } from "./types";
 import { api } from "./client";
 
 /**
@@ -15,9 +15,11 @@ export async function exportData(): Promise<AppData> {
 
 /**
  * Import user data from a backup file
- * @param data AppData object to import
+ * Supports both complete exported data and manually-created files with optional fields.
+ * 
+ * @param data AppDataForImport object to import (flexible format)
  * @param mode "overwrite" to replace all data, "merge" to combine with existing data
  */
-export async function importData(data: AppData, mode: "overwrite" | "merge" = "merge"): Promise<void> {
+export async function importData(data: AppDataForImport, mode: "overwrite" | "merge" = "merge"): Promise<void> {
   await api.post<{ ok: boolean }>(`/io/import?mode=${mode}`, data);
 }

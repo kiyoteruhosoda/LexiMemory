@@ -110,7 +110,9 @@ export async function getWords(
 
     // Build memory map
     const memoryMap: Record<string, MemoryState> = {};
-    for (const mem of file.memory) {
+    // Ensure file.memory is an array (defensive programming)
+    const memoryArray = Array.isArray(file.memory) ? file.memory : [];
+    for (const mem of memoryArray) {
       memoryMap[mem.wordId] = mem;
     }
 
@@ -285,6 +287,8 @@ export async function getMemoryState(
 
 /**
  * Get next card due for review
+ * 
+ * Includes words without memory state (automatically creates default state)
  */
 export async function getNextCard(tags?: string[]): Promise<{
   word: WordEntry;
@@ -294,29 +298,59 @@ export async function getNextCard(tags?: string[]): Promise<{
   if (!file) return null;
 
   const now = new Date().toISOString();
-  let dueCards = file.memory.filter((m) => m.dueAt <= now);
+  const memoryById = new Map(file.memory.map((m) => [m.wordId, m]));
+
+  // Build candidates: all words with their memory state (or default)
+  let candidates: Array<{ word: WordEntry; memory: MemoryState }> = file.words.map((w) => {
+    const memory = memoryById.get(w.id) || {
+      wordId: w.id,
+      memoryLevel: 0,
+      ease: 2.5,
+      intervalDays: 0,
+      dueAt: now,
+      lastRating: null,
+      lastReviewedAt: null,
+      lapseCount: 0,
+      reviewCount: 0,
+    };
+    return { word: w, memory };
+  });
 
   // Filter by tags if specified
   if (tags && tags.length > 0) {
     const tagSet = new Set(tags);
-    dueCards = dueCards.filter((m) => {
-      const word = file.words.find((w) => w.id === m.wordId);
-      if (!word) return false;
-      // Check if word has at least one of the specified tags
-      return word.tags.some((tag) => tagSet.has(tag));
-    });
+    candidates = candidates.filter((c) => 
+      c.word.tags.some((tag) => tagSet.has(tag))
+    );
   }
 
-  if (dueCards.length === 0) return null;
+  if (candidates.length === 0) return null;
 
-  // Sort by dueAt (earliest first)
-  dueCards.sort((a, b) => a.dueAt.localeCompare(b.dueAt));
-  const nextMemory = dueCards[0];
+  // Filter due cards (dueAt <= now)
+  const dueCards = candidates.filter((c) => c.memory.dueAt <= now);
 
-  const word = file.words.find((w) => w.id === nextMemory.wordId);
-  if (!word) return null;
+  if (dueCards.length > 0) {
+    // Priority 1: Due cards, sorted by dueAt (earliest first), then memoryLevel (lowest first)
+    dueCards.sort((a, b) => {
+      const dateCompare = a.memory.dueAt.localeCompare(b.memory.dueAt);
+      if (dateCompare !== 0) return dateCompare;
+      return a.memory.memoryLevel - b.memory.memoryLevel;
+    });
+    return dueCards[0];
+  }
 
-  return { word, memory: nextMemory };
+  // No due cards - check if all are mastered (memoryLevel >= 4)
+  const allMastered = candidates.every((c) => c.memory.memoryLevel >= 4);
+  if (allMastered) return null;
+
+  // Priority 2: Not due yet, sorted by memoryLevel (lowest first), then dueAt (earliest first)
+  candidates.sort((a, b) => {
+    const levelCompare = a.memory.memoryLevel - b.memory.memoryLevel;
+    if (levelCompare !== 0) return levelCompare;
+    return a.memory.dueAt.localeCompare(b.memory.dueAt);
+  });
+
+  return candidates[0];
 }
 
 /**

@@ -90,7 +90,18 @@ export async function getVocabFile(): Promise<VocabFile | null> {
             )
           );
         };
-        request.onsuccess = () => resolve(request.result || null);
+        request.onsuccess = () => {
+          const result = request.result;
+          // Normalize legacy data: ensure memory is an array
+          if (result && !Array.isArray(result.memory)) {
+            result.memory = [];
+          }
+          // Ensure words is an array
+          if (result && !Array.isArray(result.words)) {
+            result.words = [];
+          }
+          resolve(result || null);
+        };
 
         tx.onerror = () => {
           reject(
