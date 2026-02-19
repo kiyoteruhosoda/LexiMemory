@@ -33,14 +33,38 @@ class MatchMediaMock {
   }
 }
 
+type MatchMediaMap = {
+  anyHover: MatchMediaMock;
+  primaryHover: MatchMediaMock;
+};
+
+function setupMatchMedia(map: MatchMediaMap): void {
+  vi.spyOn(window, "matchMedia").mockImplementation((query: string) => {
+    if (query.includes("any-hover")) {
+      return map.anyHover as unknown as MediaQueryList;
+    }
+
+    return map.primaryHover as unknown as MediaQueryList;
+  });
+}
+
+function createPointerEvent(pointerType: string): PointerEvent {
+  const event = new Event("pointerdown") as PointerEvent;
+  Object.defineProperty(event, "pointerType", { value: pointerType });
+  return event;
+}
+
 describe("initializeHoverModeShim", () => {
   afterEach(() => {
+    vi.restoreAllMocks();
     document.documentElement.classList.remove("has-hover", "no-hover");
   });
 
   it("hover非対応デバイスでは no-hover を付与する", () => {
-    const mql = new MatchMediaMock(false, "(hover: hover) and (pointer: fine)");
-    vi.spyOn(window, "matchMedia").mockReturnValue(mql as unknown as MediaQueryList);
+    setupMatchMedia({
+      anyHover: new MatchMediaMock(false, "(any-hover: hover) and (any-pointer: fine)"),
+      primaryHover: new MatchMediaMock(false, "(hover: hover) and (pointer: fine)"),
+    });
 
     const dispose = initializeHoverModeShim();
 
@@ -49,20 +73,31 @@ describe("initializeHoverModeShim", () => {
     dispose();
   });
 
-  it("pointerdown の種類で hover モードを切り替える", () => {
-    const mql = new MatchMediaMock(true, "(hover: hover) and (pointer: fine)");
-    vi.spyOn(window, "matchMedia").mockReturnValue(mql as unknown as MediaQueryList);
+  it("ハイブリッド端末は any-hover を優先して初期状態を has-hover にする", () => {
+    setupMatchMedia({
+      anyHover: new MatchMediaMock(true, "(any-hover: hover) and (any-pointer: fine)"),
+      primaryHover: new MatchMediaMock(false, "(hover: hover) and (pointer: fine)"),
+    });
 
     const dispose = initializeHoverModeShim();
 
-    const touchEvent = new Event("pointerdown") as PointerEvent;
-    Object.defineProperty(touchEvent, "pointerType", { value: "touch" });
-    window.dispatchEvent(touchEvent);
+    expect(document.documentElement.classList.contains("has-hover")).toBe(true);
+    expect(document.documentElement.classList.contains("no-hover")).toBe(false);
+    dispose();
+  });
+
+  it("hover非対応端末では touch pointerdown で no-hover を維持し、mouse で has-hover に戻す", () => {
+    setupMatchMedia({
+      anyHover: new MatchMediaMock(false, "(any-hover: hover) and (any-pointer: fine)"),
+      primaryHover: new MatchMediaMock(false, "(hover: hover) and (pointer: fine)"),
+    });
+
+    const dispose = initializeHoverModeShim();
+
+    window.dispatchEvent(createPointerEvent("touch"));
     expect(document.documentElement.classList.contains("no-hover")).toBe(true);
 
-    const mouseEvent = new Event("pointerdown") as PointerEvent;
-    Object.defineProperty(mouseEvent, "pointerType", { value: "mouse" });
-    window.dispatchEvent(mouseEvent);
+    window.dispatchEvent(createPointerEvent("mouse"));
     expect(document.documentElement.classList.contains("has-hover")).toBe(true);
     dispose();
   });

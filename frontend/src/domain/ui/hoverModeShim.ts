@@ -1,5 +1,7 @@
-const HOVER_MEDIA_QUERY = "(hover: hover) and (pointer: fine)";
-const TOUCH_POINTER_TYPES = new Set(["touch", "pen"]);
+const ANY_HOVER_QUERY = "(any-hover: hover) and (any-pointer: fine)";
+const PRIMARY_HOVER_QUERY = "(hover: hover) and (pointer: fine)";
+const TOUCH_POINTER_TYPES = new Set(["touch"]);
+const HOVER_CAPABLE_POINTER_TYPES = new Set(["mouse", "pen"]);
 
 interface HoverModeStrategy {
   apply(): void;
@@ -34,26 +36,41 @@ class HoverModeContext {
   }
 }
 
+function canEnvironmentHover(anyHoverList: MediaQueryList, primaryHoverList: MediaQueryList): boolean {
+  return anyHoverList.matches || primaryHoverList.matches;
+}
+
 export function initializeHoverModeShim(): () => void {
   const hoverModeContext = new HoverModeContext();
-  const mediaQueryList = window.matchMedia(HOVER_MEDIA_QUERY);
+  const anyHoverList = window.matchMedia(ANY_HOVER_QUERY);
+  const primaryHoverList = window.matchMedia(PRIMARY_HOVER_QUERY);
 
-  const syncByMediaQuery = (queryList: MediaQueryList | MediaQueryListEvent): void => {
-    hoverModeContext.switch(queryList.matches);
+  const syncByCapability = (): void => {
+    hoverModeContext.switch(canEnvironmentHover(anyHoverList, primaryHoverList));
   };
 
   const syncByPointerEvent = (event: PointerEvent): void => {
-    const canHover = !TOUCH_POINTER_TYPES.has(event.pointerType);
-    hoverModeContext.switch(canHover);
+    if (HOVER_CAPABLE_POINTER_TYPES.has(event.pointerType)) {
+      hoverModeContext.switch(true);
+      return;
+    }
+
+    if (TOUCH_POINTER_TYPES.has(event.pointerType) && !canEnvironmentHover(anyHoverList, primaryHoverList)) {
+      hoverModeContext.switch(false);
+    }
   };
 
-  syncByMediaQuery(mediaQueryList);
+  syncByCapability();
 
-  mediaQueryList.addEventListener("change", syncByMediaQuery);
+  anyHoverList.addEventListener("change", syncByCapability);
+  primaryHoverList.addEventListener("change", syncByCapability);
   window.addEventListener("pointerdown", syncByPointerEvent, { passive: true });
+  window.addEventListener("pointermove", syncByPointerEvent, { passive: true });
 
   return (): void => {
-    mediaQueryList.removeEventListener("change", syncByMediaQuery);
+    anyHoverList.removeEventListener("change", syncByCapability);
+    primaryHoverList.removeEventListener("change", syncByCapability);
     window.removeEventListener("pointerdown", syncByPointerEvent);
+    window.removeEventListener("pointermove", syncByPointerEvent);
   };
 }
