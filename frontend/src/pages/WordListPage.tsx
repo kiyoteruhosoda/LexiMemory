@@ -82,6 +82,14 @@ export function WordListPage() {
           </button>
 
           <button
+            className="btn btn-outline-primary"
+            onClick={() => navigate("/examples")}
+          >
+            <i className="fa-solid fa-pen-to-square me-1" />
+            Examples
+          </button>
+
+          <button
             className="btn btn-outline-secondary"
             onClick={() => setShowSearch(!showSearch)}
             title="Toggle search"

@@ -112,11 +112,10 @@ export default function SyncButton() {
     <>
       {/* Minimal sync button with unified status indicator */}
       <button
-        className="btn btn-sm btn-link text-light position-relative p-1"
+        className="btn btn-sm btn-outline-secondary position-relative"
         onClick={handleSync}
         disabled={syncing || !status.online}
         title={statusTitle}
-        style={{ textDecoration: 'none' }}
       >
         {syncing ? (
           <span className="spinner-border spinner-border-sm" role="status" />

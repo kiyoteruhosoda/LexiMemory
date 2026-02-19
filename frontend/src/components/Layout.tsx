@@ -48,6 +48,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   Study
                 </NavLink>
               </li>
+              <li className="nav-item">
+                <NavLink className="nav-link" to="/examples">
+                  Examples
+                </NavLink>
+              </li>
               <li className="nav-item dropdown">
                 <a
                   className="nav-link dropdown-toggle"

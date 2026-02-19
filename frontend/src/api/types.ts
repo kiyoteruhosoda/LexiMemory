@@ -94,3 +94,22 @@ export interface AppDataForImport {
   words: WordEntryForImport[];
   memory?: MemoryStateForImport[];
 }
+
+// Example Test Types
+export interface ExampleTestItem {
+  id: string;
+  en: string;
+  ja?: string | null;
+  source?: string | null;
+  word: {
+    id: string;
+    headword: string;
+    pos: Pos;
+    meaningJa: string;
+    tags: string[];
+  };
+}
+
+export interface NextExampleResponse {
+  example: ExampleTestItem | null;
+}

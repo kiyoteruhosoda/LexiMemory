@@ -14,7 +14,19 @@ export function StudyPage() {
   // Tag filter state
   const [allTags, setAllTags] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [appliedTags, setAppliedTags] = useState<string[] | undefined>(undefined);
+  const [appliedTags, setAppliedTags] = useState<string[] | undefined>(() => {
+    // Restore from localStorage
+    try {
+      const saved = localStorage.getItem('study_applied_tags');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Array.isArray(parsed) && parsed.length > 0 ? parsed : undefined;
+      }
+    } catch (e) {
+      console.error('Failed to restore tag filter:', e);
+    }
+    return undefined;
+  });
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
 
   async function loadTags() {
@@ -50,6 +62,16 @@ export function StudyPage() {
   }, []);
 
   useEffect(() => {
+    // Save to localStorage whenever appliedTags changes
+    try {
+      if (appliedTags && appliedTags.length > 0) {
+        localStorage.setItem('study_applied_tags', JSON.stringify(appliedTags));
+      } else {
+        localStorage.removeItem('study_applied_tags');
+      }
+    } catch (e) {
+      console.error('Failed to save tag filter:', e);
+    }
     void loadNext();
   }, [appliedTags]);
 
@@ -66,7 +88,8 @@ export function StudyPage() {
   }
 
   function applyFilter() {
-    setAppliedTags(selectedTags.length > 0 ? selectedTags : undefined);
+    const newTags = selectedTags.length > 0 ? selectedTags : undefined;
+    setAppliedTags(newTags);
     setIsFilterExpanded(false);
   }
 
@@ -75,6 +98,13 @@ export function StudyPage() {
     setAppliedTags(undefined);
     setIsFilterExpanded(false);
   }
+
+  // Initialize selectedTags from appliedTags on mount
+  useEffect(() => {
+    if (appliedTags && appliedTags.length > 0) {
+      setSelectedTags(appliedTags);
+    }
+  }, []);
 
   return (
     <div className="vstack gap-3">
@@ -87,6 +117,14 @@ export function StudyPage() {
           >
             <i className="fa-solid fa-book me-1" />
             Words
+          </button>
+
+          <button
+            className="btn btn-outline-primary"
+            onClick={() => navigate("/examples")}
+          >
+            <i className="fa-solid fa-pen-to-square me-1" />
+            Examples
           </button>
 
           {/* Tag Filter Button */}

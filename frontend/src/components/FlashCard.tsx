@@ -24,20 +24,24 @@ export function FlashCard({ word, memory, onRate }: Props) {
     await onRate(rating);
   }
 
-  function speak() {
+  function speak(e?: React.MouseEvent<HTMLButtonElement>) {
     if (!canSpeak) return;
     const ut = new SpeechSynthesisUtterance(word.headword);
     ut.lang = "en-US";
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(ut);
+    // Blur to remove focus/hover state on touch devices
+    if (e) e.currentTarget.blur();
   }
 
-  function speakExample(text: string) {
+  function speakExample(text: string, e?: React.MouseEvent<HTMLButtonElement>) {
     if (!canSpeak || !text.trim()) return;
     const ut = new SpeechSynthesisUtterance(text.trim());
     ut.lang = "en-US";
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(ut);
+    // Blur to remove focus/hover state on touch devices
+    if (e) e.currentTarget.blur();
   }
 
   return (
@@ -91,7 +95,7 @@ export function FlashCard({ word, memory, onRate }: Props) {
                         <button
                           className="btn btn-outline-secondary btn-sm"
                           type="button"
-                          onClick={() => speakExample(example.en)}
+                          onClick={(e) => speakExample(example.en, e)}
                           disabled={!canSpeak}
                           title="Speak example">
                           <i className="fa-solid fa-volume-high" />

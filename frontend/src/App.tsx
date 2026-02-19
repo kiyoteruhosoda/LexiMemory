@@ -7,6 +7,7 @@ import { WordListPage } from "./pages/WordListPage";
 import { WordCreatePage } from "./pages/WordCreatePage";
 import { WordDetailPage } from "./pages/WordDetailPage";
 import { StudyPage } from "./pages/StudyPage";
+import { ExamplesTestPage } from "./pages/ExamplesTestPage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ensureInitialized } from "./db/localRepository";
 
@@ -65,6 +66,7 @@ export default function App() {
             <Route path="/words/create" element={<Layout><WordCreatePage /></Layout>} />
             <Route path="/words/:id" element={<Layout><WordDetailPage /></Layout>} />
             <Route path="/study" element={<Layout><StudyPage /></Layout>} />
+            <Route path="/examples" element={<Layout><ExamplesTestPage /></Layout>} />
 
             <Route path="/" element={<Navigate to="/words" replace />} />
             <Route path="*" element={<Navigate to="/words" replace />} />

@@ -40,20 +40,24 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
 
   const canSpeak = useMemo(() => typeof window !== "undefined" && "speechSynthesis" in window, []);
 
-  function speakHeadword() {
+  function speakHeadword(e?: React.MouseEvent<HTMLButtonElement>) {
     if (!canSpeak || !headword.trim()) return;
     const ut = new SpeechSynthesisUtterance(headword.trim());
     ut.lang = "en-US";
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(ut);
+    // Blur to remove focus/hover state on touch devices
+    if (e) e.currentTarget.blur();
   }
 
-  function speakExample(text: string) {
+  function speakExample(text: string, e?: React.MouseEvent<HTMLButtonElement>) {
     if (!canSpeak || !text.trim()) return;
     const ut = new SpeechSynthesisUtterance(text.trim());
     ut.lang = "en-US";
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(ut);
+    // Blur to remove focus/hover state on touch devices
+    if (e) e.currentTarget.blur();
   }
 
   function addExample() {
@@ -119,7 +123,7 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
               <button
                 className="btn btn-outline-secondary"
                 type="button"
-                onClick={speakHeadword}
+                onClick={(e) => speakHeadword(e)}
                 disabled={!canSpeak || !headword.trim()}
                 title="Speak word"
               >
@@ -177,7 +181,7 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
                           <button
                             className="btn btn-outline-secondary"
                             type="button"
-                            onClick={() => speakExample(ex.en)}
+                            onClick={(e) => speakExample(ex.en, e)}
                             disabled={!canSpeak || !ex.en.trim()}
                             title="Speak English sentence"
                           >

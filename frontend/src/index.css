@@ -108,16 +108,37 @@ button:focus-visible {
     -webkit-tap-highlight-color: transparent !important;
   }
   
-  /* Prevent Bootstrap hover states from sticking on touch devices */
+  /* Completely disable ALL hover states on touch devices - they stick after tap */
+  /* This prevents buttons from staying highlighted after tap */
+  *:hover {
+    background-color: inherit !important;
+    color: inherit !important;
+    border-color: inherit !important;
+    opacity: inherit !important;
+  }
+  
+  /* Prevent Bootstrap button hover states from sticking on touch devices */
   .btn:hover,
+  .btn-primary:hover,
+  .btn-secondary:hover,
+  .btn-success:hover,
+  .btn-danger:hover,
+  .btn-warning:hover,
+  .btn-info:hover,
+  .btn-light:hover,
+  .btn-dark:hover,
   .btn-outline-primary:hover,
   .btn-outline-secondary:hover,
+  .btn-outline-success:hover,
   .btn-outline-danger:hover,
   .btn-outline-warning:hover,
-  .btn-outline-success:hover,
-  .btn-outline-light:hover {
-    color: inherit;
-    background-color: transparent;
-    border-color: inherit;
+  .btn-outline-info:hover,
+  .btn-outline-light:hover,
+  .btn-outline-dark:hover,
+  .btn-link:hover {
+    color: revert !important;
+    background-color: revert !important;
+    border-color: revert !important;
+    text-decoration: none !important;
   }
 }
