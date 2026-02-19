@@ -200,7 +200,8 @@ def _next_interval_days(prev_interval: int, ease: float, review_count: int) -> i
         return 7
     return max(1, round(prev_interval * ease))
 
-def get_next_card(userId: str) -> Optional[dict]:
+def get_next_card(userId: str, tags: Optional[List[str]] = None) -> Optional[dict]:
+    """Get next card to study, optionally filtered by tags"""
     wf = load_words(userId)
     mf = load_memory(userId)
 
@@ -210,6 +211,10 @@ def get_next_card(userId: str) -> Optional[dict]:
     # wordsに存在するものだけ対象
     candidates = []
     for w in wf.words:
+        # Filter by tags if provided
+        if tags and not any(tag in w.tags for tag in tags):
+            continue
+        
         m = mem_by_id.get(w.id) or MemoryState(
             wordId=w.id,
             dueAt=storage.now_iso(),
@@ -539,3 +544,12 @@ def reset_memory(userId: str, wordId: str) -> None:
     mf = load_memory(userId)
     mf.memory = [m for m in mf.memory if m.wordId != wordId]
     save_memory(userId, mf)
+
+
+def get_all_tags(userId: str) -> List[str]:
+    """Get all unique tags used in user's words"""
+    wf = load_words(userId)
+    tags_set = set()
+    for w in wf.words:
+        tags_set.update(w.tags)
+    return sorted(list(tags_set))

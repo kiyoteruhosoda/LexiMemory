@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { wordsApi } from "../api/words";
-import { exportData, importData } from "../api/io";
-import type { WordEntry, MemoryState, AppData } from "../api/types";
-import { ApiError } from "../api/client";
+import { wordsApi } from "../api/words.offline";
+import { ioApi } from "../api/io.offline";
+import type { WordEntry, MemoryState } from "../api/types";
+import { ImportModal } from "../components/ImportModal";
 
 export function WordListPage() {
   const navigate = useNavigate();
@@ -12,6 +12,7 @@ export function WordListPage() {
   const [q, setQ] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   async function reload() {
     setError(null);
@@ -20,8 +21,8 @@ export function WordListPage() {
       const result = await wordsApi.list(q);
       setItems(result.words);
       setMemoryMap(result.memoryMap);
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to load");
+    } catch (e: any) {
+      setError(e?.message || "Failed to load");
     } finally {
       setBusy(false);
     }
@@ -33,7 +34,7 @@ export function WordListPage() {
     setError(null);
     setBusy(true);
     try {
-      const data = await exportData();
+      const data = await ioApi.export();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -43,41 +44,15 @@ export function WordListPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Export failed");
+    } catch (e: any) {
+      setError(e?.message || "Export failed");
     } finally {
       setBusy(false);
     }
   }
 
-  async function handleImport() {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = "application/json,.json";
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      setError(null);
-      setBusy(true);
-      try {
-        const text = await file.text();
-        const data: AppData = JSON.parse(text);
-        
-        const mode = confirm(
-          "Choose import mode:\n\nOK = Merge with existing data\nCancel = Overwrite all data"
-        ) ? "merge" : "overwrite";
-        
-        await importData(data, mode);
-        await reload();
-        alert("Import successful.");
-      } catch (e) {
-        setError(e instanceof ApiError ? e.message : "Import failed");
-      } finally {
-        setBusy(false);
-      }
-    };
-    input.click();
+  function handleImportSuccess() {
+    void reload();
   }
 
   function getMemoryLevel(wordId: string): number {
@@ -109,7 +84,7 @@ export function WordListPage() {
             </button>
             <button
               className="btn btn-sm btn-outline-secondary"
-              onClick={() => void handleImport()}
+              onClick={() => setShowImportModal(true)}
               disabled={busy}
               title="Import data from file"
             >
@@ -202,6 +177,12 @@ export function WordListPage() {
           </table>
         </div>
       )}
+
+      <ImportModal
+        show={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onSuccess={handleImportSuccess}
+      />
     </div>
   );
 }

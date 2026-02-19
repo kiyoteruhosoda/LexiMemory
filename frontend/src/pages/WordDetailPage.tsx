@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { wordsApi } from "../api/words";
-import { studyApi } from "../api/study";
+import { wordsApi } from "../api/words.offline";
+import { studyApi } from "../api/study.offline";
 import type { WordEntry } from "../api/types";
 import { WordForm } from "../components/WordForm";
-import { ApiError } from "../api/client";
+import { ConfirmModal } from "../components/Modal";
 
 export function WordDetailPage() {
   const navigate = useNavigate();
@@ -12,21 +12,22 @@ export function WordDetailPage() {
   const [word, setWord] = useState<WordEntry | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
 
   async function loadWord() {
     if (!id) return;
     setError(null);
     setBusy(true);
     try {
-      const result = await wordsApi.list();
-      const found = result.words.find((w) => w.id === id);
+      const found = await wordsApi.get(id);
       if (!found) {
         setError("Word not found");
         return;
       }
       setWord(found);
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to load");
+    } catch (e: any) {
+      setError(e?.message || "Failed to load");
     } finally {
       setBusy(false);
     }
@@ -42,34 +43,33 @@ export function WordDetailPage() {
     try {
       await wordsApi.update(word.id, draft);
       navigate("/words");
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to update word");
+    } catch (e: any) {
+      setError(e?.message || "Failed to update word");
     }
   }
 
   async function handleDelete() {
     if (!word) return;
-    if (!confirm(`Delete "${word.headword}"? This cannot be undone.`)) return;
     
     setError(null);
     try {
       await wordsApi.delete(word.id);
       navigate("/words");
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to delete word");
+    } catch (e: any) {
+      setError(e?.message || "Failed to delete word");
     }
   }
 
   async function handleResetMemory() {
     if (!word) return;
-    if (!confirm(`Reset memory level for "${word.headword}"?`)) return;
     
     setError(null);
     try {
       await studyApi.resetMemory(word.id);
+      setShowResetModal(false);
       alert("Memory level reset.");
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to reset memory");
+    } catch (e: any) {
+      setError(e?.message || "Failed to reset memory");
     }
   }
 
@@ -137,7 +137,7 @@ export function WordDetailPage() {
           <div className="col-md-6">
             <button
               className="btn btn-warning w-100"
-              onClick={() => void handleResetMemory()}
+              onClick={() => setShowResetModal(true)}
             >
               <i className="fa-solid fa-rotate-left me-1" />
               Reset Memory Level
@@ -146,7 +146,7 @@ export function WordDetailPage() {
           <div className="col-md-6">
             <button
               className="btn btn-danger w-100"
-              onClick={() => void handleDelete()}
+              onClick={() => setShowDeleteModal(true)}
             >
               <i className="fa-solid fa-trash me-1" />
               Delete
@@ -160,7 +160,7 @@ export function WordDetailPage() {
           <button
             type="button"
             className="btn btn-sm btn-warning"
-            onClick={() => void handleResetMemory()}
+            onClick={() => setShowResetModal(true)}
           >
             <i className="fa-solid fa-rotate-left me-1" />
             Reset
@@ -168,13 +168,35 @@ export function WordDetailPage() {
           <button
             type="button"
             className="btn btn-sm btn-danger"
-            onClick={() => void handleDelete()}
+            onClick={() => setShowDeleteModal(true)}
           >
             <i className="fa-solid fa-trash me-1" />
             Delete
           </button>
         </div>
       </div>
+
+      <ConfirmModal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        title="単語を削除"
+        message={`"${word.headword}" を削除しますか？この操作は取り消せません。`}
+        confirmText="削除"
+        cancelText="キャンセル"
+        variant="danger"
+      />
+
+      <ConfirmModal
+        show={showResetModal}
+        onClose={() => setShowResetModal(false)}
+        onConfirm={handleResetMemory}
+        title="メモリーレベルをリセット"
+        message={`"${word.headword}" のメモリーレベルをリセットしますか？`}
+        confirmText="リセット"
+        cancelText="キャンセル"
+        variant="warning"
+      />
     </div>
   );
 }

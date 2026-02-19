@@ -60,6 +60,9 @@ fi
 echo "Running TypeScript type check..."
 npx tsc --noEmit
 
+echo "Running TypeScript build..."
+npx tsc -b
+
 echo "Running frontend tests with coverage..."
 npm run test:coverage
 

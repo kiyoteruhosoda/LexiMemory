@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { wordsApi } from "../api/words";
+import { wordsApi } from "../api/words.offline";
 import type { WordEntry } from "../api/types";
 import { WordForm } from "../components/WordForm";
-import { ApiError } from "../api/client";
 
 export function WordCreatePage() {
   const navigate = useNavigate();
@@ -14,8 +13,8 @@ export function WordCreatePage() {
     try {
       await wordsApi.create(draft);
       navigate("/words");
-    } catch (e) {
-      setError(e instanceof ApiError ? e.message : "Failed to create word");
+    } catch (e: any) {
+      setError(e?.message || "Failed to create word");
     }
   }
 

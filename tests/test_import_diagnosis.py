@@ -198,22 +198,22 @@ async def test_import_validation_error_response(client):
     
     # Try to import invalid data
     invalid_imports = [
-        {},  # Empty object
-        {"schemaVersion": 2},  # Wrong version
-        {"schemaVersion": 1},  # Missing required fields
-        {"schemaVersion": 1, "words": [{"headword": "test"}]},  # Missing meaningJa and pos
+        ({"schemaVersion": 2}, "Wrong schema version"),  # Wrong version -> 400
+        ({"schemaVersion": 1, "words": [{"headword": "test"}]}, "Missing required fields"),  # Missing meaningJa and pos -> 422
+        ({"schemaVersion": 1, "words": [{"pos": "noun", "meaningJa": "意味"}]}, "Missing headword"),  # Missing headword -> 422
     ]
     
-    for invalid_data in invalid_imports:
+    for invalid_data, description in invalid_imports:
         response = await client.post(
             "/api/io/import?mode=merge",
             json=invalid_data,
             headers=headers
         )
-        print(f"\n=== Invalid Import Test ===")
+        print(f"\n=== Invalid Import Test: {description} ===")
         print(f"Data: {invalid_data}")
         print(f"Status: {response.status_code}")
-        print(f"Response: {response.json() if response.status_code == 422 else 'Non-validation error'}")
+        print(f"Response: {response.json() if response.status_code in [400, 422] else response.json()}")
         
         # Should either be 400 (bad schema) or 422 (validation error)
-        assert response.status_code in [400, 422], f"Expected 400 or 422, got {response.status_code}"
+        assert response.status_code in [400, 422], f"Expected 400 or 422 for '{description}', got {response.status_code}"
+

@@ -20,7 +20,7 @@ from . import storage, deps
 from .errors import ApiErrorPayload, http_error_code, is_safe_to_echo_detail
 from .logging_setup import setup_logging
 from .middleware import RequestLoggingMiddleware
-from .routers import auth, io, logs, study, words
+from .routers import auth, io, logs, study, words, vocab
 from .settings import settings
 from .infra.jwt_provider import JWTProvider
 from .infra.token_store_json import JsonTokenStore
@@ -206,6 +206,7 @@ def create_app() -> FastAPI:
     app.include_router(words.router, prefix="/api")
     app.include_router(study.router, prefix="/api")
     app.include_router(io.router, prefix="/api")
+    app.include_router(vocab.router, prefix="/api")
     app.include_router(logs.router, prefix="/api")
 
     @app.get(

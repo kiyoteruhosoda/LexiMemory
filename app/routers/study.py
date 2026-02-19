@@ -1,17 +1,18 @@
 # app/routers/study.py
 from __future__ import annotations
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
+from typing import List, Optional
 from ..deps import require_auth
 from ..models import GradeRequest, MemoryState
 from .. import storage
-from ..services import get_next_card, grade_card, reset_memory
+from ..services import get_next_card, grade_card, reset_memory, get_all_tags
 
 router = APIRouter(prefix="/study", tags=["study"])
 
 @router.get(
     "/next",
     summary="Get next card to study",
-    description="Retrieve the next word to study using FSRS spaced repetition algorithm. Prioritizes words due for review.",
+    description="Retrieve the next word to study using FSRS spaced repetition algorithm. Prioritizes words due for review. Optionally filter by tags.",
     responses={
         200: {
             "description": "Next card retrieved",
@@ -39,9 +40,12 @@ router = APIRouter(prefix="/study", tags=["study"])
         401: {"description": "Unauthorized"},
     }
 )
-async def next_card(u: dict = Depends(require_auth)):
+async def next_card(
+    tags: Optional[List[str]] = Query(None, description="Filter by tags (OR logic - matches any tag)"),
+    u: dict = Depends(require_auth)
+):
     async with storage.user_lock(u["userId"]):
-        card = get_next_card(u["userId"])
+        card = get_next_card(u["userId"], tags=tags)
         if not card:
             return {"ok": True, "card": None}
         return {"ok": True, "card": {"word": card["word"], "memory": card["memory"]}}
@@ -92,3 +96,29 @@ async def reset_word_memory(word_id: str, u: dict = Depends(require_auth)):
     async with storage.user_lock(u["userId"]):
         reset_memory(u["userId"], word_id)
         return {"ok": True}
+
+
+@router.get(
+    "/tags",
+    summary="Get all tags",
+    description="Retrieve all unique tags used in user's vocabulary words for filtering.",
+    responses={
+        200: {
+            "description": "Tags retrieved successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "ok": True,
+                        "tags": ["business", "travel", "idiom"]
+                    }
+                }
+            }
+        },
+        401: {"description": "Unauthorized"},
+    }
+)
+async def list_tags(u: dict = Depends(require_auth)):
+    """Get all unique tags from user's words"""
+    async with storage.user_lock(u["userId"]):
+        tags = get_all_tags(u["userId"])
+        return {"ok": True, "tags": tags}

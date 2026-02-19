@@ -95,6 +95,11 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
 
   return (
     <div className="card shadow-sm">
+      <div className="card-header bg-white">
+        <h5 className="mb-0">
+          {initial ? "Edit word" : "Add a new word"}
+        </h5>
+      </div>
 
       <div className="card-body">
         <form onSubmit={submit} className="row g-3">

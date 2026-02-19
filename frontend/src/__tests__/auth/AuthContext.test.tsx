@@ -2,7 +2,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useState } from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../../auth/AuthContext';
 import { authApi } from '../../api/auth';
 
@@ -62,14 +62,13 @@ describe('AuthContext', () => {
     vi.mocked(authApi.refresh).mockResolvedValue(false);
     vi.mocked(authApi.me).mockResolvedValue(null as any);
 
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
-
-    // Give component time to initialize
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await act(async () => {
+      render(
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      );
+    });
     
     await waitFor(() => {
       expect(screen.getByTestId('status')).toHaveTextContent('guest');
@@ -93,11 +92,13 @@ describe('AuthContext', () => {
       expires_in: 900,
     });
 
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
+    await act(async () => {
+      render(
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      );
+    });
 
     // Wait for initialization to reach guest state
     await waitFor(() => {
@@ -128,11 +129,13 @@ describe('AuthContext', () => {
       .mockResolvedValue(null as any);
     vi.mocked(authApi.logout).mockResolvedValue(undefined);
 
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
+    await act(async () => {
+      render(
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      );
+    });
 
     // Wait for initialization with authenticated state
     await waitFor(() => {
@@ -155,11 +158,13 @@ describe('AuthContext', () => {
     vi.mocked(authApi.me).mockResolvedValue(null as any);
     vi.mocked(authApi.login).mockRejectedValue(new Error('Invalid credentials'));
 
-    render(
-      <AuthProvider>
-        <TestComponent />
-      </AuthProvider>
-    );
+    await act(async () => {
+      render(
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>
+      );
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId('status')).toHaveTextContent('guest');

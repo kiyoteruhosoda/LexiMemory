@@ -1,7 +1,7 @@
 // frontend/src/components/Layout.test.tsx
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { Layout } from '../../components/Layout';
 import { AuthProvider } from '../../auth/AuthContext';
@@ -50,6 +50,9 @@ describe('Layout', () => {
 
     renderWithRouter(<Layout>Test Content</Layout>);
 
+    // Wait for async initialization
+    await screen.findByText('Guest');
+    
     const lexiMemories = screen.getAllByText(/LexiMemory/);
     expect(lexiMemories.length).toBeGreaterThan(0);
   });
@@ -60,6 +63,9 @@ describe('Layout', () => {
 
     renderWithRouter(<Layout><div>Test Content</div></Layout>);
 
+    // Wait for async initialization
+    await screen.findByText('Guest');
+    
     expect(screen.getByText('Test Content')).toBeInTheDocument();
   });
 
@@ -69,6 +75,9 @@ describe('Layout', () => {
 
     renderWithRouter(<Layout>Content</Layout>);
 
+    // Wait for async initialization
+    await screen.findByText('Guest');
+    
     expect(screen.getByText('Words')).toBeInTheDocument();
     expect(screen.getByText('Study')).toBeInTheDocument();
   });
@@ -111,7 +120,9 @@ describe('Layout', () => {
     const logoutButton = await screen.findByText('Logout');
     expect(logoutButton).toBeInTheDocument();
     
-    logoutButton.click();
+    await act(async () => {
+      logoutButton.click();
+    });
   });
 
   it('should display app version', async () => {
@@ -120,6 +131,9 @@ describe('Layout', () => {
 
     renderWithRouter(<Layout>Content</Layout>);
 
+    // Wait for async initialization
+    await screen.findByText('Guest');
+    
     expect(screen.getByText('v1.0.0')).toBeInTheDocument();
   });
 
@@ -129,6 +143,9 @@ describe('Layout', () => {
 
     renderWithRouter(<Layout>Content</Layout>);
 
+    // Wait for async initialization
+    await screen.findByText('Guest');
+    
     const toggleButton = document.querySelector('.navbar-toggler');
     expect(toggleButton).toBeInTheDocument();
   });

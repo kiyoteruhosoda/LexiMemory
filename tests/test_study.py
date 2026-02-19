@@ -197,3 +197,162 @@ async def test_reset_memory(authenticated_client: tuple[AsyncClient, dict, str])
     assert card["word"]["id"] == word_id
     # Memory should be reset (memoryLevel = 0 or similar initial state)
     assert card["memory"]["memoryLevel"] == 0
+
+
+@pytest.mark.asyncio
+async def test_get_all_tags(authenticated_client: tuple[AsyncClient, dict, str]):
+    """Test getting all unique tags from user's words."""
+    client, _, access_token = authenticated_client
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Create words with different tags
+    await client.post(
+        "/api/words",
+        json={"headword": "business", "pos": "noun", "meaningJa": "ビジネス", "tags": ["business", "formal"]},
+        headers=headers
+    )
+    await client.post(
+        "/api/words",
+        json={"headword": "travel", "pos": "noun", "meaningJa": "旅行", "tags": ["travel", "casual"]},
+        headers=headers
+    )
+    await client.post(
+        "/api/words",
+        json={"headword": "meeting", "pos": "noun", "meaningJa": "会議", "tags": ["business"]},
+        headers=headers
+    )
+    
+    # Get all tags
+    response = await client.get("/api/study/tags", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ok"] is True
+    assert "tags" in data
+    tags = data["tags"]
+    
+    # Should contain all unique tags
+    assert "business" in tags
+    assert "formal" in tags
+    assert "travel" in tags
+    assert "casual" in tags
+    # business appears twice but should only be in the list once
+    assert tags.count("business") == 1
+
+
+@pytest.mark.asyncio
+async def test_next_card_filter_by_single_tag(authenticated_client: tuple[AsyncClient, dict, str]):
+    """Test filtering next card by a single tag."""
+    client, _, access_token = authenticated_client
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Create words with different tags
+    business_response = await client.post(
+        "/api/words",
+        json={"headword": "business", "pos": "noun", "meaningJa": "ビジネス", "tags": ["business"]},
+        headers=headers
+    )
+    travel_response = await client.post(
+        "/api/words",
+        json={"headword": "travel", "pos": "noun", "meaningJa": "旅行", "tags": ["travel"]},
+        headers=headers
+    )
+    
+    # Filter by "business" tag
+    response = await client.get("/api/study/next?tags=business", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ok"] is True
+    assert data["card"] is not None
+    assert data["card"]["word"]["headword"] == "business"
+    
+    # Filter by "travel" tag
+    response = await client.get("/api/study/next?tags=travel", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ok"] is True
+    assert data["card"] is not None
+    assert data["card"]["word"]["headword"] == "travel"
+
+
+@pytest.mark.asyncio
+async def test_next_card_filter_by_multiple_tags(authenticated_client: tuple[AsyncClient, dict, str]):
+    """Test filtering next card by multiple tags (OR logic)."""
+    client, _, access_token = authenticated_client
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Create words with different tags
+    await client.post(
+        "/api/words",
+        json={"headword": "business", "pos": "noun", "meaningJa": "ビジネス", "tags": ["business"]},
+        headers=headers
+    )
+    await client.post(
+        "/api/words",
+        json={"headword": "travel", "pos": "noun", "meaningJa": "旅行", "tags": ["travel"]},
+        headers=headers
+    )
+    await client.post(
+        "/api/words",
+        json={"headword": "food", "pos": "noun", "meaningJa": "食べ物", "tags": ["food"]},
+        headers=headers
+    )
+    
+    # Filter by multiple tags (should match words with ANY of the tags)
+    response = await client.get("/api/study/next?tags=business&tags=travel", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ok"] is True
+    assert data["card"] is not None
+    # Should return either "business" or "travel", but not "food"
+    assert data["card"]["word"]["headword"] in ["business", "travel"]
+
+
+@pytest.mark.asyncio
+async def test_next_card_filter_no_matching_tags(authenticated_client: tuple[AsyncClient, dict, str]):
+    """Test filtering by tags that don't match any words."""
+    client, _, access_token = authenticated_client
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Create a word with specific tags
+    await client.post(
+        "/api/words",
+        json={"headword": "example", "pos": "noun", "meaningJa": "例", "tags": ["test"]},
+        headers=headers
+    )
+    
+    # Filter by non-existent tag
+    response = await client.get("/api/study/next?tags=nonexistent", headers=headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["ok"] is True
+    # Should return None when no words match the filter
+    assert data["card"] is None
+
+
+@pytest.mark.asyncio
+async def test_next_card_word_with_multiple_tags(authenticated_client: tuple[AsyncClient, dict, str]):
+    """Test that words with multiple tags can be filtered by any of them."""
+    client, _, access_token = authenticated_client
+    headers = {"Authorization": f"Bearer {access_token}"}
+    
+    # Create a word with multiple tags
+    await client.post(
+        "/api/words",
+        json={"headword": "meeting", "pos": "noun", "meaningJa": "会議", "tags": ["business", "formal", "work"]},
+        headers=headers
+    )
+    
+    # Filter by first tag
+    response = await client.get("/api/study/next?tags=business", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["card"]["word"]["headword"] == "meeting"
+    
+    # Filter by second tag
+    response = await client.get("/api/study/next?tags=formal", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["card"]["word"]["headword"] == "meeting"
+    
+    # Filter by third tag
+    response = await client.get("/api/study/next?tags=work", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["card"]["word"]["headword"] == "meeting"

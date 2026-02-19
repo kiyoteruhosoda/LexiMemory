@@ -5,6 +5,7 @@ Verify that critical operations are logged to audit.log with proper structure.
 import pytest
 import json
 from pathlib import Path
+from typing import Optional
 from app import storage
 from app.settings import settings
 
@@ -15,7 +16,7 @@ def audit_log_path():
     return settings.data_dir / "logs" / "audit.log"
 
 
-def read_audit_events(audit_log_path: Path, event_type: str = None):
+def read_audit_events(audit_log_path: Path, event_type: Optional[str] = None):
     """Read audit log and return parsed events, optionally filtered by event type"""
     if not audit_log_path.exists():
         return []

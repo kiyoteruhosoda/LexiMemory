@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import { AuthProvider } from "./auth/AuthContext";
-import { RequireAuth } from "./auth/RequireAuth";
 import { Layout } from "./components/Layout";
 import { LoginPage } from "./pages/LoginPage";
 import { WordListPage } from "./pages/WordListPage";
@@ -8,8 +8,16 @@ import { WordCreatePage } from "./pages/WordCreatePage";
 import { WordDetailPage } from "./pages/WordDetailPage";
 import { StudyPage } from "./pages/StudyPage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ensureInitialized } from "./db/localRepository";
 
 export default function App() {
+  // Initialize IndexedDB on app load
+  useEffect(() => {
+    ensureInitialized().catch((err) => {
+      console.error("Failed to initialize IndexedDB:", err);
+    });
+  }, []);
+
   return (
     <ErrorBoundary>
       <AuthProvider>
@@ -17,41 +25,11 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<Layout><LoginPage /></Layout>} />
 
-            <Route
-              path="/words"
-              element={
-                <RequireAuth>
-                  <Layout><WordListPage /></Layout>
-                </RequireAuth>
-              }
-            />
-
-            <Route
-              path="/words/create"
-              element={
-                <RequireAuth>
-                  <Layout><WordCreatePage /></Layout>
-                </RequireAuth>
-              }
-            />
-
-            <Route
-              path="/words/:id"
-              element={
-                <RequireAuth>
-                  <Layout><WordDetailPage /></Layout>
-                </RequireAuth>
-              }
-            />
-
-            <Route
-              path="/study"
-              element={
-                <RequireAuth>
-                  <Layout><StudyPage /></Layout>
-                </RequireAuth>
-              }
-            />
+            {/* All pages are accessible offline without authentication */}
+            <Route path="/words" element={<Layout><WordListPage /></Layout>} />
+            <Route path="/words/create" element={<Layout><WordCreatePage /></Layout>} />
+            <Route path="/words/:id" element={<Layout><WordDetailPage /></Layout>} />
+            <Route path="/study" element={<Layout><StudyPage /></Layout>} />
 
             <Route path="/" element={<Navigate to="/words" replace />} />
             <Route path="*" element={<Navigate to="/words" replace />} />

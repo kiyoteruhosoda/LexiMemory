@@ -71,15 +71,32 @@ class JsonTokenStore:
         async with self._lock:
             store.updated_at_utc = datetime.now(timezone.utc).isoformat()
             
-            # Write to temporary file
-            with open(self.tmp_path, "w", encoding="utf-8") as f:
-                json.dump(store.model_dump(), f, indent=2, ensure_ascii=False)
-                f.flush()
-                os.fsync(f.fileno())  # Ensure written to disk
+            # Ensure directory exists (race condition protection)
+            self.auth_dir.mkdir(parents=True, exist_ok=True)
             
-            # Atomic rename
-            os.replace(self.tmp_path, self.store_path)
-            logger.debug("Refresh store saved atomically")
+            try:
+                # Write to temporary file
+                with open(self.tmp_path, "w", encoding="utf-8") as f:
+                    json.dump(store.model_dump(), f, indent=2, ensure_ascii=False)
+                    f.flush()
+                    os.fsync(f.fileno())  # Ensure written to disk
+                
+                # Verify tmp file exists before rename
+                if not self.tmp_path.exists():
+                    raise FileNotFoundError(f"Temporary file not created: {self.tmp_path}")
+                
+                # Atomic rename
+                os.replace(self.tmp_path, self.store_path)
+                logger.debug("Refresh store saved atomically")
+            except Exception as e:
+                # Clean up tmp file if it exists
+                if self.tmp_path.exists():
+                    try:
+                        self.tmp_path.unlink()
+                    except Exception:
+                        pass
+                logger.error(f"Failed to save refresh store: {e}")
+                raise
     
     async def find_by_hash(self, token_hash: str) -> Optional[tuple[str, TokenRecord]]:
         """

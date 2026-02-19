@@ -2,6 +2,7 @@
 
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import SyncButton from "./SyncButton";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { state, logout } = useAuth();
@@ -65,7 +66,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </nav>
 
-      <div className="container my-4">{children}</div>
+      <div className="container my-4">
+        {/* Sync panel at the top */}
+        <div className="row mb-3">
+          <div className="col-12">
+            <SyncButton />
+          </div>
+        </div>
+        
+        {children}
+      </div>
       <footer className="text-center mt-4">
         LexiMemory <span className="ms-2 badge text-bg-secondary">v{appVersion}</span>
       </footer>
