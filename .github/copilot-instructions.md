@@ -22,3 +22,21 @@ If instructions conflict:
 - Service/Domain: framework-agnostic
 - Raise HTTPException only in API layer
 - Never log secrets (tokens/passwords)
+
+## Quality Gate (Required)
+- After making changes, always verify by running tests for both backend and frontend with no errors.
+
+### Backend (FastAPI / Python)
+- Ensure the virtual environment (.venv) is activated before running any backend commands.
+- Run the full Python test suite (e.g., pytest).
+- Resolve all test failures and runtime errors before considering the change complete.
+
+### Frontend (React)
+- Run the frontend test suite (e.g., vitest or jest).
+- Run TypeScript type checking (e.g., tsc --noEmit).
+- Ensure the production build succeeds if a build step exists (e.g., vite build).
+
+## UI Language (Important)
+- All user-facing UI strings must be in English.
+  - This includes labels, buttons, headings, placeholders, validation messages shown in the UI, and toast/modal messages.
+  

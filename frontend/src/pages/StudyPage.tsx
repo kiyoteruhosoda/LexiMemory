@@ -140,7 +140,7 @@ export function StudyPage() {
           )}
         </div>
 
-        <SyncButton />
+        <SyncButton onSyncSuccess={() => { void loadTags(); void loadNext(); }} />
       </div>
 
       {/* Tag Filter Panel - Collapsible */}

@@ -119,7 +119,7 @@ export function WordListPage() {
           </div>
         </div>
 
-        <SyncButton />
+        <SyncButton onSyncSuccess={reload} />
       </div>
 
       {/* Search Form - Collapsible */}

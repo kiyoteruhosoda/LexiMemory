@@ -273,7 +273,7 @@ export function ExamplesTestPage() {
           )}
         </div>
 
-        <SyncButton />
+        <SyncButton onSyncSuccess={() => { void loadTags(); void loadNext(); }} />
       </div>
 
       {/* Tag Filter Panel - Collapsible */}

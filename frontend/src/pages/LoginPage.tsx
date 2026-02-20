@@ -84,7 +84,6 @@ export function LoginPage() {
                     className="form-control"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="e.g. hosoda"
                     autoComplete="username"
                     required
                   />

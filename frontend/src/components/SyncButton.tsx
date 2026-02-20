@@ -16,7 +16,11 @@ import {
 import type { ConflictResolution } from "../db/types";
 import { useAuth } from "../auth/AuthContext";
 
-export default function SyncButton() {
+type SyncButtonProps = {
+  onSyncSuccess?: () => void;
+};
+
+export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
   const { state } = useAuth();
   const isAuthenticated = state.status === "authed";
   const [status, setStatus] = useState<SyncStatus | null>(null);
@@ -64,6 +68,10 @@ export default function SyncButton() {
         // Success
         await loadStatus();
         setSuccessMessage("Sync completed successfully");
+        // Notify parent component to refresh data
+        if (onSyncSuccess) {
+          onSyncSuccess();
+        }
       } else if (result.status === "conflict") {
         // Conflict - show resolution dialog
         setConflict(result);
@@ -90,6 +98,10 @@ export default function SyncButton() {
       setSelectedResolution("fetch-server"); // Reset to default
       await loadStatus();
       setSuccessMessage("Conflict resolved successfully");
+      // Notify parent component to refresh data
+      if (onSyncSuccess) {
+        onSyncSuccess();
+      }
     } catch (err: any) {
       // Errors are silently ignored in this minimal button
       console.error("Failed to resolve conflict:", err);
@@ -186,55 +198,75 @@ export default function SyncButton() {
               <strong>Warning:</strong> The unselected version will be lost.
             </div>
 
-            {/* Resolution Selector */}
-            <div className="mb-3">
-              <label htmlFor="resolution-select" className="form-label">
-                Select Version:
-              </label>
-              <select
-                id="resolution-select"
-                className="form-select"
-                value={selectedResolution}
-                onChange={(e) => setSelectedResolution(e.target.value as ConflictResolution)}
-                disabled={syncing}
-              >
-                <option value="fetch-server">Server Version</option>
-                <option value="force-local">Local Version</option>
-              </select>
+            {/* Version Selection Cards with Radio Buttons */}
+            <div className="row g-3 mb-3">
+              <div className="col-md-6">
+                <div
+                  className={`card h-100 cursor-pointer ${
+                    selectedResolution === "force-local" ? "border-primary border-2" : ""
+                  }`}
+                  onClick={() => setSelectedResolution("force-local")}
+                  style={{ cursor: "pointer" }}
+                >
+                  <div className="card-body">
+                    <div className="d-flex align-items-start gap-2 mb-2">
+                      <input
+                        type="radio"
+                        className="form-check-input mt-1"
+                        checked={selectedResolution === "force-local"}
+                        onChange={() => setSelectedResolution("force-local")}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="flex-grow-1">
+                        <h6 className="card-title mb-0">Local Version</h6>
+                      </div>
+                    </div>
+                    <p className="small text-muted mb-0">
+                      Words: {conflict.localFile.words.length}
+                      <br />
+                      Updated:{" "}
+                      {new Date(
+                        conflict.localFile.updatedAt
+                      ).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div
+                  className={`card h-100 cursor-pointer ${
+                    selectedResolution === "fetch-server" ? "border-primary border-2" : ""
+                  }`}
+                  onClick={() => setSelectedResolution("fetch-server")}
+                  style={{ cursor: "pointer" }}
+                >
+                  <div className="card-body">
+                    <div className="d-flex align-items-start gap-2 mb-2">
+                      <input
+                        type="radio"
+                        className="form-check-input mt-1"
+                        checked={selectedResolution === "fetch-server"}
+                        onChange={() => setSelectedResolution("fetch-server")}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <div className="flex-grow-1">
+                        <h6 className="card-title mb-0">Server Version</h6>
+                      </div>
+                    </div>
+                    <p className="small text-muted mb-0">
+                      Words: {conflict.serverData.file.words.length}
+                      <br />
+                      Updated:{" "}
+                      {new Date(
+                        conflict.serverData.updatedAt
+                      ).toLocaleString()}
+                      <br />
+                      Client: {conflict.serverData.updatedByClientId.slice(0, 8)}...
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-
-            {/* Display Selected Version Details */}
-            {selectedResolution === "fetch-server" ? (
-              <div className="card border-primary">
-                <div className="card-body">
-                  <h6 className="card-title">Server Version</h6>
-                  <p className="small mb-0">
-                    Words: {conflict.serverData.file.words.length}
-                    <br />
-                    Updated:{" "}
-                    {new Date(
-                      conflict.serverData.updatedAt
-                    ).toLocaleString()}
-                    <br />
-                    Client: {conflict.serverData.updatedByClientId.slice(0, 8)}...
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="card border-primary">
-                <div className="card-body">
-                  <h6 className="card-title">Local Version</h6>
-                  <p className="small mb-0">
-                    Words: {conflict.localFile.words.length}
-                    <br />
-                    Updated:{" "}
-                    {new Date(
-                      conflict.localFile.updatedAt
-                    ).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            )}
 
             <div className="modal-footer mt-3">
               <button
