@@ -209,6 +209,7 @@ export function ExamplesTestPage() {
   }
 
   function handleNext() {
+    setShowWordInfo(false);
     setShowTranslation(false);
     void loadNext();
   }

@@ -152,8 +152,6 @@ describe('FlashCard', () => {
 
     render(<FlashCard word={mockWord} memory={mockMemory} onRate={mockOnRate} />);
 
-    fireEvent.click(screen.getByText('Show Answer'));
-
     const ratings: Array<[string, 'again' | 'hard' | 'good' | 'easy']> = [
       ['Again', 'again'],
       ['Hard', 'hard'],
@@ -162,6 +160,9 @@ describe('FlashCard', () => {
     ];
 
     for (const [buttonText, rating] of ratings) {
+      // Show answer before each rating
+      fireEvent.click(screen.getByText('Show Answer'));
+      
       fireEvent.click(screen.getByText(buttonText));
       await waitFor(() => {
         expect(mockOnRate).toHaveBeenCalledWith(rating);

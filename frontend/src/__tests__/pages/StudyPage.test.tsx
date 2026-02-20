@@ -1,7 +1,9 @@
 // src/__tests__/pages/StudyPage.test.tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { StudyPage } from '../../pages/StudyPage';
+import { AuthProvider } from '../../auth/AuthContext';
 import * as studyOffline from '../../api/study.offline';
 
 vi.mock('../../api/study.offline', () => ({
@@ -9,6 +11,31 @@ vi.mock('../../api/study.offline', () => ({
     next: vi.fn(),
     grade: vi.fn(),
     getTags: vi.fn(),
+  },
+}));
+
+vi.mock('../../api/auth', () => ({
+  authApi: {
+    me: vi.fn(),
+    logout: vi.fn(),
+    login: vi.fn(),
+    refresh: vi.fn(),
+  },
+}));
+
+vi.mock('../../api/client', () => ({
+  tokenManager: {
+    setToken: vi.fn(),
+    clearToken: vi.fn(),
+    onUnauthorized: vi.fn(),
+  },
+}));
+
+vi.mock('../../utils/logger', () => ({
+  logger: {
+    info: vi.fn(),
+    error: vi.fn(),
+    setUserId: vi.fn(),
   },
 }));
 
@@ -21,7 +48,13 @@ describe('StudyPage', () => {
     vi.mocked(studyOffline.studyApi.getTags).mockResolvedValue({ ok: true, tags: [] });
     vi.mocked(studyOffline.studyApi.next).mockResolvedValue({ ok: true, card: null });
 
-    render(<StudyPage />);
+    render(
+      <MemoryRouter>
+        <AuthProvider>
+          <StudyPage />
+        </AuthProvider>
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Study Complete')).toBeInTheDocument();
@@ -56,7 +89,13 @@ describe('StudyPage', () => {
     vi.mocked(studyOffline.studyApi.getTags).mockResolvedValue({ ok: true, tags: [] });
     vi.mocked(studyOffline.studyApi.next).mockResolvedValue({ ok: true, card: mockCard });
 
-    render(<StudyPage />);
+    render(
+      <MemoryRouter>
+        <AuthProvider>
+          <StudyPage />
+        </AuthProvider>
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByText('vocabulary')).toBeInTheDocument();
@@ -67,7 +106,13 @@ describe('StudyPage', () => {
     vi.mocked(studyOffline.studyApi.getTags).mockResolvedValue({ ok: true, tags: [] });
     vi.mocked(studyOffline.studyApi.next).mockRejectedValue(new Error('Network error'));
 
-    render(<StudyPage />);
+    render(
+      <MemoryRouter>
+        <AuthProvider>
+          <StudyPage />
+        </AuthProvider>
+      </MemoryRouter>
+    );
 
     await waitFor(() => {
       expect(screen.getByText(/Network error/i)).toBeInTheDocument();

@@ -53,7 +53,7 @@ describe('Layout', () => {
     // Wait for async initialization
     await screen.findByText('Guest');
     
-    const lexiMemories = screen.getAllByText(/LexiMemory/);
+    const lexiMemories = screen.getAllByText(/LinguisticNode/);
     expect(lexiMemories.length).toBeGreaterThan(0);
   });
 

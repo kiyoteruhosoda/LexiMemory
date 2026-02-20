@@ -1,6 +1,6 @@
 # OpenAPI + Swagger ドキュメント
 
-LexiMemory API は、OpenAPI 3.0 仕様に対応しており、自動生成される Swagger UI と ReDoc で対話的に API を探索・テストできます。
+LinguisticNode API は、OpenAPI 3.0 仕様に対応しており、自動生成される Swagger UI と ReDoc で対話的に API を探索・テストできます。
 
 ## アクセス方法
 
@@ -15,7 +15,7 @@ LexiMemory API は、OpenAPI 3.0 仕様に対応しており、自動生成さ�
 
 ### 基本情報
 
-- **Title**: LexiMemory API
+- **Title**: LinguisticNode API
 - **Version**: 0.1.0
 - **Description**: 間隔反復法（FSRS アルゴリズム）を使用した語彙学習アプリケーション
 

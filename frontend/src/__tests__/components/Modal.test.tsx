@@ -95,7 +95,7 @@ describe('ConfirmModal', () => {
     );
 
     expect(screen.getByText('Confirm')).toBeInTheDocument();
-    expect(screen.getByText('本当に削除しますか？')).toBeInTheDocument();
+    expect(screen.getByText('Are you sure you want to delete?')).toBeInTheDocument();
   });
 
   it('should display custom button text', () => {

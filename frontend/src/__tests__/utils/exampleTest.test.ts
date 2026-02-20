@@ -194,7 +194,7 @@ describe('Example Test Utils', () => {
 
     it('should NOT match partial words - exact match only', () => {
       expect(checkAnswer('remain', 'remaining')).toBe(false);
-      expect(checkAnswer('remaining', 'remain')).toBe(true);
+      expect(checkAnswer('remaining', 'remain')).toBe(false);
     });
   });
 

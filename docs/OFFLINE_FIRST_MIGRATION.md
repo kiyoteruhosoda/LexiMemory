@@ -2,7 +2,7 @@
 
 ## 概要
 
-LexiMemoryをオフラインファースト・アーキテクチャに移行しました。
+LinguisticNodeをオフラインファースト・アーキテクチャに移行しました。
 ローカルが単一の真実（Source of Truth）となり、同期はユーザー操作で明示的に行います。
 
 ## 主な変更点
@@ -234,7 +234,7 @@ GET /api/io/export
 await indexedDB.databases()
 
 // 強制削除
-indexedDB.deleteDatabase("LexiMemoryDB")
+indexedDB.deleteDatabase("LinguisticNodeDB")
 
 // ページリロードで再初期化される
 ```

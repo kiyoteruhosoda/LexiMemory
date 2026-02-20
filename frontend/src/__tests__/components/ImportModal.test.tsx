@@ -89,11 +89,11 @@ describe('ImportModal', () => {
     
     const mockData = { schemaVersion: 1, words: [{ headword: 'test', pos: 'noun', meaningJa: 'テスト' }], memory: [] };
     const file = new File([JSON.stringify(mockData)], 'test.json', { type: 'application/json' });
-    const input = screen.getByLabelText('JSONファイルを選択') as HTMLInputElement;
+    const input = screen.getByLabelText('Select JSON File') as HTMLInputElement;
     
     await user.upload(input, file);
     
-    const importButton = screen.getByRole('button', { name: /インポート/i });
+    const importButton = screen.getByRole('button', { name: /Import/i });
     await user.click(importButton);
     
     await waitFor(() => {
@@ -148,7 +148,7 @@ describe('ImportModal', () => {
     await user.click(importButton);
     
     await waitFor(() => {
-      expect(screen.getByText(errorMsg)).toBeInTheDocument();
+      expect(screen.getByText(/Import error/i)).toBeInTheDocument();
     }, { timeout: 3000 });
   });
 

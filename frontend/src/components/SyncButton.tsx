@@ -24,6 +24,7 @@ export default function SyncButton() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [conflict, setConflict] = useState<SyncConflict | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [selectedResolution, setSelectedResolution] = useState<ConflictResolution>("fetch-server");
 
   // Load sync status on mount and when authentication changes
   useEffect(() => {
@@ -79,13 +80,14 @@ export default function SyncButton() {
     }
   };
 
-  const handleResolveConflict = async (strategy: ConflictResolution) => {
+  const handleResolveConflict = async () => {
     setSyncing(true);
     setSuccessMessage(null);
 
     try {
-      await resolveConflict(strategy);
+      await resolveConflict(selectedResolution);
       setConflict(null);
+      setSelectedResolution("fetch-server"); // Reset to default
       await loadStatus();
       setSuccessMessage("Conflict resolved successfully");
     } catch (err: any) {
@@ -177,64 +179,89 @@ export default function SyncButton() {
           <div>
             <p>
               The server data has been updated from another device.
-              Which version would you like to keep?
+              Select which version to keep:
             </p>
 
             <div className="alert alert-warning">
               <strong>Warning:</strong> The unselected version will be lost.
             </div>
 
-            <div className="row">
-              <div className="col-md-6">
-                <div className="card">
-                  <div className="card-body">
-                    <h6 className="card-title">Local Version</h6>
-                    <p className="small">
-                      Words: {conflict.localFile.words.length}
-                      <br />
-                      Updated:{" "}
-                      {new Date(
-                        conflict.localFile.updatedAt
-                      ).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-6">
-                <div className="card">
-                  <div className="card-body">
-                    <h6 className="card-title">Server Version</h6>
-                    <p className="small">
-                      Words: {conflict.serverData.file.words.length}
-                      <br />
-                      Updated:{" "}
-                      {new Date(
-                        conflict.serverData.updatedAt
-                      ).toLocaleString()}
-                      <br />
-                      Client: {conflict.serverData.updatedByClientId.slice(0, 8)}...
-                    </p>
-                  </div>
-                </div>
-              </div>
+            {/* Resolution Selector */}
+            <div className="mb-3">
+              <label htmlFor="resolution-select" className="form-label">
+                Select Version:
+              </label>
+              <select
+                id="resolution-select"
+                className="form-select"
+                value={selectedResolution}
+                onChange={(e) => setSelectedResolution(e.target.value as ConflictResolution)}
+                disabled={syncing}
+              >
+                <option value="fetch-server">Server Version</option>
+                <option value="force-local">Local Version</option>
+              </select>
             </div>
+
+            {/* Display Selected Version Details */}
+            {selectedResolution === "fetch-server" ? (
+              <div className="card border-primary">
+                <div className="card-body">
+                  <h6 className="card-title">Server Version</h6>
+                  <p className="small mb-0">
+                    Words: {conflict.serverData.file.words.length}
+                    <br />
+                    Updated:{" "}
+                    {new Date(
+                      conflict.serverData.updatedAt
+                    ).toLocaleString()}
+                    <br />
+                    Client: {conflict.serverData.updatedByClientId.slice(0, 8)}...
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="card border-primary">
+                <div className="card-body">
+                  <h6 className="card-title">Local Version</h6>
+                  <p className="small mb-0">
+                    Words: {conflict.localFile.words.length}
+                    <br />
+                    Updated:{" "}
+                    {new Date(
+                      conflict.localFile.updatedAt
+                    ).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            )}
 
             <div className="modal-footer mt-3">
               <button
                 type="button"
                 className="btn btn-secondary"
-                onClick={() => handleResolveConflict("fetch-server")}
+                onClick={() => setConflict(null)}
                 disabled={syncing}
               >
-                Use Server Version
+                Cancel
               </button>
               <button
                 type="button"
                 className="btn btn-primary"
-                onClick={() => handleResolveConflict("force-local")}
+                onClick={handleResolveConflict}
                 disabled={syncing}
               >
-                Use Local Version
+                {syncing ? (
+                  <>
+                    <span className="spinner-border spinner-border-sm me-2" />
+                    Resolving...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-check me-2" />
+                    Resolve Conflict
+                  </>
+                )}
               </button>
             </div>
           </div>

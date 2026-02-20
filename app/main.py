@@ -178,7 +178,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="LexiMemory API",
+        title="LinguisticNode API",
         version=os.getenv("VOCAB_APP_VERSION", "0.1.0"),
         description="Vocabulary learning application with spaced repetition (FSRS algorithm)",
         lifespan=lifespan,

@@ -43,7 +43,7 @@ class IDBTransactionMock {
 }
 
 class IDBDatabaseMock {
-  name = 'LexiMemoryDB';
+  name = 'LinguisticNodeDB';
   version = 1;
   objectStoreNames = {
     contains: vi.fn().mockReturnValue(false),

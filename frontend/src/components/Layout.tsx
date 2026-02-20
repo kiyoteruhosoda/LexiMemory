@@ -21,7 +21,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
         <div className="container">
           <Link className="navbar-brand fw-bold" to="/words">
-            LexiMemory
+            LinguisticNode
           </Link>
 
           <button
@@ -113,7 +113,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </div>
       
       <footer className="text-center mt-4">
-        LexiMemory <span className="ms-2 badge text-bg-secondary">v{appVersion}</span>
+        LinguisticNode <span className="ms-2 badge text-bg-secondary">v{appVersion}</span>
       </footer>
       
       {/* Sync Details Modal */}

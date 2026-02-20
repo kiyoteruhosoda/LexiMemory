@@ -6,7 +6,7 @@ ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 FRONTEND_DIR="$ROOT_DIR/frontend"
 
 echo "========================================"
-echo "LexiMemory FULL TEST SUITE START"
+echo "LinguisticNode FULL TEST SUITE START"
 echo "Root: $ROOT_DIR"
 echo "========================================"
 
@@ -74,5 +74,5 @@ echo "  $FRONTEND_DIR/coverage"
 ########################################
 
 echo "========================================"
-echo "LexiMemory FULL TEST SUITE SUCCESS"
+echo "LinguisticNode FULL TEST SUITE SUCCESS"
 echo "========================================"

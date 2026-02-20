@@ -1,7 +1,7 @@
 
-# LexiMemory
+# LinguisticNode
 
-LexiMemory is a vocabulary learning and spaced-repetition memory app, featuring a FastAPI backend and a React (TypeScript) frontend. The project is fully containerized with Docker.
+LinguisticNode is a vocabulary learning and spaced-repetition memory app, featuring a FastAPI backend and a React (TypeScript) frontend. The project is fully containerized with Docker.
 
 ## Project Structure
 
@@ -160,7 +160,7 @@ Key environment variables (see `.env.sample`):
 
 ## Architecture
 
-LexiMemory follows a clean layered architecture:
+LinguisticNode follows a clean layered architecture:
 
 1. **API Layer** (`routers/`): HTTP endpoints, request/response models
 2. **Service Layer** (`services.py`): Business logic, framework-agnostic
@@ -312,7 +312,7 @@ POST /api/io/import?mode=overwrite
 - ✅ Merge logic applies (timestamp comparison)
 
 **Typical workflow:**
-1. Export from LexiMemory → get complete format
+1. Export from LinguisticNode → get complete format
 2. Create manually → use minimal format
 3. Merge imports → existing data + new data
 4. Overwrite imports → full replacement

@@ -8,7 +8,7 @@
 
 import type { VocabFile, SyncMetadata } from "./types";
 
-const DB_NAME = "LexiMemoryDB";
+const DB_NAME = "LinguisticNodeDB";
 const DB_VERSION = 1;
 
 const STORE_VOCAB = "vocab";
