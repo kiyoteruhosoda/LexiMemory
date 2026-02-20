@@ -35,6 +35,21 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
     loadStatus();
   }, [isAuthenticated]);
 
+  // Auto-sync after login if there was a pending sync
+  useEffect(() => {
+    if (isAuthenticated) {
+      const pendingSync = localStorage.getItem('pendingSync');
+      if (pendingSync === 'true') {
+        localStorage.removeItem('pendingSync');
+        // Execute sync automatically after a short delay to ensure auth is fully ready
+        const timer = setTimeout(() => {
+          void handleSync();
+        }, 100);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [isAuthenticated]);
+
   // Clear success message after 3 seconds
   useEffect(() => {
     if (successMessage) {
@@ -55,6 +70,7 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
   const handleSync = async () => {
     if (!isAuthenticated) {
       setShowLoginPrompt(true);
+      localStorage.setItem('pendingSync', 'true');
       return;
     }
 
@@ -81,6 +97,7 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
       // Check if authentication error
       if (err.status === 401) {
         setShowLoginPrompt(true);
+        localStorage.setItem('pendingSync', 'true');
       }
       // Other errors are silently ignored
     } finally {
@@ -162,7 +179,10 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
       {showLoginPrompt && (
         <Modal
           show={showLoginPrompt}
-          onClose={() => setShowLoginPrompt(false)}
+          onClose={() => {
+            setShowLoginPrompt(false);
+            localStorage.removeItem('pendingSync');
+          }}
           title="Login Required"
         >
           <p>You need to login to sync your data.</p>
@@ -170,7 +190,10 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => setShowLoginPrompt(false)}
+              onClick={() => {
+                setShowLoginPrompt(false);
+                localStorage.removeItem('pendingSync');
+              }}
             >
               Cancel
             </button>
