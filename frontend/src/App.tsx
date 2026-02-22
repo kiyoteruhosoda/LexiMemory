@@ -10,19 +10,41 @@ import { StudyPage } from "./pages/StudyPage";
 import { ExamplesTestPage } from "./pages/ExamplesTestPage";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ensureInitialized } from "./db/localRepository";
+import { api } from "./api/client";
 
 export default function App() {
   const [dbInitialized, setDbInitialized] = useState(false);
   const [initError, setInitError] = useState<string | null>(null);
 
-  // Initialize IndexedDB on app load
+  // Initialize, and set up periodic server connectivity check
   useEffect(() => {
+    // Perform an immediate health check to determine initial online status.
+    void api.healthCheck();
+
+    // Set up a periodic health check every 30 seconds
+    const intervalId = setInterval(() => {
+      void api.healthCheck();
+    }, 30000);
+
+    // Add an event listener to re-check immediately when browser comes online
+    const handleOnline = () => {
+      void api.healthCheck();
+    };
+    window.addEventListener("online", handleOnline);
+
+    // Initialize the local database
     ensureInitialized()
       .then(() => setDbInitialized(true))
       .catch((err) => {
         console.error("Failed to initialize IndexedDB:", err);
         setInitError(err.message || "Database initialization failed");
       });
+
+    // Cleanup on component unmount
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener("online", handleOnline);
+    };
   }, []);
 
   // Show loading screen while initializing

@@ -13,6 +13,7 @@ import type {
   VocabSyncResponse,
   ConflictResolution,
 } from "./types";
+import { onlineStatusStore } from "../utils/onlineStatusStore";
 import {
   getSyncMetadata,
   saveSyncMetadata,
@@ -124,7 +125,7 @@ export async function getSyncStatus(): Promise<SyncStatus> {
   }
 
   return {
-    online: navigator.onLine,
+    online: onlineStatusStore.getOnlineStatus(),
     dirty: metadata.dirty,
     lastSyncAt: metadata.lastSyncAt,
     clientId: metadata.clientId,

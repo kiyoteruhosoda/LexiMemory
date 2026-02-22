@@ -1,4 +1,5 @@
 import { logger } from "../utils/logger";
+import { onlineStatusStore } from "../utils/onlineStatusStore";
 
 export class ApiError extends Error {
   status: number;
@@ -68,7 +69,7 @@ async function request<T>(
   method: HttpMethod,
   path: string,
   body?: unknown,
-  opts?: { skipAuth?: boolean; allow401?: boolean }
+  opts?: { skipAuth?: boolean; allow401?: boolean; isHealthCheck?: boolean }
 ): Promise<T> {
   const headers: Record<string, string> = {};
   
@@ -81,57 +82,77 @@ async function request<T>(
     headers["Content-Type"] = "application/json";
   }
 
-  const res = await fetch(`/api${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-    credentials: "include",
-  });
-
-  if (opts?.allow401 && res.status === 401) {
-    return undefined as T;
-  }
-
-  // Handle 401 Unauthorized
-  if (res.status === 401 && !opts?.skipAuth) {
-    const error = await parseError(res);
-    logger.warn("Unauthorized - token expired", {
+  try {
+    const res = await fetch(`/api${path}`, {
       method,
-      path,
-      errorCode: error.errorCode,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      credentials: "include",
     });
-    
-    accessToken = null;
-    if (onUnauthorizedCallback) {
-      onUnauthorizedCallback();
+
+    // If we received a response, we are online.
+    onlineStatusStore.setOnline(true);
+
+    if (opts?.allow401 && res.status === 401) {
+      return undefined as T;
+    }
+
+    // Handle 401 Unauthorized
+    if (res.status === 401 && !opts?.skipAuth) {
+      const error = await parseError(res);
+      logger.warn("Unauthorized - token expired", {
+        method,
+        path,
+        errorCode: error.errorCode,
+      });
+      
+      accessToken = null;
+      if (onUnauthorizedCallback) {
+        onUnauthorizedCallback();
+      }
+      
+      throw error;
+    }
+
+    if (!res.ok) {
+      const error = await parseError(res);
+      logger.error("API request failed", {
+        method,
+        path,
+        status: error.status,
+        errorCode: error.errorCode,
+        requestId: error.requestId,
+        message: error.message,
+      });
+      throw error;
+    }
+
+    if (res.status === 204) return undefined as T;
+    return (await res.json()) as T;
+
+  } catch (err: any) {
+    // This block catches network errors (e.g., server down, no internet)
+    logger.warn(`Network error during API request: ${err.message}`, { path });
+    onlineStatusStore.setOnline(false);
+
+    // Don't rethrow for health checks, as we don't want to crash the app
+    if (opts?.isHealthCheck) {
+      return undefined as T;
     }
     
-    throw error;
+    // Re-throw the error for other requests to be handled by the caller
+    throw err;
   }
-
-  if (!res.ok) {
-    const error = await parseError(res);
-    logger.error("API request failed", {
-      method,
-      path,
-      status: error.status,
-      errorCode: error.errorCode,
-      requestId: error.requestId,
-      message: error.message,
-    });
-    throw error;
-  }
-
-  if (res.status === 204) return undefined as T;
-  return (await res.json()) as T;
 }
 
 export const api = {
   get: <T>(path: string) => request<T>("GET", path),
-  post: <T>(path: string, body?: unknown) => request<T>("POST", path, body),
+  post: <T>(path:string, body?: unknown) => request<T>("POST", path, body),
   put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body),
   del: <T>(path: string) => request<T>("DELETE", path),
   getAllow401: <T>(path: string) => request<T>("GET", path, undefined, { allow401: true }),
   postAuth: <T>(path: string, body?: unknown) =>
     request<T>("POST", path, body, { skipAuth: true }),
+  // Add a health check method
+  healthCheck: () => request<unknown>("GET", "/users/me", undefined, { allow401: true, isHealthCheck: true }),
 };

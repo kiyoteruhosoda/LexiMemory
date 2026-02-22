@@ -7,6 +7,8 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./hover-shim.css";
 import { initializeHoverModeShim } from "./domain/ui/hoverModeShim";
+import { onlineStatusStore } from "./utils/onlineStatusStore";
+import { api } from "./api/client";
 
 // Global error handlers for debugging
 window.onerror = (message, source, lineno, colno, error) => {
@@ -17,6 +19,16 @@ window.onerror = (message, source, lineno, colno, error) => {
 window.onunhandledrejection = (event) => {
   console.error("Unhandled promise rejection:", event.reason);
 };
+
+// Register health check function for network status monitoring
+onlineStatusStore.registerHealthCheck(async () => {
+  try {
+    await api.healthCheck();
+    return true;
+  } catch {
+    return false;
+  }
+});
 
 initializeHoverModeShim();
 

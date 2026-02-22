@@ -15,6 +15,7 @@ import {
 } from "../db/syncService";
 import type { ConflictResolution } from "../db/types";
 import { useAuth } from "../auth/AuthContext";
+import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 type SyncButtonProps = {
   onSyncSuccess?: () => void;
@@ -23,21 +24,22 @@ type SyncButtonProps = {
 export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
   const { state } = useAuth();
   const isAuthenticated = state.status === "authed";
-  const [status, setStatus] = useState<SyncStatus | null>(null);
+  const isOnline = useOnlineStatus(); // Use the hook
+  const [status, setStatus] = useState<Omit<SyncStatus, "online"> | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [conflict, setConflict] = useState<SyncConflict | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [selectedResolution, setSelectedResolution] = useState<ConflictResolution>("fetch-server");
 
-  // Load sync status on mount and when authentication changes
+  // Load sync metadata on mount and when authentication changes
   useEffect(() => {
-    loadStatus();
+    void loadStatus();
   }, [isAuthenticated]);
 
-  // Auto-sync after login if there was a pending sync
+  // Auto-sync after login if there was a pending sync and we are online
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && isOnline) {
       const pendingSync = localStorage.getItem('pendingSync');
       if (pendingSync === 'true') {
         localStorage.removeItem('pendingSync');
@@ -48,7 +50,7 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
         return () => clearTimeout(timer);
       }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isOnline]);
 
   // Clear success message after 3 seconds
   useEffect(() => {
@@ -60,14 +62,21 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
 
   const loadStatus = async () => {
     try {
-      const s = await getSyncStatus();
-      setStatus(s);
+      // We get the full status, but only store the parts we need, ignoring 'online'
+      const { online, ...rest } = await getSyncStatus();
+      setStatus(rest);
     } catch (err: any) {
       console.error("Failed to load sync status:", err);
     }
   };
 
   const handleSync = async () => {
+    // Prevent sync if offline
+    if (!isOnline) {
+      console.log("Sync prevented: You are offline.");
+      return;
+    }
+
     if (!isAuthenticated) {
       setShowLoginPrompt(true);
       localStorage.setItem('pendingSync', 'true');
@@ -92,14 +101,15 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
         // Conflict - show resolution dialog
         setConflict(result);
       }
-      // Errors are silently ignored in this minimal button
+      // Errors are now handled by the API client layer setting online status
     } catch (err: any) {
       // Check if authentication error
       if (err.status === 401) {
         setShowLoginPrompt(true);
         localStorage.setItem('pendingSync', 'true');
       }
-      // Other errors are silently ignored
+      // Other errors are now more gracefully handled by the online status store
+      console.error("Sync failed:", err);
     } finally {
       setSyncing(false);
     }
@@ -108,6 +118,12 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
   const handleResolveConflict = async () => {
     setSyncing(true);
     setSuccessMessage(null);
+
+    if (!isOnline) {
+      console.log("Conflict resolution prevented: You are offline.");
+      setSyncing(false);
+      return;
+    }
 
     try {
       await resolveConflict(selectedResolution);
@@ -132,10 +148,10 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
   }
 
   // Determine status badge color: yellow (dirty) takes priority over green (online)
-  const statusColor = status.dirty ? "warning" : status.online ? "success" : "secondary";
+  const statusColor = status.dirty ? "warning" : isOnline ? "success" : "secondary";
   const statusTitle = status.dirty 
     ? "Unsaved changes" 
-    : status.online 
+    : isOnline 
     ? "Online" 
     : "Offline";
 
@@ -145,7 +161,7 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
       <button
         className="btn btn-sm btn-outline-secondary position-relative"
         onClick={handleSync}
-        disabled={syncing || !status.online}
+        disabled={syncing || !isOnline}
         title={statusTitle}
       >
         {syncing ? (
