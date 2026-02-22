@@ -1,6 +1,6 @@
 // frontend/src/pages/ExamplesTestPage.tsx
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { examplesApi } from "../api/examples.offline";
 import type { ExampleTestItem } from "../api/types";
@@ -116,6 +116,7 @@ export function ExamplesTestPage() {
   const [showWordInfo, setShowWordInfo] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const canSpeak = useMemo(() => typeof window !== "undefined" && "speechSynthesis" in window, []);
   
   // Tag filter state
   const [allTags, setAllTags] = useState<string[]>([]);
@@ -212,6 +213,16 @@ export function ExamplesTestPage() {
     setShowWordInfo(false);
     setShowTranslation(false);
     void loadNext();
+  }
+
+  function speakSentence(e?: React.MouseEvent<HTMLButtonElement>) {
+    if (!canSpeak || !example?.en) return;
+    const ut = new SpeechSynthesisUtterance(example.en);
+    ut.lang = "en-US";
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(ut);
+    // Blur to remove focus/hover state on touch devices
+    if (e) e.currentTarget.blur();
   }
 
   function toggleTagSelection(tag: string) {
@@ -367,8 +378,18 @@ export function ExamplesTestPage() {
 
             {/* Blanked Sentence */}
             <div className="mb-3">
-              <div className="fs-5 fw-medium">
-                {blankedSentence}
+              <div className="d-flex align-items-start gap-2">
+                <div className="fs-5 fw-medium flex-grow-1">
+                  {blankedSentence}
+                </div>
+                <button
+                  className="btn btn-outline-secondary btn-sm"
+                  onClick={speakSentence}
+                  disabled={!canSpeak}
+                  title="Speak"
+                >
+                  <i className="fa-solid fa-volume-high" />
+                </button>
               </div>
               
               {/* Translation Toggle */}
