@@ -188,8 +188,11 @@ def create_word(
 
 # ---------- Study (SRS) ----------
 def _parse_iso(s: str) -> datetime:
-    # ISO with timezone assumed; storage.now_iso() uses UTC offset
-    return datetime.fromisoformat(s)
+    # ISO with timezone assumed; support trailing "Z" and naive values.
+    parsed = datetime.fromisoformat(s.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=UTC)
+    return parsed
 
 def _next_interval_days(prev_interval: int, ease: float, review_count: int) -> int:
     if review_count <= 0:

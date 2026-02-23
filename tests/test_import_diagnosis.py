@@ -91,7 +91,7 @@ async def test_import_merge_duplicate_detection(authenticated_client):
     print(f"\n=== Import Old Timestamp ===")
     print(f"Status: {import_old.status_code}")
     
-    # Check - should still have original
+    # Check - older imported data should not override newer existing data
     words = await client.get("/api/words", headers=headers)
     print(f"Words count: {len(words.json()['words'])}")
     print(f"Headword: {words.json()['words'][0]['headword']}")

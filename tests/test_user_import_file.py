@@ -13,7 +13,7 @@ async def test_import_user_file(authenticated_client):
     headers = {"Authorization": f"Bearer {token}"}
     
     # Load user's file
-    with open('data/No Title3_20260218_185432.txt', 'r') as f:
+    with open('tests/fixtures/user_import_sample.json', 'r', encoding='utf-8') as f:
         import_data = json.load(f)
     
     print(f"\n=== User File Import Test ===")

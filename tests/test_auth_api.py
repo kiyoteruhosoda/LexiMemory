@@ -112,7 +112,8 @@ async def test_replay_detection(client: AsyncClient, unique_username):
     assert resp.status_code == 200
     
     # Try to reuse old refresh token (replay attack)
-    client.cookies.set("refresh_token", refresh_token_1)
+    # NOTE: set domain explicitly to override host cookie created by previous Set-Cookie
+    client.cookies.set("refresh_token", refresh_token_1, domain="testserver.local", path="/")
     resp = await client.post("/api/auth/refresh")
     assert resp.status_code == 401
     error = resp.json()["error"]
