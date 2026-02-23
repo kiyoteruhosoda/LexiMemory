@@ -18,6 +18,7 @@ type RefreshResponse = {
 type AuthStatusResponse = {
   ok: boolean;
   authenticated: boolean;
+  canRefresh: boolean;
   userId?: string;
   username?: string;
 };
@@ -54,13 +55,13 @@ export const authApi = {
   },
 
   // Check authentication status - always returns 200, never throws 401
-  // Returns { authenticated: true/false, userId?, username? }
+  // Returns { authenticated: true/false, canRefresh: true/false, userId?, username? }
   status: async (): Promise<AuthStatusResponse> => {
     try {
       return await api.get<AuthStatusResponse>("/auth/status");
     } catch {
-      // If network error, assume not authenticated
-      return { ok: true, authenticated: false };
+      // If network error, assume not authenticated and no refresh token
+      return { ok: true, authenticated: false, canRefresh: false };
     }
   },
 

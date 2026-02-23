@@ -338,12 +338,13 @@ async def test_access_token_expiration_format(client: AsyncClient, unique_userna
 
 @pytest.mark.asyncio
 async def test_auth_status_without_token(client: AsyncClient):
-    """Test /auth/status without authentication - should return 200 with authenticated=false"""
+    """Test /auth/status without authentication - should return 200 with authenticated=false, canRefresh=false"""
     resp = await client.get("/api/auth/status")
     assert resp.status_code == 200
     data = resp.json()
     assert data["ok"] is True
     assert data["authenticated"] is False
+    assert data["canRefresh"] is False
     assert "userId" not in data or data["userId"] is None
     assert "username" not in data or data["username"] is None
 
@@ -376,6 +377,7 @@ async def test_auth_status_with_valid_token(client: AsyncClient, unique_username
     data = resp.json()
     assert data["ok"] is True
     assert data["authenticated"] is True
+    assert data["canRefresh"] is True  # Should have refresh token from login
     assert data["username"] == username
     assert "userId" in data
 
@@ -391,3 +393,32 @@ async def test_auth_status_with_invalid_token(client: AsyncClient):
     data = resp.json()
     assert data["ok"] is True
     assert data["authenticated"] is False
+    assert data["canRefresh"] is False
+
+
+@pytest.mark.asyncio
+async def test_auth_status_with_refresh_token_only(client: AsyncClient, unique_username):
+    """Test /auth/status with only refresh token (no access token) - should return canRefresh=true"""
+    username = unique_username()
+    password = "testpass123"
+    
+    # Register and login to get refresh token
+    await client.post("/api/auth/register", json={
+        "username": username,
+        "password": password
+    })
+    
+    resp = await client.post("/api/auth/login", json={
+        "username": username,
+        "password": password
+    })
+    assert resp.status_code == 200
+    # Now we have refresh token in cookie, but we won't send access token
+    
+    # Check status without access token header
+    resp = await client.get("/api/auth/status")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["ok"] is True
+    assert data["authenticated"] is False  # No access token
+    assert data["canRefresh"] is True  # But has refresh token

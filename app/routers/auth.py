@@ -376,7 +376,7 @@ async def me(user: dict = Depends(require_auth)):
 @router.get(
     "/status",
     summary="Check authentication status",
-    description="Check if the current request has a valid access token. Always returns 200, never 401.",
+    description="Check if the current request has a valid access token and/or refresh token. Always returns 200, never 401.",
     responses={
         200: {
             "description": "Authentication status",
@@ -385,11 +385,15 @@ async def me(user: dict = Depends(require_auth)):
                     "examples": {
                         "authenticated": {
                             "summary": "User is authenticated",
-                            "value": {"ok": True, "authenticated": True, "userId": "123", "username": "john"}
+                            "value": {"ok": True, "authenticated": True, "canRefresh": True, "userId": "123", "username": "john"}
                         },
-                        "not_authenticated": {
-                            "summary": "User is not authenticated",
-                            "value": {"ok": True, "authenticated": False}
+                        "can_refresh": {
+                            "summary": "Can restore session via refresh token",
+                            "value": {"ok": True, "authenticated": False, "canRefresh": True}
+                        },
+                        "guest": {
+                            "summary": "Guest user - no tokens",
+                            "value": {"ok": True, "authenticated": False, "canRefresh": False}
                         }
                     }
                 }
@@ -397,38 +401,53 @@ async def me(user: dict = Depends(require_auth)):
         },
     }
 )
-async def auth_status(request: Request):
+async def auth_status(request: Request, refresh_token: str | None = Cookie(default=None, alias=REFRESH_COOKIE_NAME)):
     """
     Check authentication status without requiring auth.
-    Returns authenticated=true with user info if valid token exists,
-    otherwise returns authenticated=false.
+    Returns:
+    - authenticated=true with user info if valid access token exists
+    - canRefresh=true if refresh token exists (even if access token is invalid/missing)
+    - authenticated=false, canRefresh=false if no tokens exist
     Never returns 401.
     """
+    has_refresh_token = False
+    
+    # Check if refresh token exists
+    if refresh_token and _auth_service:
+        try:
+            # Verify refresh token is valid
+            payload = _auth_service.jwt_provider.verify_refresh_token(refresh_token)
+            if payload:
+                has_refresh_token = True
+        except Exception:
+            pass
+    
     try:
         # Try to get Authorization header
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
-            return {"ok": True, "authenticated": False}
+            return {"ok": True, "authenticated": False, "canRefresh": has_refresh_token}
         
         token = auth_header[7:]  # Remove "Bearer " prefix
         
         # Use the global auth service to verify the token
         if not _auth_service:
-            return {"ok": True, "authenticated": False}
+            return {"ok": True, "authenticated": False, "canRefresh": has_refresh_token}
         
         payload = _auth_service.jwt_provider.verify_access_token(token)
         if not payload:
-            return {"ok": True, "authenticated": False}
+            return {"ok": True, "authenticated": False, "canRefresh": has_refresh_token}
         
         return {
             "ok": True,
             "authenticated": True,
+            "canRefresh": has_refresh_token,
             "userId": payload.get("userId"),
             "username": payload.get("username")
         }
     except Exception:
         # Any error means not authenticated
-        return {"ok": True, "authenticated": False}
+        return {"ok": True, "authenticated": False, "canRefresh": has_refresh_token}
 
 
 @router.delete(
