@@ -63,8 +63,11 @@ describe('ErrorBoundary', () => {
 
   it('should reload page when reload button clicked', async () => {
     const user = userEvent.setup();
-    delete (window as any).location;
-    window.location = { reload: vi.fn() } as any;
+    const mockReload = vi.fn();
+    Object.defineProperty(window, 'location', {
+      value: { reload: mockReload },
+      writable: true,
+    });
 
     render(
       <ErrorBoundary>

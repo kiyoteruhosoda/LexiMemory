@@ -10,19 +10,19 @@ afterEach(() => {
 
 // Mock IndexedDB
 class IDBRequestMock {
-  result: any = null;
-  error: any = null;
-  onsuccess: ((event: any) => void) | null = null;
-  onerror: ((event: any) => void) | null = null;
+  result: unknown = null;
+  error: Error | null = null;
+  onsuccess: ((event: { target: IDBRequestMock }) => void) | null = null;
+  onerror: ((event: { target: IDBRequestMock }) => void) | null = null;
   
-  _succeed(result: any) {
+  _succeed(result: unknown) {
     this.result = result;
     if (this.onsuccess) {
       this.onsuccess({ target: this });
     }
   }
   
-  _fail(error: any) {
+  _fail(error: Error) {
     this.error = error;
     if (this.onerror) {
       this.onerror({ target: this });
@@ -37,9 +37,9 @@ class IDBTransactionMock {
     delete: vi.fn().mockReturnValue(new IDBRequestMock()),
     clear: vi.fn().mockReturnValue(new IDBRequestMock()),
   });
-  onerror: ((event: any) => void) | null = null;
-  oncomplete: ((event: any) => void) | null = null;
-  error: any = null;
+  onerror: ((event: { target: IDBTransactionMock }) => void) | null = null;
+  oncomplete: ((event: { target: IDBTransactionMock }) => void) | null = null;
+  error: Error | null = null;
 }
 
 class IDBDatabaseMock {
@@ -55,8 +55,8 @@ class IDBDatabaseMock {
 }
 
 class IDBOpenDBRequestMock extends IDBRequestMock {
-  onupgradeneeded: ((event: any) => void) | null = null;
-  onblocked: ((event: any) => void) | null = null;
+  onupgradeneeded: ((event: { target: IDBOpenDBRequestMock }) => void) | null = null;
+  onblocked: ((event: { target: IDBOpenDBRequestMock }) => void) | null = null;
 }
 
 const indexedDBMock = {
@@ -76,7 +76,7 @@ const indexedDBMock = {
   }),
 };
 
-(global as any).indexedDB = indexedDBMock;
+(global as unknown as { indexedDB: typeof indexedDBMock }).indexedDB = indexedDBMock;
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -110,7 +110,7 @@ if (typeof File !== 'undefined' && !File.prototype.text) {
 // Suppress console errors during tests (optional)
 const originalError = console.error;
 beforeAll(() => {
-  console.error = (...args: any[]) => {
+  console.error = (...args: unknown[]) => {
     if (
       typeof args[0] === 'string' &&
       args[0].includes('Not implemented: HTMLFormElement.prototype.submit')

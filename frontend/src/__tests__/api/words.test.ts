@@ -11,6 +11,12 @@ vi.mock('../../api/client', () => ({
     put: vi.fn(),
     del: vi.fn(),
   },
+  tokenManager: {
+    setToken: vi.fn(),
+    clearToken: vi.fn(),
+    onUnauthorized: vi.fn(),
+    getToken: vi.fn(() => null),
+  },
 }));
 
 describe('Words API', () => {

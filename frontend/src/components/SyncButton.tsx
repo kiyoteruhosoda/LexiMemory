@@ -50,6 +50,7 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
         return () => clearTimeout(timer);
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- handleSync depends on state
   }, [isAuthenticated, isOnline]);
 
   // Clear success message after 3 seconds
@@ -63,9 +64,10 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
   const loadStatus = async () => {
     try {
       // We get the full status, but only store the parts we need, ignoring 'online'
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { online, ...rest } = await getSyncStatus();
       setStatus(rest);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to load sync status:", err);
     }
   };
@@ -102,9 +104,10 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
         setConflict(result);
       }
       // Errors are now handled by the API client layer setting online status
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Check if authentication error
-      if (err.status === 401) {
+      const error = err as { status?: number };
+      if (error.status === 401) {
         setShowLoginPrompt(true);
         localStorage.setItem('pendingSync', 'true');
       }
@@ -135,7 +138,7 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
       if (onSyncSuccess) {
         onSyncSuccess();
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Errors are silently ignored in this minimal button
       console.error("Failed to resolve conflict:", err);
     } finally {

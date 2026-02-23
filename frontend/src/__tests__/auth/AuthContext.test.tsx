@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import { AuthProvider, useAuth } from '../../auth/AuthContext';
 import { authApi } from '../../api/auth';
+import type { MeResponse } from '../../api/types';
 
 vi.mock('../../api/auth', () => ({
   authApi: {
@@ -12,6 +13,7 @@ vi.mock('../../api/auth', () => ({
     login: vi.fn(),
     logout: vi.fn(),
     refresh: vi.fn(),
+    status: vi.fn(),
   },
 }));
 vi.mock('../../api/client', () => ({
@@ -59,8 +61,9 @@ describe('AuthContext', () => {
   });
 
   it('should initialize with guest status when no session', async () => {
+    vi.mocked(authApi.status).mockResolvedValue({ ok: true, authenticated: false, canRefresh: false });
     vi.mocked(authApi.refresh).mockResolvedValue(false);
-    vi.mocked(authApi.me).mockResolvedValue(null as any);
+    vi.mocked(authApi.me).mockResolvedValue(null as unknown as MeResponse);
 
     await act(async () => {
       render(
@@ -82,6 +85,7 @@ describe('AuthContext', () => {
     };
 
     // Setup initial state: no session
+    vi.mocked(authApi.status).mockResolvedValue({ ok: true, authenticated: false, canRefresh: false });
     vi.mocked(authApi.refresh).mockResolvedValue(false);
     // me() always returns mockUser (after login in refresh())
     vi.mocked(authApi.me).mockResolvedValue(mockUser);
@@ -120,13 +124,20 @@ describe('AuthContext', () => {
       username: 'testuser',
     };
 
-    // Setup: start with authenticated state by having refresh return true
+    // Setup: start with authenticated state
+    vi.mocked(authApi.status).mockResolvedValue({ 
+      ok: true, 
+      authenticated: true, 
+      canRefresh: false,
+      userId: '1',
+      username: 'testuser'
+    });
     vi.mocked(authApi.refresh).mockResolvedValue(true);
     // First call to me() returns user (authenticated)
     // After logout, subsequent calls return null
     vi.mocked(authApi.me)
       .mockResolvedValueOnce(mockUser)
-      .mockResolvedValue(null as any);
+      .mockResolvedValue(null as unknown as MeResponse);
     vi.mocked(authApi.logout).mockResolvedValue(undefined);
 
     await act(async () => {
@@ -155,7 +166,8 @@ describe('AuthContext', () => {
     // Suppress error output for this test
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     
-    vi.mocked(authApi.me).mockResolvedValue(null as any);
+    vi.mocked(authApi.status).mockResolvedValue({ ok: true, authenticated: false, canRefresh: false });
+    vi.mocked(authApi.me).mockResolvedValue(null as unknown as MeResponse);
     vi.mocked(authApi.login).mockRejectedValue(new Error('Invalid credentials'));
 
     await act(async () => {

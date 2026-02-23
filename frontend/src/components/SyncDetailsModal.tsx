@@ -43,7 +43,7 @@ export function SyncDetailsModal({ show, onClose }: SyncDetailsModalProps) {
     try {
       const s = await getSyncStatus();
       setStatus(s);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Failed to load sync status:", err);
     }
   };
@@ -65,8 +65,9 @@ export function SyncDetailsModal({ show, onClose }: SyncDetailsModalProps) {
       const serverData = await api.get<VocabServerData>("/vocab");
       setServerWordCount(serverData.file.words.length);
       setServerUpdatedAt(serverData.updatedAt);
-    } catch (err: any) {
-      if (err.status === 404) {
+    } catch (err: unknown) {
+      const error = err as { status?: number };
+      if (error.status === 404) {
         setServerWordCount(0);
         setServerUpdatedAt(null);
       } else {
@@ -93,11 +94,12 @@ export function SyncDetailsModal({ show, onClose }: SyncDetailsModalProps) {
       } else {
         setError(result.message || "Sync failed");
       }
-    } catch (err: any) {
-      if (err.status === 401) {
+    } catch (err: unknown) {
+      const error = err as { status?: number; message?: string };
+      if (error.status === 401) {
         setError("Authentication required");
       } else {
-        setError(err.message || "Sync failed");
+        setError(error.message || "Sync failed");
       }
     } finally {
       setSyncing(false);

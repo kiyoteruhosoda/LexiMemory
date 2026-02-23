@@ -10,7 +10,7 @@ export interface LogEntry {
   timestamp: string;
   level: LogLevel;
   message: string;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   userId?: string;
   url?: string;
   userAgent?: string;
@@ -34,7 +34,7 @@ class Logger {
     this.userId = userId;
   }
 
-  private createEntry(level: LogLevel, message: string, context?: Record<string, any>): LogEntry {
+  private createEntry(level: LogLevel, message: string, context?: Record<string, unknown>): LogEntry {
     return {
       timestamp: new Date().toISOString(),
       level,
@@ -46,7 +46,7 @@ class Logger {
     };
   }
 
-  private log(level: LogLevel, message: string, context?: Record<string, any>) {
+  private log(level: LogLevel, message: string, context?: Record<string, unknown>) {
     const entry = this.createEntry(level, message, context);
 
     // Console output (always)
@@ -62,19 +62,19 @@ class Logger {
     }
   }
 
-  debug(message: string, context?: Record<string, any>) {
+  debug(message: string, context?: Record<string, unknown>) {
     this.log('debug', message, context);
   }
 
-  info(message: string, context?: Record<string, any>) {
+  info(message: string, context?: Record<string, unknown>) {
     this.log('info', message, context);
   }
 
-  warn(message: string, context?: Record<string, any>) {
+  warn(message: string, context?: Record<string, unknown>) {
     this.log('warn', message, context);
   }
 
-  error(message: string, context?: Record<string, any>) {
+  error(message: string, context?: Record<string, unknown>) {
     this.log('error', message, context);
   }
 

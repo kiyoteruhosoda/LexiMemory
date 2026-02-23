@@ -52,11 +52,12 @@ async function withRetry<T>(
   for (let attempt = 0; attempt <= options.maxRetries; attempt++) {
     try {
       return await fn();
-    } catch (error: any) {
-      lastError = error;
+    } catch (error: unknown) {
+      lastError = error as Error;
+      const err = error as { status?: number };
 
       // Don't retry on client errors (4xx except 429)
-      if (error.status && error.status >= 400 && error.status < 500 && error.status !== 429) {
+      if (err.status && err.status >= 400 && err.status < 500 && err.status !== 429) {
         throw error;
       }
 
@@ -168,9 +169,10 @@ export async function syncToServer(): Promise<SyncResult> {
         updatedAt: response.updatedAt,
       };
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Handle 409 Conflict
-    if (error.status === 409) {
+    const err = error as { status?: number };
+    if (err.status === 409) {
       try {
         const serverData = await api.get<VocabServerData>("/vocab");
         const localFile = await getVocabFile();
@@ -184,20 +186,22 @@ export async function syncToServer(): Promise<SyncResult> {
           localFile,
           serverData,
         };
-      } catch (conflictError: any) {
+      } catch (conflictError: unknown) {
+        const conflictErr = conflictError as { code?: string; message?: string };
         return {
           status: "error",
-          code: conflictError.code || "CONFLICT_RESOLUTION_ERROR",
-          message: conflictError.message || "Failed to resolve conflict",
+          code: conflictErr.code || "CONFLICT_RESOLUTION_ERROR",
+          message: conflictErr.message || "Failed to resolve conflict",
         };
       }
     }
 
     // Handle other errors
+    const errObj = err as { code?: string; message?: string };
     return {
       status: "error",
-      code: error.code || "SYNC_ERROR",
-      message: error.message || "Sync failed",
+      code: errObj.code || "SYNC_ERROR",
+      message: errObj.message || "Sync failed",
     };
   }
 }
@@ -333,9 +337,10 @@ export async function initializeSyncFromServer(): Promise<void> {
     metadata.dirty = false;
     metadata.lastSyncAt = serverData.updatedAt;
     await saveSyncMetadata(metadata);
-  } catch (error: any) {
+  } catch (error: unknown) {
     // If 404, server has no data yet - keep local data
-    if (error.status === 404) {
+    const err = error as { status?: number };
+    if (err.status === 404) {
       console.log("Server has no data yet, keeping local data");
       return;
     }

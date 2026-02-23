@@ -367,14 +367,23 @@ async def test_auth_status_with_valid_token(client: AsyncClient, unique_username
     })
     assert resp.status_code == 200
     access_token = resp.json()["access_token"]
+    refresh_token = resp.cookies.get("refresh_token")
+    assert refresh_token is not None, "Refresh token should be set in cookie"
     
-    # Check status with valid token
+    # Set cookie on client instance
+    client.cookies.set("refresh_token", refresh_token, domain="testserver")
+    
+    # Check status with valid token and refresh token cookie
     resp = await client.get(
         "/api/auth/status",
         headers={"Authorization": f"Bearer {access_token}"}
     )
     assert resp.status_code == 200
     data = resp.json()
+    
+    print(f"DEBUG: status response = {data}")
+    print(f"DEBUG: access_token = {access_token[:20]}...")
+    
     assert data["ok"] is True
     assert data["authenticated"] is True
     assert data["canRefresh"] is True  # Should have refresh token from login
@@ -413,12 +422,25 @@ async def test_auth_status_with_refresh_token_only(client: AsyncClient, unique_u
         "password": password
     })
     assert resp.status_code == 200
-    # Now we have refresh token in cookie, but we won't send access token
+    # Extract refresh token from Set-Cookie header
+    refresh_token = resp.cookies.get("refresh_token")
+    assert refresh_token is not None, "Refresh token should be set in cookie"
     
-    # Check status without access token header
+    print(f"DEBUG: refresh_token from login = {refresh_token[:20]}...")
+    print(f"DEBUG: client.cookies before set = {client.cookies}")
+    
+    # Set cookie on client instance for subsequent requests
+    client.cookies.set("refresh_token", refresh_token, domain="testserver")
+    
+    print(f"DEBUG: client.cookies after set = {client.cookies}")
+    
+    # Check status without access token header, but with refresh token cookie
     resp = await client.get("/api/auth/status")
     assert resp.status_code == 200
     data = resp.json()
+    
+    print(f"DEBUG: status response = {data}")
+    
     assert data["ok"] is True
     assert data["authenticated"] is False  # No access token
     assert data["canRefresh"] is True  # But has refresh token

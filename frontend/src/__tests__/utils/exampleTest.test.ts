@@ -48,7 +48,7 @@ function checkAnswer(userInput: string, targetWord: string): boolean {
  */
 function createBlankedSentence(sentence: string, targetWord: string): { blanked: string; actualWord: string | null; found: boolean } {
   // Try case-insensitive replacement
-  const regex = new RegExp(`\\b${targetWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+  const regex = new RegExp(`\\b${targetWord.replace(/[.*+?^${}()|\\[\\]\\\\]/g, '\\$&')}\\b`, 'gi');
   const match = sentence.match(regex);
   
   if (match) {
@@ -64,7 +64,7 @@ function createBlankedSentence(sentence: string, targetWord: string): { blanked:
   
   for (let i = 0; i < words.length; i++) {
     // Remove punctuation for comparison
-    const cleanWord = words[i].replace(/[.,!?;:()"\[\]{}]/g, '');
+    const cleanWord = words[i].replace(/[.,!?;:()[\]{}"]/g, '');
     const userStems = getWordStems(cleanWord);
     const targetStems = getWordStems(targetWord);
     

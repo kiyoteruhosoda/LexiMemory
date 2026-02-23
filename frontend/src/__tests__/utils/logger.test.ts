@@ -7,9 +7,10 @@ describe('Logger', () => {
     vi.useFakeTimers();
     vi.clearAllMocks();
     global.fetch = vi.fn().mockResolvedValue({ ok: true });
-    global.navigator = {
+    type MockNavigator = { sendBeacon: ReturnType<typeof vi.fn> };
+    (global.navigator as unknown as MockNavigator) = {
       sendBeacon: vi.fn(() => true),
-    } as any;
+    };
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'info').mockImplementation(() => {});
     vi.spyOn(console, 'warn').mockImplementation(() => {});

@@ -26,7 +26,7 @@ describe('API Client', () => {
   describe('GET requests', () => {
     it('should make successful GET request', async () => {
       const mockData = { ok: true, data: 'test' };
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         status: 200,
         json: async () => mockData,
@@ -44,7 +44,7 @@ describe('API Client', () => {
     });
 
     it('should throw ApiError on failure', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: false,
         status: 404,
         statusText: 'Not Found',
@@ -74,7 +74,7 @@ describe('API Client', () => {
       const requestBody = { username: 'test', password: 'pass' };
       const mockResponse = { ok: true, userId: '123' };
 
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         status: 200,
         json: async () => mockResponse,
@@ -97,7 +97,7 @@ describe('API Client', () => {
   describe('PUT requests', () => {
     it('should make PUT request', async () => {
       const mockResponse = { ok: true };
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         status: 200,
         json: async () => mockResponse,
@@ -111,7 +111,7 @@ describe('API Client', () => {
   describe('DELETE requests', () => {
     it('should make DELETE request', async () => {
       const mockResponse = { ok: true };
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         status: 200,
         json: async () => mockResponse,
@@ -124,7 +124,7 @@ describe('API Client', () => {
 
   describe('getAllow401', () => {
     it('should return undefined on 401', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: false,
         status: 401,
       });
@@ -135,7 +135,7 @@ describe('API Client', () => {
 
     it('should return data on success', async () => {
       const mockData = { userId: '123', username: 'test' };
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         status: 200,
         json: async () => mockData,
@@ -148,7 +148,7 @@ describe('API Client', () => {
 
   describe('204 No Content', () => {
     it('should return undefined for 204 responses', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         status: 204,
       });

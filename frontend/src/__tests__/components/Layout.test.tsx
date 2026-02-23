@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { Layout } from '../../components/Layout';
 import { AuthProvider } from '../../auth/AuthContext';
 import { authApi } from '../../api/auth';
+import type { MeResponse } from '../../api/types';
 
 vi.mock('../../api/auth', () => ({
   authApi: {
@@ -13,6 +14,7 @@ vi.mock('../../api/auth', () => ({
     logout: vi.fn(),
     login: vi.fn(),
     refresh: vi.fn(),
+    status: vi.fn(),
   },
 }));
 vi.mock('../../api/client', () => ({
@@ -45,8 +47,9 @@ describe('Layout', () => {
   });
 
   it('should render navigation bar with app name', async () => {
+    vi.mocked(authApi.status).mockResolvedValue({ ok: true, authenticated: false, canRefresh: false });
     vi.mocked(authApi.refresh).mockResolvedValue(false);
-    vi.mocked(authApi.me).mockResolvedValue(null as any);
+    vi.mocked(authApi.me).mockResolvedValue(null as unknown as MeResponse);
 
     renderWithRouter(<Layout>Test Content</Layout>);
 
@@ -58,8 +61,9 @@ describe('Layout', () => {
   });
 
   it('should render child content', async () => {
+    vi.mocked(authApi.status).mockResolvedValue({ ok: true, authenticated: false, canRefresh: false });
     vi.mocked(authApi.refresh).mockResolvedValue(false);
-    vi.mocked(authApi.me).mockResolvedValue(null as any);
+    vi.mocked(authApi.me).mockResolvedValue(null as unknown as MeResponse);
 
     renderWithRouter(<Layout><div>Test Content</div></Layout>);
 
@@ -70,8 +74,9 @@ describe('Layout', () => {
   });
 
   it('should show Words and Study links', async () => {
+    vi.mocked(authApi.status).mockResolvedValue({ ok: true, authenticated: false, canRefresh: false });
     vi.mocked(authApi.refresh).mockResolvedValue(false);
-    vi.mocked(authApi.me).mockResolvedValue(null as any);
+    vi.mocked(authApi.me).mockResolvedValue(null as unknown as MeResponse);
 
     renderWithRouter(<Layout>Content</Layout>);
 
@@ -83,6 +88,13 @@ describe('Layout', () => {
   });
 
   it('should show username and logout button when authenticated', async () => {
+    vi.mocked(authApi.status).mockResolvedValue({ 
+      ok: true, 
+      authenticated: true, 
+      canRefresh: false,
+      userId: '1',
+      username: 'testuser'
+    });
     vi.mocked(authApi.refresh).mockResolvedValue(true);
     vi.mocked(authApi.me).mockResolvedValue({
       userId: '1',
@@ -97,8 +109,9 @@ describe('Layout', () => {
   });
 
   it('should show Guest when not authenticated', async () => {
+    vi.mocked(authApi.status).mockResolvedValue({ ok: true, authenticated: false, canRefresh: false });
     vi.mocked(authApi.refresh).mockResolvedValue(false);
-    vi.mocked(authApi.me).mockResolvedValue(null as any);
+    vi.mocked(authApi.me).mockResolvedValue(null as unknown as MeResponse);
 
     renderWithRouter(<Layout>Content</Layout>);
 
@@ -107,6 +120,13 @@ describe('Layout', () => {
   });
 
   it('should call logout when logout button is clicked', async () => {
+    vi.mocked(authApi.status).mockResolvedValue({ 
+      ok: true, 
+      authenticated: true, 
+      canRefresh: false,
+      userId: '1',
+      username: 'testuser'
+    });
     vi.mocked(authApi.refresh).mockResolvedValue(true);
     vi.mocked(authApi.me).mockResolvedValue({
       userId: '1',
@@ -126,8 +146,9 @@ describe('Layout', () => {
   });
 
   it('should display app version', async () => {
+    vi.mocked(authApi.status).mockResolvedValue({ ok: true, authenticated: false, canRefresh: false });
     vi.mocked(authApi.refresh).mockResolvedValue(false);
-    vi.mocked(authApi.me).mockResolvedValue(null as any);
+    vi.mocked(authApi.me).mockResolvedValue(null as unknown as MeResponse);
 
     renderWithRouter(<Layout>Content</Layout>);
 
@@ -138,8 +159,9 @@ describe('Layout', () => {
   });
 
   it('should have hamburger menu button for mobile', async () => {
+    vi.mocked(authApi.status).mockResolvedValue({ ok: true, authenticated: false, canRefresh: false });
     vi.mocked(authApi.refresh).mockResolvedValue(false);
-    vi.mocked(authApi.me).mockResolvedValue(null as any);
+    vi.mocked(authApi.me).mockResolvedValue(null as unknown as MeResponse);
 
     renderWithRouter(<Layout>Content</Layout>);
 

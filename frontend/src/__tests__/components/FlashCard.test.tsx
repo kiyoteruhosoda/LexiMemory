@@ -9,13 +9,19 @@ import type { WordEntry, MemoryState } from '../../api/types';
 beforeEach(() => {
   if (typeof window !== 'undefined') {
     if (!window.SpeechSynthesisUtterance) {
-      (window as any).SpeechSynthesisUtterance = class {
-        constructor(_text: string) {}
+      (window as unknown as { SpeechSynthesisUtterance: unknown }).SpeechSynthesisUtterance = class {
+        constructor() {
+          // Mock constructor
+        }
         lang = 'en-US';
       };
     }
     if (!window.speechSynthesis) {
-      (window as any).speechSynthesis = {
+      type SpeechSynthesisMock = {
+        speak: ReturnType<typeof vi.fn>;
+        cancel: ReturnType<typeof vi.fn>;
+      };
+      (window as unknown as { speechSynthesis: SpeechSynthesisMock }).speechSynthesis = {
         speak: vi.fn(),
         cancel: vi.fn(),
       };
@@ -64,7 +70,7 @@ describe('FlashCard', () => {
     global.window.speechSynthesis = {
       speak: vi.fn(),
       cancel: vi.fn(),
-    } as any;
+    } as unknown as SpeechSynthesis;
   });
 
   it('should render flash card with word', () => {

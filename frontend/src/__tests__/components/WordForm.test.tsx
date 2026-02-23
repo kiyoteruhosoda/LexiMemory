@@ -5,15 +5,25 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { WordForm } from '../../components/WordForm';
 // Mock SpeechSynthesisUtterance
 if (typeof window !== 'undefined' && !window.SpeechSynthesisUtterance) {
-  window.SpeechSynthesisUtterance = class {
-    constructor(_text: string) {}
+  type SpeechSynthesisMock = {
+    speak: ReturnType<typeof vi.fn>;
+    cancel: ReturnType<typeof vi.fn>;
+  };
+  (window as unknown as { 
+    SpeechSynthesisUtterance: unknown; 
+    speechSynthesis: SpeechSynthesisMock 
+  }).SpeechSynthesisUtterance = class {
+    constructor() {
+      // Mock constructor
+    }
     lang = 'en-US';
-  } as any;
-  window.speechSynthesis = {
+  };
+  (window as unknown as { speechSynthesis: SpeechSynthesisMock }).speechSynthesis = {
     speak: vi.fn(),
     cancel: vi.fn(),
-  } as any;
-}import type { WordEntry } from '../../api/types';
+  };
+}
+import type { WordEntry } from '../../api/types';
 
 describe('WordForm', () => {
   const mockOnSave = vi.fn();

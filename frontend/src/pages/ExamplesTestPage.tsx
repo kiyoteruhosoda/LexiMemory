@@ -1,6 +1,6 @@
 // frontend/src/pages/ExamplesTestPage.tsx
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { examplesApi } from "../api/examples.offline";
 import type { ExampleTestItem } from "../api/types";
@@ -54,7 +54,7 @@ function checkAnswer(userInput: string, targetWord: string): boolean {
 function createBlankedSentence(sentence: string, targetWord: string): { blanked: string; actualWord: string | null; found: boolean } {
   // Handle multi-word targets (like "check in")
   // Try case-insensitive replacement
-  const regex = new RegExp(`\\b${targetWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+  const regex = new RegExp(`\\b${targetWord.replace(/[.*+?^${}()|\\[\\]\\\\]/g, '\\$&')}\\b`, 'gi');
   const match = sentence.match(regex);
   
   if (match) {
@@ -70,7 +70,7 @@ function createBlankedSentence(sentence: string, targetWord: string): { blanked:
   
   for (let i = 0; i < words.length; i++) {
     // Remove punctuation for comparison
-    const cleanWord = words[i].replace(/[.,!?;:()"\[\]{}]/g, '');
+    const cleanWord = words[i].replace(/[.,!?;:()[\]{}"]/g, '');
     const userStems = getWordStems(cleanWord);
     const targetStems = getWordStems(targetWord);
     
@@ -136,16 +136,16 @@ export function ExamplesTestPage() {
   });
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
 
-  async function loadTags() {
+  const loadTags = useCallback(async () => {
     try {
       const res = await examplesApi.getTags();
       setAllTags(res.tags);
     } catch (e) {
       console.error("Failed to load tags:", e);
     }
-  }
+  }, []);
 
-  async function loadNext() {
+  const loadNext = useCallback(async () => {
     setError(null);
     setUserInput("");
     setFeedback(null);
@@ -167,15 +167,15 @@ export function ExamplesTestPage() {
         setActualWordInSentence(actualWord);
         setLastExampleId(res.example.id);
       }
-    } catch (e: any) {
-      setError(e?.message || "Failed to load");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load");
     }
-  }
+  }, [appliedTags, lastExampleId]);
 
   useEffect(() => { 
     void loadTags();
     void loadNext(); 
-  }, []);
+  }, [loadTags, loadNext]);
 
   useEffect(() => {
     // Save to localStorage whenever appliedTags changes
@@ -189,7 +189,7 @@ export function ExamplesTestPage() {
       console.error('Failed to save tag filter:', e);
     }
     void loadNext();
-  }, [appliedTags]);
+  }, [appliedTags, loadNext]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -243,12 +243,12 @@ export function ExamplesTestPage() {
     setIsFilterExpanded(false);
   }
 
-  // Initialize selectedTags from appliedTags on mount
+  // Initialize selectedTags from appliedTags
   useEffect(() => {
     if (appliedTags && appliedTags.length > 0) {
       setSelectedTags(appliedTags);
     }
-  }, []);
+  }, [appliedTags]);
 
   return (
     <div className="vstack gap-3">

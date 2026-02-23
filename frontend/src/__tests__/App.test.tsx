@@ -9,6 +9,12 @@ vi.mock('../api/client', () => ({
   api: {
     healthCheck: vi.fn(),
   },
+  tokenManager: {
+    setToken: vi.fn(),
+    clearToken: vi.fn(),
+    onUnauthorized: vi.fn(),
+    getToken: vi.fn(() => null),
+  },
 }));
 
 vi.mock('../db/localRepository', () => ({
@@ -87,10 +93,15 @@ describe('App component', () => {
     expect(api.healthCheck).toHaveBeenCalledTimes(1);
 
     // Manually find and call the registered 'online' event handler
-    const onlineCall = (window.addEventListener as any).mock.calls.find(
-      (call: [string, any]) => call[0] === 'online'
+    type EventListenerMock = { mock: { calls: [string, () => void][] } };
+    const onlineCall = (window.addEventListener as unknown as EventListenerMock).mock.calls.find(
+      (call: [string, () => void]) => call[0] === 'online'
     );
-    const onlineHandler = onlineCall[1];
+    const onlineHandler = onlineCall?.[1];
+    
+    if (!onlineHandler) {
+      throw new Error('Online event handler not found');
+    }
     
     await act(async () => {
         onlineHandler();

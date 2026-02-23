@@ -23,14 +23,16 @@ export function WordListPage() {
       const result = await wordsApi.list(q);
       setItems(result.words);
       setMemoryMap(result.memoryMap);
-    } catch (e: any) {
-      setError(e?.message || "Failed to load");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
       setBusy(false);
     }
   }
 
-  useEffect(() => { void reload(); }, []);
+  useEffect(() => { void reload(); 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleExport() {
     setError(null);
@@ -46,8 +48,8 @@ export function WordListPage() {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    } catch (e: any) {
-      setError(e?.message || "Export failed");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Export failed");
     } finally {
       setBusy(false);
     }

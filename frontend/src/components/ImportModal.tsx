@@ -42,8 +42,8 @@ export function ImportModal({ show, onClose, onSuccess }: ImportModalProps) {
       // Reset state
       setFile(null);
       setMode("merge");
-    } catch (e: any) {
-      setError(e?.message || "Import failed");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Import failed");
     } finally {
       setBusy(false);
     }

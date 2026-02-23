@@ -81,7 +81,8 @@ class JsonTokenStore:
                     f.flush()
                     os.fsync(f.fileno())  # Ensure written to disk
                 
-                # Verify tmp file exists before rename
+                # Verify tmp file exists before rename (after file is closed)
+                # NOTE: Check must be outside with block to ensure file is closed
                 if not self.tmp_path.exists():
                     raise FileNotFoundError(f"Temporary file not created: {self.tmp_path}")
                 

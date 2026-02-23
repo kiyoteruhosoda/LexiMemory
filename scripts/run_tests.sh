@@ -2,43 +2,48 @@
 # scripts/run_tests.sh
 set -euo pipefail
 
-ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 FRONTEND_DIR="$ROOT_DIR/frontend"
 
-echo "========================================"
-echo "LinguisticNode FULL TEST SUITE START"
-echo "Root: $ROOT_DIR"
-echo "========================================"
+log() { echo "[$(date +"%Y-%m-%d %H:%M:%S")] $*"; }
+
+log "========================================"
+log "LinguisticNode FULL TEST SUITE START"
+log "Root: $ROOT_DIR"
+log "========================================"
 
 ########################################
 # Backend (Python)
 ########################################
-
 cd "$ROOT_DIR"
 
 if [ -d ".venv" ]; then
   # shellcheck disable=SC1091
-  source .venv/bin/activate
+  source ".venv/bin/activate"
 fi
 
-if ! command -v pytest >/dev/null 2>&1; then
-  echo "pytest not found. Please install backend dependencies."
+if ! command -v python >/dev/null 2>&1; then
+  echo "python not found."
   exit 1
 fi
 
-echo "Running backend tests with coverage..."
-pytest -v \
+if ! python -c "import pytest" >/dev/null 2>&1; then
+  echo "pytest not found in this Python environment. Please install backend dependencies."
+  exit 1
+fi
+
+log "Running backend tests with coverage..."
+python -m pytest -v \
   --cov=app \
   --cov-report=term-missing \
   --cov-report=html
 
-echo "Backend coverage report:"
-echo "  $ROOT_DIR/htmlcov/index.html"
+log "Backend coverage report:"
+log "  $ROOT_DIR/htmlcov/index.html"
 
 ########################################
 # Frontend (React + TypeScript)
 ########################################
-
 if [ ! -d "$FRONTEND_DIR" ]; then
   echo "Frontend directory not found: $FRONTEND_DIR"
   exit 1
@@ -51,28 +56,26 @@ if ! command -v npm >/dev/null 2>&1; then
   exit 1
 fi
 
-# node_modulesがなければインストール（CI対応）
 if [ ! -d "node_modules" ]; then
-  echo "Installing frontend dependencies..."
+  log "Installing frontend dependencies (npm ci)..."
   npm ci
 fi
 
-echo "Running TypeScript type check..."
-npx tsc --noEmit
+log "Running frontend lint..."
+npm run lint
 
-echo "Running TypeScript build..."
+log "Running TypeScript build (includes type-check)..."
 npx tsc -b
 
-echo "Running frontend tests with coverage..."
+log "Running frontend tests with coverage..."
 npm run test:coverage
 
-echo "Frontend coverage report directory:"
-echo "  $FRONTEND_DIR/coverage"
+log "Frontend coverage report directory:"
+log "  $FRONTEND_DIR/coverage"
 
 ########################################
 # Done
 ########################################
-
-echo "========================================"
-echo "LinguisticNode FULL TEST SUITE SUCCESS"
-echo "========================================"
+log "========================================"
+log "LinguisticNode FULL TEST SUITE SUCCESS"
+log "========================================"

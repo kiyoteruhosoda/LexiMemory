@@ -131,9 +131,10 @@ async function request<T>(
     if (res.status === 204) return undefined as T;
     return (await res.json()) as T;
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     // This block catches network errors (e.g., server down, no internet)
-    logger.warn(`Network error during API request: ${err.message}`, { path });
+    const error = err as Error;
+    logger.warn(`Network error during API request: ${error.message}`, { path });
     onlineStatusStore.setOnline(false);
 
     // Don't rethrow for health checks, as we don't want to crash the app

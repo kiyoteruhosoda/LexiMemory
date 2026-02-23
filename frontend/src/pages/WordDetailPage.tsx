@@ -26,8 +26,8 @@ export function WordDetailPage() {
         return;
       }
       setWord(found);
-    } catch (e: any) {
-      setError(e?.message || "Failed to load");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load");
     } finally {
       setBusy(false);
     }
@@ -35,6 +35,7 @@ export function WordDetailPage() {
 
   useEffect(() => {
     void loadWord();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   async function handleUpdate(draft: Omit<WordEntry, "id" | "createdAt" | "updatedAt">) {
@@ -43,8 +44,8 @@ export function WordDetailPage() {
     try {
       await wordsApi.update(word.id, draft);
       navigate("/words");
-    } catch (e: any) {
-      setError(e?.message || "Failed to update word");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to update word");
     }
   }
 
@@ -55,8 +56,8 @@ export function WordDetailPage() {
     try {
       await wordsApi.delete(word.id);
       navigate("/words");
-    } catch (e: any) {
-      setError(e?.message || "Failed to delete word");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to delete word");
     }
   }
 
@@ -68,8 +69,8 @@ export function WordDetailPage() {
       await studyApi.resetMemory(word.id);
       setShowResetModal(false);
       alert("Memory level reset.");
-    } catch (e: any) {
-      setError(e?.message || "Failed to reset memory");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to reset memory");
     }
   }
 

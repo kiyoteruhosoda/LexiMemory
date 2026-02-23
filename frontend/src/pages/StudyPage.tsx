@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { studyApi } from "../api/study.offline";
 import type { WordEntry, MemoryState, Rating } from "../api/types";
@@ -29,7 +29,7 @@ export function StudyPage() {
   });
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
 
-  async function loadTags() {
+  const loadTags = useCallback(async () => {
     try {
       const res = await studyApi.getTags();
       if (res.ok) {
@@ -38,9 +38,9 @@ export function StudyPage() {
     } catch (e) {
       console.error("Failed to load tags:", e);
     }
-  }
+  }, []);
 
-  async function loadNext() {
+  const loadNext = useCallback(async () => {
     setError(null);
     try {
       const res = await studyApi.next(appliedTags);
@@ -51,15 +51,15 @@ export function StudyPage() {
         setWord(res.card.word);
         setMemory(res.card.memory);
       }
-    } catch (e: any) {
-      setError(e?.message || "Failed to load");
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Failed to load");
     }
-  }
+  }, [appliedTags]);
 
   useEffect(() => { 
     void loadTags();
     void loadNext(); 
-  }, []);
+  }, [loadTags, loadNext]);
 
   useEffect(() => {
     // Save to localStorage whenever appliedTags changes
@@ -73,7 +73,7 @@ export function StudyPage() {
       console.error('Failed to save tag filter:', e);
     }
     void loadNext();
-  }, [appliedTags]);
+  }, [appliedTags, loadNext]);
 
   async function rate(rating: Rating) {
     if (!word) return;
@@ -99,12 +99,12 @@ export function StudyPage() {
     setIsFilterExpanded(false);
   }
 
-  // Initialize selectedTags from appliedTags on mount
+  // Initialize selectedTags from appliedTags
   useEffect(() => {
     if (appliedTags && appliedTags.length > 0) {
       setSelectedTags(appliedTags);
     }
-  }, []);
+  }, [appliedTags]);
 
   return (
     <div className="vstack gap-3">

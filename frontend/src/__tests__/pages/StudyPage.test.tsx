@@ -20,6 +20,7 @@ vi.mock('../../api/auth', () => ({
     logout: vi.fn(),
     login: vi.fn(),
     refresh: vi.fn(),
+    status: vi.fn(),
   },
 }));
 

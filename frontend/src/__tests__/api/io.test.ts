@@ -10,6 +10,12 @@ vi.mock('../../api/client', () => ({
     get: vi.fn(),
     post: vi.fn(),
   },
+  tokenManager: {
+    setToken: vi.fn(),
+    clearToken: vi.fn(),
+    onUnauthorized: vi.fn(),
+    getToken: vi.fn(() => null),
+  },
 }));
 
 describe('io API', () => {

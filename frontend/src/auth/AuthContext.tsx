@@ -124,12 +124,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     void initialize();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Initialize only on mount
   }, []);
 
-  const value = useMemo(() => ({ state, login, logout, refresh }), [state]);
+  const value = useMemo(() => ({ state, login, logout, refresh }), [state, login, logout, refresh]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
+// Export hook
 export function useAuth() {
   const v = useContext(Ctx);
   if (!v) throw new Error("AuthProvider is missing");

@@ -45,15 +45,19 @@ def temp_data_dir() -> Generator[Path, None, None]:
 async def client(temp_data_dir: Path):
     """Create async test client with isolated data directory."""
     from app.main import lifespan
+    from httpx import Cookies
     
     app = create_app()
     
     # Manually trigger lifespan startup
     async with lifespan(app):
+        # Enable automatic cookie handling with httpx.Cookies()
+        # Use "testserver" as base_url for proper cookie domain handling
         async with AsyncClient(
             transport=ASGITransport(app=app),
-            base_url="http://test",
-            follow_redirects=True
+            base_url="http://testserver",
+            follow_redirects=True,
+            cookies=Cookies()
         ) as ac:
             yield ac
 
