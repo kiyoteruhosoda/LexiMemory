@@ -14,7 +14,7 @@ import {
   type SyncConflict,
 } from "../db/syncService";
 import type { ConflictResolution } from "../db/types";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
 
 type SyncButtonProps = {

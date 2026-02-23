@@ -3,7 +3,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useState } from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { AuthProvider, useAuth } from '../../auth/AuthContext';
+import { AuthProvider } from '../../auth/AuthContext';
+import { useAuth } from '../../auth/useAuth';
 import { authApi } from '../../api/auth';
 import type { MeResponse } from '../../api/types';
 

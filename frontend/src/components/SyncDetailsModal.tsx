@@ -5,7 +5,7 @@
 import { useState, useEffect } from "react";
 import { Modal } from "./Modal";
 import { getSyncStatus, syncToServer, type SyncStatus } from "../db/syncService";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import { getVocabFile } from "../db/indexeddb";
 import { api } from "../api/client";
 import type { VocabServerData } from "../db/types";
