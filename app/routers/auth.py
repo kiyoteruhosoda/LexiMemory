@@ -471,7 +471,8 @@ async def auth_status(request: Request):
             return {"ok": True, "authenticated": False, "canRefresh": has_refresh_token}
         
         # Get username from storage
-        user = await storage.get_user_by_id(user_id)
+        from ..services import find_user_by_id
+        user = find_user_by_id(user_id)
         username = user["username"] if user else None
         logger.info(f"auth_status: username = {username}")
         
