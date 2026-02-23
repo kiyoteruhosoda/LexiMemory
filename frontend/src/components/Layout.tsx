@@ -2,7 +2,7 @@
 
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../auth/useAuth";
 import { SyncDetailsModal } from "./SyncDetailsModal";
 
 export function Layout({ children }: { children: React.ReactNode }) {

@@ -1,48 +1,15 @@
 // frontend/src/auth/AuthContext.tsx
 
-import React, { createContext, useContext, useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { authApi } from "../api/auth";
 import { tokenManager } from "../api/client";
-import type { MeResponse } from "../api/types";
 import { logger } from "../utils/logger";
-
-type AuthState =
-  | { status: "loading" }
-  | { status: "guest" }
-  | { status: "authed"; me: MeResponse };
-
-type AuthCtx = {
-  state: AuthState;
-  login: (username: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  refresh: () => Promise<void>;
-};
-
-const Ctx = createContext<AuthCtx | null>(null);
+import { AuthContext, type AuthState } from "./context";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: "loading" });
 
-  const handleUnauthorized = useCallback(async () => {
-    logger.info("Token expired, attempting refresh");
-    const refreshed = await authApi.refresh();
-    
-    if (refreshed) {
-      logger.info("Token refreshed successfully");
-      await refresh();
-    } else {
-      logger.info("Refresh failed, logging out");
-      setState({ status: "guest" });
-      logger.setUserId(null);
-    }
-  }, []);
-
-  useEffect(() => {
-    // Register unauthorized callback
-    tokenManager.onUnauthorized(handleUnauthorized);
-  }, [handleUnauthorized]);
-
-  async function refresh() {
+  const refresh = useCallback(async () => {
     try {
       const me = await authApi.me();
 
@@ -60,9 +27,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logger.setUserId(null);
       tokenManager.clearToken();
     }
-  }
+  }, []);
 
-  async function initialize() {
+  const handleUnauthorized = useCallback(async () => {
+    logger.info("Token expired, attempting refresh");
+    const refreshed = await authApi.refresh();
+    
+    if (refreshed) {
+      logger.info("Token refreshed successfully");
+      await refresh();
+    } else {
+      logger.info("Refresh failed, logging out");
+      setState({ status: "guest" });
+      logger.setUserId(null);
+    }
+  }, [refresh]);
+
+  useEffect(() => {
+    // Register unauthorized callback
+    tokenManager.onUnauthorized(handleUnauthorized);
+  }, [handleUnauthorized]);
+
+  const initialize = useCallback(async () => {
     try {
       // Check authentication status (access token and refresh token)
       logger.info("Checking authentication status");
@@ -97,9 +83,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logger.error("Failed to initialize auth", { error });
       setState({ status: "guest" });
     }
-  }
+  }, [refresh]);
 
-  async function login(username: string, password: string) {
+  const login = useCallback(async (username: string, password: string) => {
     try {
       await authApi.login(username, password);
       await refresh();
@@ -108,9 +94,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logger.error("Login failed", { username, error });
       throw error;
     }
-  }
+  }, [refresh]);
 
-  async function logout() {
+  const logout = useCallback(async () => {
     try {
       await authApi.logout();
       logger.info("User logged out");
@@ -120,20 +106,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setState({ status: "guest" });
       logger.setUserId(null);
     }
-  }
+  }, []);
 
   useEffect(() => {
     void initialize();
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- Initialize only on mount
-  }, []);
+  }, [initialize]);
 
   const value = useMemo(() => ({ state, login, logout, refresh }), [state, login, logout, refresh]);
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
-}
-
-// Export hook
-export function useAuth() {
-  const v = useContext(Ctx);
-  if (!v) throw new Error("AuthProvider is missing");
-  return v;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

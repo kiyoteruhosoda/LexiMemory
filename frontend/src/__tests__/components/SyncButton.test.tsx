@@ -3,16 +3,16 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import SyncButton from '../../components/SyncButton';
 import { useOnlineStatus } from '../../hooks/useOnlineStatus';
 import * as syncService from '../../db/syncService';
-import * as AuthContext from '../../auth/AuthContext';
+import * as useAuthModule from '../../auth/useAuth';
 
 // Mock dependencies
 vi.mock('../../hooks/useOnlineStatus');
 vi.mock('../../db/syncService');
-vi.mock('../../auth/AuthContext');
+vi.mock('../../auth/useAuth');
 
 const useOnlineStatusMock = vi.mocked(useOnlineStatus);
 const syncServiceMock = vi.mocked(syncService);
-const useAuthMock = vi.mocked(AuthContext.useAuth);
+const useAuthMock = vi.mocked(useAuthModule.useAuth);
 
 describe('SyncButton', () => {
   const mockSyncStatus = {
