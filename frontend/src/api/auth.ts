@@ -15,6 +15,13 @@ type RefreshResponse = {
   expires_in: number;
 };
 
+type AuthStatusResponse = {
+  ok: boolean;
+  authenticated: boolean;
+  userId?: string;
+  username?: string;
+};
+
 export const authApi = {
   register: (username: string, password: string) =>
     api.postAuth<{ ok: boolean; userId: string; username: string }>(
@@ -44,6 +51,17 @@ export const authApi = {
   me: async () => {
     const r = await api.getAllow401<MeResponse>("/auth/me");
     return r ?? null;
+  },
+
+  // Check authentication status - always returns 200, never throws 401
+  // Returns { authenticated: true/false, userId?, username? }
+  status: async (): Promise<AuthStatusResponse> => {
+    try {
+      return await api.get<AuthStatusResponse>("/auth/status");
+    } catch {
+      // If network error, assume not authenticated
+      return { ok: true, authenticated: false };
+    }
   },
 
   refresh: async (): Promise<boolean> => {

@@ -64,17 +64,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   async function initialize() {
     try {
-      // First, try to refresh access token from refresh token (HttpOnly cookie)
-      logger.info("Attempting to restore session from refresh token");
-      const refreshed = await authApi.refresh();
+      // Check if we have a valid access token
+      logger.info("Checking authentication status");
+      const status = await authApi.status();
       
-      if (refreshed) {
-        logger.info("Session restored successfully");
-        // Now fetch user info with the new access token
-        await refresh();
+      if (status.authenticated && status.userId && status.username) {
+        // We have a valid access token, use the user info from status response
+        logger.info("Valid access token found");
+        setState({ 
+          status: "authed", 
+          me: { userId: status.userId, username: status.username } 
+        });
+        logger.setUserId(status.userId);
       } else {
-        logger.info("No valid refresh token found, starting as guest");
-        setState({ status: "guest" });
+        // No valid access token, try to refresh from HttpOnly cookie
+        logger.info("No valid access token, attempting refresh");
+        const refreshed = await authApi.refresh();
+        
+        if (refreshed) {
+          logger.info("Session restored successfully");
+          await refresh();
+        } else {
+          logger.info("No valid refresh token found, starting as guest");
+          setState({ status: "guest" });
+        }
       }
     } catch (error) {
       logger.error("Failed to initialize auth", { error });

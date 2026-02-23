@@ -334,3 +334,60 @@ async def test_access_token_expiration_format(client: AsyncClient, unique_userna
     assert "expires_in" in data
     assert isinstance(data["expires_in"], int)
     assert data["expires_in"] > 0
+
+
+@pytest.mark.asyncio
+async def test_auth_status_without_token(client: AsyncClient):
+    """Test /auth/status without authentication - should return 200 with authenticated=false"""
+    resp = await client.get("/api/auth/status")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["ok"] is True
+    assert data["authenticated"] is False
+    assert "userId" not in data or data["userId"] is None
+    assert "username" not in data or data["username"] is None
+
+
+@pytest.mark.asyncio
+async def test_auth_status_with_valid_token(client: AsyncClient, unique_username):
+    """Test /auth/status with valid token - should return 200 with authenticated=true"""
+    username = unique_username()
+    password = "testpass123"
+    
+    # Register and login
+    await client.post("/api/auth/register", json={
+        "username": username,
+        "password": password
+    })
+    
+    resp = await client.post("/api/auth/login", json={
+        "username": username,
+        "password": password
+    })
+    assert resp.status_code == 200
+    access_token = resp.json()["access_token"]
+    
+    # Check status with valid token
+    resp = await client.get(
+        "/api/auth/status",
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["ok"] is True
+    assert data["authenticated"] is True
+    assert data["username"] == username
+    assert "userId" in data
+
+
+@pytest.mark.asyncio
+async def test_auth_status_with_invalid_token(client: AsyncClient):
+    """Test /auth/status with invalid token - should return 200 with authenticated=false"""
+    resp = await client.get(
+        "/api/auth/status",
+        headers={"Authorization": "Bearer invalid_token_here"}
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["ok"] is True
+    assert data["authenticated"] is False

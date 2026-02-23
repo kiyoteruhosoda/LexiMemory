@@ -373,6 +373,64 @@ async def me(user: dict = Depends(require_auth)):
     return MeResponse(userId=user["userId"], username=user["username"])
 
 
+@router.get(
+    "/status",
+    summary="Check authentication status",
+    description="Check if the current request has a valid access token. Always returns 200, never 401.",
+    responses={
+        200: {
+            "description": "Authentication status",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "authenticated": {
+                            "summary": "User is authenticated",
+                            "value": {"ok": True, "authenticated": True, "userId": "123", "username": "john"}
+                        },
+                        "not_authenticated": {
+                            "summary": "User is not authenticated",
+                            "value": {"ok": True, "authenticated": False}
+                        }
+                    }
+                }
+            }
+        },
+    }
+)
+async def auth_status(request: Request):
+    """
+    Check authentication status without requiring auth.
+    Returns authenticated=true with user info if valid token exists,
+    otherwise returns authenticated=false.
+    Never returns 401.
+    """
+    try:
+        # Try to get Authorization header
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return {"ok": True, "authenticated": False}
+        
+        token = auth_header[7:]  # Remove "Bearer " prefix
+        
+        # Use the global auth service to verify the token
+        if not _auth_service:
+            return {"ok": True, "authenticated": False}
+        
+        payload = _auth_service.jwt_provider.verify_access_token(token)
+        if not payload:
+            return {"ok": True, "authenticated": False}
+        
+        return {
+            "ok": True,
+            "authenticated": True,
+            "userId": payload.get("userId"),
+            "username": payload.get("username")
+        }
+    except Exception:
+        # Any error means not authenticated
+        return {"ok": True, "authenticated": False}
+
+
 @router.delete(
     "/me",
     summary="Delete user account",
