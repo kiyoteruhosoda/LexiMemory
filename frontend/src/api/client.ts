@@ -69,7 +69,7 @@ async function request<T>(
   method: HttpMethod,
   path: string,
   body?: unknown,
-  opts?: { skipAuth?: boolean; allow401?: boolean; isHealthCheck?: boolean }
+  opts?: { skipAuth?: boolean; allow401?: boolean; isHealthCheck?: boolean; skipApiPrefix?: boolean }
 ): Promise<T> {
   const headers: Record<string, string> = {};
   
@@ -83,7 +83,8 @@ async function request<T>(
   }
 
   try {
-    const res = await fetch(`/api${path}`, {
+    const url = opts?.skipApiPrefix ? path : `/api${path}`;
+    const res = await fetch(url, {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
@@ -153,6 +154,6 @@ export const api = {
   getAllow401: <T>(path: string) => request<T>("GET", path, undefined, { allow401: true }),
   postAuth: <T>(path: string, body?: unknown) =>
     request<T>("POST", path, body, { skipAuth: true }),
-  // Add a health check method
-  healthCheck: () => request<unknown>("GET", "/users/me", undefined, { allow401: true, isHealthCheck: true }),
+  // Health check using dedicated endpoint (no auth required)
+  healthCheck: () => request<unknown>("GET", "/healthz", undefined, { skipAuth: true, isHealthCheck: true, skipApiPrefix: true }),
 };
