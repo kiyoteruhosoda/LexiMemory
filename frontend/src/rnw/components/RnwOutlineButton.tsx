@@ -6,14 +6,15 @@ type RnwOutlineButtonProps = {
   onPress: () => void;
   icon?: ReactNode;
   testID?: string;
+  disabled?: boolean;
 };
 
-export function RnwOutlineButton({ label, onPress, icon, testID }: RnwOutlineButtonProps) {
+export function RnwOutlineButton({ label, onPress, icon, testID, disabled = false }: RnwOutlineButtonProps) {
   return (
     <Pressable
-      onPress={onPress}
+      onPress={disabled ? undefined : onPress}
       testID={testID}
-      style={({ pressed }) => ({ ...styles.button, ...(pressed ? styles.buttonPressed : {}) })}
+      style={({ pressed }) => ({ ...styles.button, ...(pressed ? styles.buttonPressed : {}), ...(disabled ? styles.buttonDisabled : {}) })}
       accessibilityRole="button"
     >
       {icon ? <Text style={styles.icon}>{icon}</Text> : null}
@@ -39,6 +40,10 @@ const styles = StyleSheet.create({
   },
   buttonPressed: {
     backgroundColor: "#e7f1ff",
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+    cursor: "not-allowed",
   },
   icon: {
     color: "#0d6efd",

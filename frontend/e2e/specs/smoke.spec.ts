@@ -1,12 +1,11 @@
 import { expect, test } from "@playwright/test";
+import { disableAnimations, stabilizeUiSession } from "../domains/stabilizeSession";
 
 test("guest user can access login and words pages", async ({ page }) => {
-  await page.addInitScript(() => {
-    Date.now = () => new Date("2024-01-01T00:00:00.000Z").getTime();
-    Math.random = () => 0.42;
-  });
+  await stabilizeUiSession(page);
 
   await page.goto("/login");
+  await disableAnimations(page);
   await expect(page.getByRole("heading", { name: "Login" })).toBeVisible();
 
   await page.goto("/words");

@@ -10,6 +10,7 @@
 - `npm run test:coverage`: Vitest coverage
 - `npm run test:e2e`: Playwright E2E（visual regression含む）
 - `npm run test:e2e:update`: Playwrightスクリーンショットのベースライン更新
+- `npm run test:e2e:firefox`: Firefoxプロジェクトのみ実行
 - `npm run typecheck`: 型チェック（`tsc -b`）
 
 ## ルーティング方式
@@ -33,6 +34,7 @@
   - `toHaveScreenshot` を使用し、`/words` と `/login` を desktop/mobile で比較
 - `e2e/specs/smoke.spec.ts`
   - ログイン前の主要導線（`/login`→`/words`）の導通を確認
+- 実行先URLは `PLAYWRIGHT_BASE_URL` で上書き可能（デフォルト: `http://localhost:${PLAYWRIGHT_WEB_PORT:-4173}`）
 - 安定化施策
   - viewport固定
   - タイムゾーン/ロケール固定
@@ -46,3 +48,7 @@
 - RNW移行PoCとして、RN風UIコンポーネント境界（`src/rnw`）を導入
   - 現在はWeb互換アダプタで稼働
   - 将来 `react-native`/`react-native-web` 実装に差し替え予定
+
+## RNW移行の進捗管理
+
+- 詳細な完了までのチェックリストは `plan.md` を参照してください。

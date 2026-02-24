@@ -13,7 +13,8 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:update": "playwright test --update-snapshots",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "test:e2e:firefox": "playwright test --project=firefox"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",
