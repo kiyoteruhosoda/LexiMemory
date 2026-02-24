@@ -52,11 +52,12 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 ## 直近の実行順（次スプリント）
 1. [ ] `WordListPage` の残り Bootstrap依存UIを RNW List/Filter primitives に置換
    - [x] 上部アクション（Study/Examples/Search/Export/Import）をRNW Button primitivesへ移行
-   - [ ] 検索フォームとテーブル表示をRNW List/Form primitivesへ移行
+   - [~] 検索フォームをRNW Form primitiveへ移行（テーブルは未着手）
 2. [ ] 同ページの visual snapshot を Chromium/Firefox で固定
+   - [x] RNW Pressable shim の pressed/disabled 挙動を unit test で固定
 3. [ ] `StudyPage` の CTA と filter toolbar を RNW primitives に揃える
 4. [ ] `Auth` / `Sync` のユースケースを `core/application` 層へ移動
 
 ---
 
-最終更新: 2026-02-24 (update-2)
+最終更新: 2026-02-24 (update-4)

@@ -8,6 +8,7 @@ import SyncButton from "../components/SyncButton";
 import { RnwPrimaryButton } from "../rnw/components/RnwPrimaryButton";
 import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
 import { RnwIconButton } from "../rnw/components/RnwIconButton";
+import { RnwSearchPanel } from "../rnw/components/RnwSearchPanel";
 
 export function WordListPage() {
   const navigate = useNavigate();
@@ -119,39 +120,18 @@ export function WordListPage() {
         <SyncButton onSyncSuccess={reload} />
       </div>
 
-      {/* Search Form - Collapsible */}
       {showSearch && (
-        <form
-          className="card border shadow-sm"
-          onSubmit={(e) => { e.preventDefault(); void reload(); }}
-        >
-          <div className="card-body">
-            <div className="d-flex gap-2">
-              <div className="input-group">
-                <span className="input-group-text">
-                  <i className="fa-solid fa-magnifying-glass" />
-                </span>
-                <input
-                  className="form-control"
-                  placeholder="Search (EN/JA)"
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  autoFocus
-                />
-              </div>
-              <button className="btn btn-outline-primary" type="submit" disabled={busy}>
-                {busy ? <span className="spinner-border spinner-border-sm" /> : <i className="fa-solid fa-filter" />}
-              </button>
-              <button 
-                type="button"
-                className="btn btn-outline-secondary" 
-                onClick={() => { setQ(""); setShowSearch(false); void reload(); }}
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-        </form>
+        <RnwSearchPanel
+          value={q}
+          busy={busy}
+          onChange={setQ}
+          onSubmit={() => void reload()}
+          onClear={() => {
+            setQ("");
+            setShowSearch(false);
+            void reload();
+          }}
+        />
       )}
 
       {error ? (
