@@ -48,3 +48,7 @@
 - RNW移行PoCとして、RN風UIコンポーネント境界（`src/rnw`）を導入
   - 現在はWeb互換アダプタで稼働
   - 将来 `react-native`/`react-native-web` 実装に差し替え予定
+
+## RNW移行の進捗管理
+
+- 詳細な完了までのチェックリストは `plan.md` を参照してください。
