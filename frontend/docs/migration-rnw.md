@@ -29,3 +29,21 @@
 - M2: RN component boundary + first component adoption（完了）
 - M3: `packages/core` 相当へのドメインロジック再配置
 - M4: `apps/mobile`(Expo) 追加と共通UI再利用
+
+
+## Suggested PR split
+
+1. **PR-1: Baseline & quality gates**
+   - READMEにCI相当コマンド/ルーティング/主要画面を明文化
+   - Playwright smoke + screenshot regressionを固定化
+2. **PR-2: Storage abstraction**
+   - `StorageAdapter`境界を統一
+   - `localStorage`依存箇所をアダプタ経由に寄せる
+3. **PR-3: Core domain extraction**
+   - タグフィルタ等のユースケースを`src/core`へ集約
+   - UIはポート(interface)のみ依存
+4. **PR-4: RNW component PoC**
+   - ボタン/Cardなど小さいUIのみRNW境界へ置換
+   - 見た目同等性をvisual regressionで担保
+5. **PR-5: Screen-by-screen migration**
+   - `/words`→`/study`→`/examples`の順で段階移行
