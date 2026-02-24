@@ -64,7 +64,7 @@ export function WordListPage() {
   }
 
   return (
-    <div className="vstack gap-3">
+    <div className="vstack gap-3" data-testid="word-list-page-ready">
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <div className="d-flex gap-2 align-items-center flex-wrap">
           <button
