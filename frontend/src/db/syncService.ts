@@ -21,6 +21,7 @@ import {
   saveVocabFile,
 } from "./indexeddb";
 import { api } from "../api/client";
+import { storage } from "../core/storage";
 
 /**
  * Retry configuration
@@ -300,16 +301,16 @@ async function backupLocalFile(file: VocabFile): Promise<void> {
   const backupKey = `vocab_backup_${timestamp}`;
   
   try {
-    localStorage.setItem(backupKey, JSON.stringify(file));
+    await storage.set(backupKey, JSON.stringify(file));
     
     // Keep only last 5 backups
-    const backupKeys = Object.keys(localStorage).filter((k) =>
+    const backupKeys = (await storage.keys()).filter((k) =>
       k.startsWith("vocab_backup_")
     );
     if (backupKeys.length > 5) {
       backupKeys.sort();
       for (let i = 0; i < backupKeys.length - 5; i++) {
-        localStorage.removeItem(backupKeys[i]);
+        await storage.remove(backupKeys[i]);
       }
     }
   } catch (error) {

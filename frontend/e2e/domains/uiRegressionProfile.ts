@@ -3,7 +3,6 @@ import { devices, type Page } from "@playwright/test";
 export type UiRegressionProfile = {
   readonly name: string;
   readonly viewport: { width: number; height: number };
-  readonly deviceScaleFactor: number;
 };
 
 export interface UiScenario {
@@ -14,22 +13,58 @@ export interface UiScenario {
   beforeAssert(page: Page): Promise<void>;
 }
 
-class WordListScenario implements UiScenario {
-  readonly id = "word-list";
-  readonly route = "/words";
-  readonly waitFor = "[data-testid='word-list-page-ready']";
-  readonly screenshotName = "word-list.png";
+abstract class BaseScenario implements UiScenario {
+  abstract readonly id: string;
+  abstract readonly route: string;
+  abstract readonly waitFor: string;
+  abstract readonly screenshotName: string;
 
   async beforeAssert(page: Page): Promise<void> {
+    await page.addInitScript(() => {
+      Date.now = () => new Date("2024-01-01T00:00:00.000Z").getTime();
+      Math.random = () => 0.42;
+    });
+
     await page.addStyleTag({
       content: `
         *, *::before, *::after {
           transition: none !important;
           animation: none !important;
+          caret-color: transparent !important;
         }
       `,
     });
   }
+}
+
+class WordListScenario extends BaseScenario {
+  readonly id = "word-list";
+  readonly route = "/words";
+  readonly waitFor = "[data-testid='word-list-page-ready']";
+  readonly screenshotName = "word-list.png";
+}
+
+
+class StudyScenario extends BaseScenario {
+  readonly id = "study";
+  readonly route = "/study";
+  readonly waitFor = "text=Study";
+  readonly screenshotName = "study.png";
+}
+
+
+class ExamplesScenario extends BaseScenario {
+  readonly id = "examples";
+  readonly route = "/examples";
+  readonly waitFor = "text=Examples";
+  readonly screenshotName = "examples.png";
+}
+
+class LoginScenario extends BaseScenario {
+  readonly id = "login";
+  readonly route = "/login";
+  readonly waitFor = "h4.card-title";
+  readonly screenshotName = "login.png";
 }
 
 const desktopChrome = devices["Desktop Chrome"];
@@ -39,13 +74,11 @@ export const uiRegressionProfiles: readonly UiRegressionProfile[] = [
   {
     name: "desktop",
     viewport: desktopChrome.viewport!,
-    deviceScaleFactor: desktopChrome.deviceScaleFactor,
   },
   {
     name: "mobile",
     viewport: iphone13.viewport!,
-    deviceScaleFactor: iphone13.deviceScaleFactor,
   },
 ];
 
-export const uiScenarios: readonly UiScenario[] = [new WordListScenario()];
+export const uiScenarios: readonly UiScenario[] = [new WordListScenario(), new StudyScenario(), new ExamplesScenario(), new LoginScenario()];
