@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, Text } from "../react-native";
+import { Pressable, Text } from "../react-native";
+import { StyleSheet } from "../stylesheet";
 
 type RnwIconButtonVariant = "secondary" | "primary";
 

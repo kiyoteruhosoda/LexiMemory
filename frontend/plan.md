@@ -18,7 +18,7 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 ## 2. UIポリモーフィズム（RNW境界）
 - [x] `src/rnw` に RN風コンポーネント境界を作成
 - [x] 小粒度コンポーネント（Button系）のRNW境界採用
-- [ ] Form / Modal / Card / List を RNWコンポーネントに置換
+- [~] Form / Modal / Card / List を RNWコンポーネントに置換（Form/Listは着手済み）
 - [ ] `*.web.tsx` / `*.native.tsx` 分岐ルールのテンプレート実装
 
 ## 3. アプリ構成の段階的再編（モノレポ相当）
@@ -52,11 +52,12 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 ## 直近の実行順（次スプリント）
 1. [ ] `WordListPage` の残り Bootstrap依存UIを RNW List/Filter primitives に置換
    - [x] 上部アクション（Study/Examples/Search/Export/Import）をRNW Button primitivesへ移行
-   - [ ] 検索フォームとテーブル表示をRNW List/Form primitivesへ移行
+   - [x] 検索フォームと一覧テーブルをRNW Form/List primitiveへ移行
 2. [ ] 同ページの visual snapshot を Chromium/Firefox で固定
+   - [x] RNW Pressable shim の pressed/disabled 挙動を unit test で固定
 3. [ ] `StudyPage` の CTA と filter toolbar を RNW primitives に揃える
 4. [ ] `Auth` / `Sync` のユースケースを `core/application` 層へ移動
 
 ---
 
-最終更新: 2026-02-24 (update-2)
+最終更新: 2026-02-24 (update-5)

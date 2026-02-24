@@ -27,6 +27,9 @@
 
 - M1: Storage abstraction + visual regression guard（完了）
 - M2: RN component boundary + first component adoption（完了）
+- M2.1: `/words` 検索フォームを RNW Form primitive (`RnwSearchPanel`) へ置換（完了）
+- M2.2: RNW shim (`Pressable`) の押下状態/disabled挙動をテストで固定（完了）
+- M2.3: `/words` 一覧テーブルを RNW List primitive (`RnwWordListTable`) へ置換（完了）
 - M3: `packages/core` 相当へのドメインロジック再配置
 - M4: `apps/mobile`(Expo) 追加と共通UI再利用
 

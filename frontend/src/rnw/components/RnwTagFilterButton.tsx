@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text } from "../react-native";
+import { Pressable, Text } from "../react-native";
+import { StyleSheet } from "../stylesheet";
 
 type RnwTagFilterButtonProps = {
   activeCount?: number;
