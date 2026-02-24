@@ -1,6 +1,12 @@
 ---
 name: error-logging-observability
 description: Define structured logging, request correlation, metrics mindset, and error handling conventions. Use when adding logs, exceptions, middleware, or troubleshooting behavior.
+license: MIT
+compatibility: Designed for GitHub Copilot and OpenAI Codex. Requires Python 3.11+, FastAPI environment, Docker.
+metadata:
+  author: LinguisticNode
+  version: "1.0"
+  category: observability
 ---
 
 # Error / Logging / Observability Skill

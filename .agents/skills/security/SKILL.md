@@ -1,6 +1,12 @@
 ---
 name: security
 description: Apply baseline security for FastAPI apps (input validation, secret handling, auth, safe errors). Use when adding auth, handling user data, or logging.
+license: MIT
+compatibility: Designed for GitHub Copilot and OpenAI Codex. Requires Python 3.11+, FastAPI environment.
+metadata:
+  author: LinguisticNode
+  version: "1.0"
+  category: security
 ---
 
 # Security Skill (Baseline)

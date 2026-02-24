@@ -1,6 +1,12 @@
 ---
 name: testing
 description: Define test strategy for domain/service/API including regression tests for bugs and observability assertions. Use when adding features or fixing bugs.
+license: MIT
+compatibility: Designed for GitHub Copilot and OpenAI Codex. Requires Python 3.11+, pytest.
+metadata:
+  author: LinguisticNode
+  version: "1.0"
+  category: testing
 ---
 
 # Testing Skill (pytest)

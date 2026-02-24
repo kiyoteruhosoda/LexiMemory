@@ -1,6 +1,12 @@
 ---
 name: architecture
 description: Enforce FastAPI project layering and dependency direction. Use when creating new modules, adding features, or refactoring architecture.
+license: MIT
+compatibility: Designed for GitHub Copilot and OpenAI Codex. Requires Python 3.11+, FastAPI environment.
+metadata:
+  author: LinguisticNode
+  version: "1.0"
+  category: backend-architecture
 ---
 
 # Architecture Skill (FastAPI Personal)

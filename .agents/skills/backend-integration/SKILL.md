@@ -1,6 +1,12 @@
 ---
 name: backend-integration
 description: Standardize FastAPI endpoints, Pydantic schemas, DI, and HTTP error mapping. Use when implementing or changing API routes.
+license: MIT
+compatibility: Designed for GitHub Copilot and OpenAI Codex. Requires Python 3.11+, FastAPI environment.
+metadata:
+  author: LinguisticNode
+  version: "1.0"
+  category: backend-api
 ---
 
 # Backend Integration Skill (FastAPI)

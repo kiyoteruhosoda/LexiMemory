@@ -1,6 +1,12 @@
 ---
 name: debugging-troubleshooting
 description: Provide a repeatable debugging workflow (repro steps, log queries, toggles). Use when investigating bugs, flaky behavior, or production-like issues.
+license: MIT
+compatibility: Designed for GitHub Copilot and OpenAI Codex. Requires Python 3.11+, FastAPI environment.
+metadata:
+  author: LinguisticNode
+  version: "1.0"
+  category: debugging
 ---
 
 # Debugging / Troubleshooting Skill

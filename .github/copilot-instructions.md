@@ -8,7 +8,7 @@ This is a personal FastAPI-centric Python project.
 
 ## Always follow Project Skills
 Follow skill documents under:
-- .github/skills/**/SKILL.md
+- .agents/skills/**/SKILL.md
 
 If instructions conflict:
 1) .github/copilot-instructions.md wins

@@ -1,6 +1,12 @@
 ---
 name: auditing-traceability
 description: Ensure actions are auditable and traceable (who did what, when, from where). Use when implementing state changes, auth, or any sensitive endpoint.
+license: MIT
+compatibility: Designed for GitHub Copilot and OpenAI Codex. Requires Python 3.11+, FastAPI environment.
+metadata:
+  author: LinguisticNode
+  version: "1.0"
+  category: security-observability
 ---
 
 # Auditing / Traceability Skill
