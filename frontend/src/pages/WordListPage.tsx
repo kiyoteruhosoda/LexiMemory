@@ -10,6 +10,7 @@ import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
 import { RnwIconButton } from "../rnw/components/RnwIconButton";
 import { RnwSearchPanel } from "../rnw/components/RnwSearchPanel";
 import { RnwWordListTable } from "../rnw/components/RnwWordListTable";
+import { RnwPlatformBadge } from "../rnw/components/RnwPlatformBadge";
 
 export function WordListPage() {
   const navigate = useNavigate();
@@ -69,6 +70,7 @@ export function WordListPage() {
     <div className="vstack gap-3" data-testid="word-list-page-ready">
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <div className="d-flex gap-2 align-items-center flex-wrap">
+          <RnwPlatformBadge />
           <RnwPrimaryButton
             label="Add"
             onPress={() => navigate("/words/create")}

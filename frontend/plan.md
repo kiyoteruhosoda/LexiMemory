@@ -7,7 +7,7 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 - [x] 既存Web互換を維持する方針を文書化
 - [x] Vitest + Playwright の回帰検知基盤を導入
 - [x] Visual regression の安定化（時刻/乱数/アニメーション制御）
-- [ ] CI で Chromium / Firefox 両プロジェクトの screenshot テストを必須化
+- [~] CI で Chromium / Firefox 両プロジェクトの screenshot テストを必須化（ローカル実行済み・CI固定は次PR）
 
 ## 1. モジュール境界の確立（DDD）
 - [x] `src/core/storage` に Storage Port (`StorageAdapter`) を定義
@@ -37,7 +37,7 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 ## 5. 画面移行（Screen-by-screen）
 - [x] `/words` の一部UIをRNW境界化（PoC）
 - [ ] `/words` 全UIを RNW component に統一
-- [ ] `/study` を RNW component に統一
+- [~] `/study` を RNW component に統一（CTA/Tag filter toolbarは置換済み）
 - [ ] `/examples` を RNW component に統一
 - [ ] `/words/create` と `/words/:id` を RNW component に統一
 - [ ] `/login` 画面を RNW component に統一
@@ -55,9 +55,9 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
    - [x] 検索フォームと一覧テーブルをRNW Form/List primitiveへ移行
 2. [ ] 同ページの visual snapshot を Chromium/Firefox で固定
    - [x] RNW Pressable shim の pressed/disabled 挙動を unit test で固定
-3. [ ] `StudyPage` の CTA と filter toolbar を RNW primitives に揃える
+3. [x] `StudyPage` の CTA と filter toolbar を RNW primitives に揃える
 4. [ ] `Auth` / `Sync` のユースケースを `core/application` 層へ移動
 
 ---
 
-最終更新: 2026-02-24 (update-5)
+最終更新: 2026-02-24 (update-6)

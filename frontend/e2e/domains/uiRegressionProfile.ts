@@ -48,7 +48,7 @@ class WordListScenario extends BaseScenario {
 class StudyScenario extends BaseScenario {
   readonly id = "study";
   readonly route = "/study";
-  readonly waitFor = "text=Study";
+  readonly waitFor = "[data-testid='study-page-ready']";
   readonly screenshotName = "study.png";
 }
 
@@ -56,7 +56,7 @@ class StudyScenario extends BaseScenario {
 class ExamplesScenario extends BaseScenario {
   readonly id = "examples";
   readonly route = "/examples";
-  readonly waitFor = "text=Examples";
+  readonly waitFor = "[data-testid='examples-page-ready']";
   readonly screenshotName = "examples.png";
 }
 
