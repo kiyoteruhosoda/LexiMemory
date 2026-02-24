@@ -34,7 +34,7 @@
   - `toHaveScreenshot` を使用し、`/words` と `/login` を desktop/mobile で比較
 - `e2e/specs/smoke.spec.ts`
   - ログイン前の主要導線（`/login`→`/words`）の導通を確認
-- 実行先URLは `PLAYWRIGHT_BASE_URL` で上書き可能（デフォルト: `http://127.0.0.1:4176`）
+- 実行先URLは `PLAYWRIGHT_BASE_URL` で上書き可能（デフォルト: `http://localhost:${PLAYWRIGHT_WEB_PORT:-4173}`）
 - 安定化施策
   - viewport固定
   - タイムゾーン/ロケール固定
