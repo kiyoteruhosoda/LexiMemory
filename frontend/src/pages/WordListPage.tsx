@@ -5,6 +5,7 @@ import { ioApi } from "../api/io.offline";
 import type { WordEntry, MemoryState } from "../api/types";
 import { ImportModal } from "../components/ImportModal";
 import SyncButton from "../components/SyncButton";
+import { RnwPrimaryButton } from "../rnw/components/RnwPrimaryButton";
 
 export function WordListPage() {
   const navigate = useNavigate();
@@ -67,13 +68,12 @@ export function WordListPage() {
     <div className="vstack gap-3" data-testid="word-list-page-ready">
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <div className="d-flex gap-2 align-items-center flex-wrap">
-          <button
-            className="btn btn-primary"
-            onClick={() => navigate("/words/create")}
-          >
-            <i className="fa-solid fa-plus me-1" />
-            Add
-          </button>
+          <RnwPrimaryButton
+            label="Add"
+            onPress={() => navigate("/words/create")}
+            icon={<i className="fa-solid fa-plus" aria-hidden="true" />}
+            testID="rnw-add-button"
+          />
 
           <button
             className="btn btn-outline-primary"

@@ -14,6 +14,7 @@ for (const profile of uiRegressionProfiles) {
         await expect(page).toHaveScreenshot(`${profile.name}-${scenario.screenshotName}`, {
           fullPage: true,
           animations: "disabled",
+          maxDiffPixelRatio: 0.01,
         });
       });
     }

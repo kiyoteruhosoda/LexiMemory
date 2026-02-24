@@ -3,8 +3,11 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { examplesApi } from "../api/examples.offline";
+import { TagFilterStorageService } from "../core/tagFilter/tagFilterStorageService";
 import type { ExampleTestItem } from "../api/types";
 import SyncButton from "../components/SyncButton";
+import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
+import { RnwTagFilterButton } from "../rnw/components/RnwTagFilterButton";
 
 /**
  * Normalize a word for comparison (handles inflections and case)
@@ -121,20 +124,10 @@ export function ExamplesTestPage() {
   // Tag filter state
   const [allTags, setAllTags] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [appliedTags, setAppliedTags] = useState<string[] | undefined>(() => {
-    // Restore from localStorage
-    try {
-      const saved = localStorage.getItem('examples_applied_tags');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return Array.isArray(parsed) && parsed.length > 0 ? parsed : undefined;
-      }
-    } catch (e) {
-      console.error('Failed to restore tag filter:', e);
-    }
-    return undefined;
-  });
+  const [appliedTags, setAppliedTags] = useState<string[] | undefined>();
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+
+  const tagFilterStorage = useMemo(() => new TagFilterStorageService("examples"), []);
 
   const loadTags = useCallback(async () => {
     try {
@@ -176,20 +169,18 @@ export function ExamplesTestPage() {
     void loadTags();
     void loadNext(); 
   }, [loadTags, loadNext]);
+  useEffect(() => {
+    void (async () => {
+      const restored = await tagFilterStorage.restore();
+      setAppliedTags(restored);
+    })();
+  }, [tagFilterStorage]);
+
 
   useEffect(() => {
-    // Save to localStorage whenever appliedTags changes
-    try {
-      if (appliedTags && appliedTags.length > 0) {
-        localStorage.setItem('examples_applied_tags', JSON.stringify(appliedTags));
-      } else {
-        localStorage.removeItem('examples_applied_tags');
-      }
-    } catch (e) {
-      console.error('Failed to save tag filter:', e);
-    }
+    void tagFilterStorage.save(appliedTags);
     void loadNext();
-  }, [appliedTags, loadNext]);
+  }, [appliedTags, loadNext, tagFilterStorage]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -255,32 +246,27 @@ export function ExamplesTestPage() {
       {/* Header with actions */}
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <div className="d-flex gap-2 align-items-center">
-          <button
-            className="btn btn-outline-primary"
-            onClick={() => navigate("/words")}
-          >
-            <i className="fa-solid fa-book me-1" />
-            Words
-          </button>
+          <RnwOutlineButton
+            label="Words"
+            onPress={() => navigate("/words")}
+            icon={<i className="fa-solid fa-book" aria-hidden="true" />}
+            testID="rnw-examples-words"
+          />
 
-          <button
-            className="btn btn-outline-primary"
-            onClick={() => navigate("/study")}
-          >
-            <i className="fa-solid fa-graduation-cap me-1" />
-            Study
-          </button>
+          <RnwOutlineButton
+            label="Study"
+            onPress={() => navigate("/study")}
+            icon={<i className="fa-solid fa-graduation-cap" aria-hidden="true" />}
+            testID="rnw-examples-study"
+          />
 
           {/* Tag Filter Button */}
           {allTags.length > 0 && (
-            <button
-              className={`btn ${appliedTags && appliedTags.length > 0 ? 'btn-primary' : 'btn-outline-secondary'}`}
-              onClick={() => setIsFilterExpanded(!isFilterExpanded)}
-              title="Filter by tags"
-            >
-              <i className="fa-solid fa-tag me-1" />
-              {appliedTags && appliedTags.length > 0 ? `${appliedTags.length}` : 'Tags'}
-            </button>
+            <RnwTagFilterButton
+              activeCount={appliedTags?.length ?? 0}
+              onPress={() => setIsFilterExpanded(!isFilterExpanded)}
+              testID="rnw-examples-tags"
+            />
           )}
         </div>
 

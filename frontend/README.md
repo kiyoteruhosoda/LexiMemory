@@ -1,93 +1,48 @@
-# React + TypeScript + Vite
+# Frontend (React + TypeScript + Vite)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 現状のCI相当コマンド
 
-Currently, two official plugins are available:
+- `npm run dev`: 開発サーバー
+- `npm run build`: TypeScriptビルド + Vite build
+- `npm run preview`: build成果物のプレビュー
+- `npm run lint`: ESLint
+- `npm run test`: Vitest
+- `npm run test:coverage`: Vitest coverage
+- `npm run test:e2e`: Playwright E2E（visual regression含む）
+- `npm run test:e2e:update`: Playwrightスクリーンショットのベースライン更新
+- `npm run typecheck`: 型チェック（`tsc -b`）
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## ルーティング方式
 
-## React Compiler
+- Router: `react-router-dom` の `BrowserRouter`。
+- エントリ: `src/App.tsx`。
+- 初期遷移: `/` は `/words` へリダイレクト。
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 主要画面一覧
 
-## Expanding the ESLint configuration
+- `/login`: ログイン/ユーザー登録
+- `/words`: 単語一覧（トップ相当）
+- `/words/create`: 単語作成
+- `/words/:id`: 単語詳細
+- `/study`: 学習画面
+- `/examples`: 例文テスト画面
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## UIリグレッションテスト
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- `e2e/specs/ui-regression.spec.ts`
+  - `toHaveScreenshot` を使用し、`/words` と `/login` を desktop/mobile で比較
+- `e2e/specs/smoke.spec.ts`
+  - ログイン前の主要導線（`/login`→`/words`）の導通を確認
+- 安定化施策
+  - viewport固定
+  - タイムゾーン/ロケール固定
+  - アニメーション無効化
+  - 時刻/乱数固定（init script）
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## RNW段階移行に向けた現状
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-## Playwright による UI リグレッションテスト基盤
-
-React Native Web への段階移行を見据え、UI 崩れを検知するための E2E スナップショット土台を追加しています。
-
-- `playwright.config.ts`: Vite preview を起動してテスト実行
-- `e2e/domains/uiRegressionProfile.ts`: 画面プロファイル（desktop / mobile）とシナリオ定義
-- `e2e/specs/ui-regression.spec.ts`: シナリオをポリモーフィックに巡回する視覚回帰テスト
-
-### 実行コマンド
-
-```bash
-npm run test:e2e
-```
-
-初回はベースライン画像を生成するため、以下を実行します。
-
-```bash
-npm run test:e2e:update
-```
+- Storage直叩きを抽象化（`src/core/storage`）
+- タグフィルタ永続化をドメインサービス化（`src/core/tagFilter`）
+- RNW移行PoCとして、RN風UIコンポーネント境界（`src/rnw`）を導入
+  - 現在はWeb互換アダプタで稼働
+  - 将来 `react-native`/`react-native-web` 実装に差し替え予定

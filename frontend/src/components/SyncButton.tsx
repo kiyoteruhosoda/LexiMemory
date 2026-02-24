@@ -16,6 +16,7 @@ import {
 import type { ConflictResolution } from "../db/types";
 import { useAuth } from "../auth/useAuth";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
+import { storage } from "../core/storage";
 
 type SyncButtonProps = {
   onSyncSuccess?: () => void;
@@ -40,15 +41,19 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
   // Auto-sync after login if there was a pending sync and we are online
   useEffect(() => {
     if (isAuthenticated && isOnline) {
-      const pendingSync = localStorage.getItem('pendingSync');
-      if (pendingSync === 'true') {
-        localStorage.removeItem('pendingSync');
+      void (async () => {
+        const pendingSync = await storage.get("pendingSync");
+        if (pendingSync !== "true") {
+          return;
+        }
+
+        await storage.remove("pendingSync");
         // Execute sync automatically after a short delay to ensure auth is fully ready
         const timer = setTimeout(() => {
           void handleSync();
         }, 100);
         return () => clearTimeout(timer);
-      }
+      })();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps -- handleSync depends on state
   }, [isAuthenticated, isOnline]);
@@ -81,7 +86,7 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
 
     if (!isAuthenticated) {
       setShowLoginPrompt(true);
-      localStorage.setItem('pendingSync', 'true');
+      void storage.set("pendingSync", "true");
       return;
     }
 
@@ -109,7 +114,7 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
       const error = err as { status?: number };
       if (error.status === 401) {
         setShowLoginPrompt(true);
-        localStorage.setItem('pendingSync', 'true');
+        void storage.set("pendingSync", "true");
       }
       // Other errors are now more gracefully handled by the online status store
       console.error("Sync failed:", err);
@@ -200,7 +205,7 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
           show={showLoginPrompt}
           onClose={() => {
             setShowLoginPrompt(false);
-            localStorage.removeItem('pendingSync');
+            void storage.remove("pendingSync");
           }}
           title="Login Required"
         >
@@ -211,7 +216,7 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
               className="btn btn-secondary"
               onClick={() => {
                 setShowLoginPrompt(false);
-                localStorage.removeItem('pendingSync');
+                void storage.remove("pendingSync");
               }}
             >
               Cancel

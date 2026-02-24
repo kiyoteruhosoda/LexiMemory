@@ -1,9 +1,12 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { studyApi } from "../api/study.offline";
 import type { WordEntry, MemoryState, Rating } from "../api/types";
 import { FlashCard } from "../components/FlashCard";
 import SyncButton from "../components/SyncButton";
+import { TagFilterStorageService } from "../core/tagFilter/tagFilterStorageService";
+import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
+import { RnwTagFilterButton } from "../rnw/components/RnwTagFilterButton";
 
 export function StudyPage() {
   const navigate = useNavigate();
@@ -14,20 +17,10 @@ export function StudyPage() {
   // Tag filter state
   const [allTags, setAllTags] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [appliedTags, setAppliedTags] = useState<string[] | undefined>(() => {
-    // Restore from localStorage
-    try {
-      const saved = localStorage.getItem('study_applied_tags');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return Array.isArray(parsed) && parsed.length > 0 ? parsed : undefined;
-      }
-    } catch (e) {
-      console.error('Failed to restore tag filter:', e);
-    }
-    return undefined;
-  });
+  const [appliedTags, setAppliedTags] = useState<string[] | undefined>();
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+
+  const tagFilterStorage = useMemo(() => new TagFilterStorageService("study"), []);
 
   const loadTags = useCallback(async () => {
     try {
@@ -60,20 +53,18 @@ export function StudyPage() {
     void loadTags();
     void loadNext(); 
   }, [loadTags, loadNext]);
+  useEffect(() => {
+    void (async () => {
+      const restored = await tagFilterStorage.restore();
+      setAppliedTags(restored);
+    })();
+  }, [tagFilterStorage]);
+
 
   useEffect(() => {
-    // Save to localStorage whenever appliedTags changes
-    try {
-      if (appliedTags && appliedTags.length > 0) {
-        localStorage.setItem('study_applied_tags', JSON.stringify(appliedTags));
-      } else {
-        localStorage.removeItem('study_applied_tags');
-      }
-    } catch (e) {
-      console.error('Failed to save tag filter:', e);
-    }
+    void tagFilterStorage.save(appliedTags);
     void loadNext();
-  }, [appliedTags, loadNext]);
+  }, [appliedTags, loadNext, tagFilterStorage]);
 
   async function rate(rating: Rating) {
     if (!word) return;
@@ -111,32 +102,27 @@ export function StudyPage() {
       {/* Header with actions */}
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <div className="d-flex gap-2 align-items-center">
-          <button
-            className="btn btn-outline-primary"
-            onClick={() => navigate("/words")}
-          >
-            <i className="fa-solid fa-book me-1" />
-            Words
-          </button>
+          <RnwOutlineButton
+            label="Words"
+            onPress={() => navigate("/words")}
+            icon={<i className="fa-solid fa-book" aria-hidden="true" />}
+            testID="rnw-study-words"
+          />
 
-          <button
-            className="btn btn-outline-primary"
-            onClick={() => navigate("/examples")}
-          >
-            <i className="fa-solid fa-pen-to-square me-1" />
-            Examples
-          </button>
+          <RnwOutlineButton
+            label="Examples"
+            onPress={() => navigate("/examples")}
+            icon={<i className="fa-solid fa-pen-to-square" aria-hidden="true" />}
+            testID="rnw-study-examples"
+          />
 
           {/* Tag Filter Button */}
           {allTags.length > 0 && (
-            <button
-              className={`btn ${appliedTags && appliedTags.length > 0 ? 'btn-primary' : 'btn-outline-secondary'}`}
-              onClick={() => setIsFilterExpanded(!isFilterExpanded)}
-              title="Filter by tags"
-            >
-              <i className="fa-solid fa-tag me-1" />
-              {appliedTags && appliedTags.length > 0 ? `${appliedTags.length}` : 'Tags'}
-            </button>
+            <RnwTagFilterButton
+              activeCount={appliedTags?.length ?? 0}
+              onPress={() => setIsFilterExpanded(!isFilterExpanded)}
+              testID="rnw-study-tags"
+            />
           )}
         </div>
 
