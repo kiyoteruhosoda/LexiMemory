@@ -7,6 +7,7 @@ import SyncButton from "../components/SyncButton";
 import { TagFilterStorageService } from "../core/tagFilter/tagFilterStorageService";
 import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
 import { RnwTagFilterButton } from "../rnw/components/RnwTagFilterButton";
+import { RnwTagFilterPanel } from "../rnw/components/RnwTagFilterPanel";
 
 export function StudyPage() {
   const navigate = useNavigate();
@@ -98,7 +99,7 @@ export function StudyPage() {
   }, [appliedTags]);
 
   return (
-    <div className="vstack gap-3">
+    <div className="vstack gap-3" data-testid="study-page-ready">
       {/* Header with actions */}
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <div className="d-flex gap-2 align-items-center">
@@ -131,49 +132,14 @@ export function StudyPage() {
 
       {/* Tag Filter Panel - Collapsible */}
       {isFilterExpanded && allTags.length > 0 && (
-        <div className="card border shadow-sm">
-          <div className="card-body">
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <strong>Filter by Tags</strong>
-              <button
-                className="btn btn-sm btn-outline-secondary"
-                onClick={() => setIsFilterExpanded(false)}
-              >
-                <i className="fa-solid fa-times" />
-              </button>
-            </div>
-            
-            <div className="d-flex flex-wrap gap-2 mb-3">
-              {allTags.map((tag) => (
-                <button
-                  key={tag}
-                  className={`btn btn-sm ${
-                    selectedTags.includes(tag)
-                      ? "btn-primary"
-                      : "btn-outline-secondary"
-                  }`}
-                  onClick={() => toggleTagSelection(tag)}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-            <div className="d-flex gap-2 justify-content-end">
-              <button
-                className="btn btn-sm btn-outline-secondary"
-                onClick={clearFilter}
-              >
-                Clear
-              </button>
-              <button
-                className="btn btn-sm btn-primary"
-                onClick={applyFilter}
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-        </div>
+        <RnwTagFilterPanel
+          allTags={allTags}
+          selectedTags={selectedTags}
+          onToggleTag={toggleTagSelection}
+          onClose={() => setIsFilterExpanded(false)}
+          onClear={clearFilter}
+          onApply={applyFilter}
+        />
       )}
 
       {error ? (

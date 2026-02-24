@@ -46,8 +46,9 @@
 - Storage直叩きを抽象化（`src/core/storage`）
 - タグフィルタ永続化をドメインサービス化（`src/core/tagFilter`）
 - RNW移行PoCとして、RN風UIコンポーネント境界（`src/rnw`）を導入
-  - 現在はWeb互換アダプタで稼働
-  - 将来 `react-native`/`react-native-web` 実装に差し替え予定
+  - `react-native` + `react-native-web` を導入し、`react-native` import をWebで解決するaliasを設定
+  - `WordListPage` で実コンポーネント (`RnwPlatformBadge`) を `react-native` APIで描画するPoCを配置
+  - 既存UIは当面 `src/rnw/react-native.tsx` の互換レイヤーを併用して段階置換
 
 ## RNW移行の進捗管理
 
