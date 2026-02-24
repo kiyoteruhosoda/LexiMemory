@@ -15,4 +15,15 @@ describe("RnwOutlineButton", () => {
     expect(screen.getByText("Words")).toBeInTheDocument();
     expect(onPress).toHaveBeenCalledTimes(1);
   });
+
+  it("does not trigger onPress when disabled", async () => {
+    const onPress = vi.fn();
+    const user = userEvent.setup();
+
+    render(<RnwOutlineButton label="Words" onPress={onPress} disabled testID="rnw-words-disabled" />);
+
+    await user.click(screen.getByTestId("rnw-words-disabled"));
+
+    expect(onPress).not.toHaveBeenCalled();
+  });
 });

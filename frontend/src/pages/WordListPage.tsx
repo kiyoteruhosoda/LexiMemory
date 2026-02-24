@@ -6,6 +6,8 @@ import type { WordEntry, MemoryState } from "../api/types";
 import { ImportModal } from "../components/ImportModal";
 import SyncButton from "../components/SyncButton";
 import { RnwPrimaryButton } from "../rnw/components/RnwPrimaryButton";
+import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
+import { RnwIconButton } from "../rnw/components/RnwIconButton";
 
 export function WordListPage() {
   const navigate = useNavigate();
@@ -75,49 +77,42 @@ export function WordListPage() {
             testID="rnw-add-button"
           />
 
-          <button
-            className="btn btn-outline-primary"
-            onClick={() => navigate("/study")}
-          >
-            <i className="fa-solid fa-graduation-cap me-1" />
-            Study
-          </button>
+          <RnwOutlineButton
+            label="Study"
+            onPress={() => navigate("/study")}
+            icon={<i className="fa-solid fa-graduation-cap" aria-hidden="true" />}
+            testID="rnw-study-button"
+          />
 
-          <button
-            className="btn btn-outline-primary"
-            onClick={() => navigate("/examples")}
-          >
-            <i className="fa-solid fa-pen-to-square me-1" />
-            Examples
-          </button>
+          <RnwOutlineButton
+            label="Examples"
+            onPress={() => navigate("/examples")}
+            icon={<i className="fa-solid fa-pen-to-square" aria-hidden="true" />}
+            testID="rnw-examples-button"
+          />
 
-          <button
-            className="btn btn-outline-secondary"
-            onClick={() => setShowSearch(!showSearch)}
+          <RnwIconButton
+            onPress={() => setShowSearch(!showSearch)}
+            icon={<i className="fa-solid fa-magnifying-glass" aria-hidden="true" />}
             title="Toggle search"
-          >
-            <i className="fa-solid fa-magnifying-glass" />
-          </button>
+            testID="rnw-toggle-search-button"
+          />
 
-          <div className="btn-group d-none d-md-flex">
-            <button
-              className="btn btn-sm btn-outline-secondary"
-              onClick={() => void handleExport()}
+          <div className="d-none d-md-flex gap-2">
+            <RnwOutlineButton
+              label="Export"
+              onPress={() => void handleExport()}
               disabled={busy}
-              title="Export all data"
-            >
-              <i className="fa-solid fa-upload me-1" />
-              Export
-            </button>
-            <button
-              className="btn btn-sm btn-outline-secondary"
-              onClick={() => setShowImportModal(true)}
+              icon={<i className="fa-solid fa-upload" aria-hidden="true" />}
+              testID="rnw-export-button"
+            />
+            <RnwOutlineButton
+              label="Import"
+              onPress={() => setShowImportModal(true)}
               disabled={busy}
-              title="Import data from file"
-            >
-              <i className="fa-solid fa-download me-1" />
-              Import
-            </button>
+              icon={<i className="fa-solid fa-download" aria-hidden="true" />}
+              testID="rnw-import-button"
+            />
           </div>
         </div>
 
