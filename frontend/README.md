@@ -71,3 +71,23 @@ export default defineConfig([
   },
 ])
 ```
+
+## Playwright による UI リグレッションテスト基盤
+
+React Native Web への段階移行を見据え、UI 崩れを検知するための E2E スナップショット土台を追加しています。
+
+- `playwright.config.ts`: Vite preview を起動してテスト実行
+- `e2e/domains/uiRegressionProfile.ts`: 画面プロファイル（desktop / mobile）とシナリオ定義
+- `e2e/specs/ui-regression.spec.ts`: シナリオをポリモーフィックに巡回する視覚回帰テスト
+
+### 実行コマンド
+
+```bash
+npm run test:e2e
+```
+
+初回はベースライン画像を生成するため、以下を実行します。
+
+```bash
+npm run test:e2e:update
+```
