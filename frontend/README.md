@@ -9,12 +9,16 @@
 - `npm run test`: Vitest
 - `npm run test:coverage`: Vitest coverage
 - `npm run typecheck`: 型チェック（`tsc -b`）
-- `npm run test:e2e`: Playwright E2E（smoke + visual）
+- `npm run test:ci`: CI相当のフロント品質ゲート（lint + typecheck + vitest run + build）
+- `npm run test:e2e`: Playwright E2E（smoke + visual + RNW PoC visual）
 - 初回のみ: `npx playwright install chromium firefox && npx playwright install-deps`（E2E実行前のブラウザ準備）
 - `npm run test:e2e:smoke`: Playwright smoke（ログイン前導線 + RNW PoC導線）
 - `npm run test:e2e:visual`: Visual regressionのみ実行（`RUN_VISUAL_REGRESSION=1`）
+- `npm run test:e2e:visual:update`: visual baselineを更新（`RUN_VISUAL_REGRESSION=1`）
 - `npm run test:e2e:update`: Playwrightスクリーンショットのベースライン更新
 - `npm run test:e2e:firefox`: Firefoxプロジェクトのみ実行
+- `npm run test:e2e:ci`: Chromium/Firefox 両方の visual regression をCI相当で実行
+- `npm run test:e2e:rnw-poc`: RNW PoCコンポーネントのvisual回帰のみを実行
 
 ## ルーティング方式
 
@@ -30,15 +34,22 @@
 - `/words/:id`: 単語詳細
 - `/study`: 学習画面
 - `/examples`: 例文テスト画面
+- `/`: `/words` へリダイレクト
+- `*`: 未定義パスは `/words` へフォールバック
 
 ## UIリグレッションテスト
 
 - `e2e/specs/smoke.spec.ts`
   - ログイン前の主要導線（`/login`→`/words`）の導通を確認
+  - RNW action row（Study/Examples/Add）のクリック遷移をE2Eで検証
 - `e2e/specs/ui-regression.spec.ts`
   - `toHaveScreenshot` を使用した visual regression
   - 現在は `/login`・`/words`・`/words/create`・`/study`・`/examples` を最小セットとして固定
-  - `RUN_VISUAL_REGRESSION=1` のときのみ実行（バイナリ非コミット運用）
+- `e2e/specs/rnw-poc.spec.ts`
+  - RNW PoCとして `/words` の action row（RNW button群）をコンポーネント単位でスクショ固定
+  - `RUN_VISUAL_REGRESSION=1` のときのみ実行
+- `e2e/domains/visualAssertion.ts`
+  - screenshot assertionをPort的に共通化（page/locatorのポリモーフィック実行）
 - 実行先URLは `PLAYWRIGHT_BASE_URL` で上書き可能（デフォルト: `http://localhost:${PLAYWRIGHT_WEB_PORT:-4173}`）
 - 安定化施策
   - viewport固定

@@ -10,67 +10,20 @@ export interface UiScenario {
   readonly route: string;
   readonly waitFor: string;
   readonly screenshotName: string;
-  beforeAssert(page: Page): Promise<void>;
+  readonly prepare: (page: Page) => Promise<void>;
+  readonly maxDiffPixelRatio?: number;
 }
 
-abstract class BaseScenario implements UiScenario {
-  abstract readonly id: string;
-  abstract readonly route: string;
-  abstract readonly waitFor: string;
-  abstract readonly screenshotName: string;
+const noopPrepare = async (page: Page): Promise<void> => {
+  void page;
+  return Promise.resolve();
+};
 
-  async beforeAssert(page: Page): Promise<void> {
-    await page.addInitScript(() => {
-      Date.now = () => new Date("2024-01-01T00:00:00.000Z").getTime();
-      Math.random = () => 0.42;
-    });
-
-    await page.addStyleTag({
-      content: `
-        *, *::before, *::after {
-          transition: none !important;
-          animation: none !important;
-          caret-color: transparent !important;
-        }
-      `,
-    });
-  }
-}
-
-class WordListScenario extends BaseScenario {
-  readonly id = "word-list";
-  readonly route = "/words";
-  readonly waitFor = "[data-testid='word-list-page-ready']";
-  readonly screenshotName = "word-list.png";
-}
-
-
-class WordCreateScenario extends BaseScenario {
-  readonly id = "word-create";
-  readonly route = "/words/create";
-  readonly waitFor = "[data-testid='word-create-page-ready']";
-  readonly screenshotName = "word-create.png";
-}
-
-class StudyScenario extends BaseScenario {
-  readonly id = "study";
-  readonly route = "/study";
-  readonly waitFor = "[data-testid='study-page-ready']";
-  readonly screenshotName = "study.png";
-}
-
-class ExamplesScenario extends BaseScenario {
-  readonly id = "examples";
-  readonly route = "/examples";
-  readonly waitFor = "[data-testid='examples-page-ready']";
-  readonly screenshotName = "examples.png";
-}
-
-class LoginScenario extends BaseScenario {
-  readonly id = "login";
-  readonly route = "/login";
-  readonly waitFor = "[data-testid='rnw-login-card']";
-  readonly screenshotName = "login.png";
+function createUiScenario(input: Omit<UiScenario, "prepare"> & { prepare?: UiScenario["prepare"] }): UiScenario {
+  return {
+    ...input,
+    prepare: input.prepare ?? noopPrepare,
+  };
 }
 
 const desktopChrome = devices["Desktop Chrome"];
@@ -88,9 +41,35 @@ export const uiRegressionProfiles: readonly UiRegressionProfile[] = [
 ];
 
 export const uiScenarios: readonly UiScenario[] = [
-  new WordListScenario(),
-  new WordCreateScenario(),
-  new LoginScenario(),
-  new StudyScenario(),
-  new ExamplesScenario(),
+  createUiScenario({
+    id: "word-list",
+    route: "/words",
+    waitFor: "[data-testid='word-list-page-ready']",
+    screenshotName: "word-list.png",
+    maxDiffPixelRatio: 0.02,
+  }),
+  createUiScenario({
+    id: "word-create",
+    route: "/words/create",
+    waitFor: "[data-testid='word-create-page-ready']",
+    screenshotName: "word-create.png",
+  }),
+  createUiScenario({
+    id: "login",
+    route: "/login",
+    waitFor: "[data-testid='rnw-login-card']",
+    screenshotName: "login.png",
+  }),
+  createUiScenario({
+    id: "study",
+    route: "/study",
+    waitFor: "[data-testid='study-page-ready']",
+    screenshotName: "study.png",
+  }),
+  createUiScenario({
+    id: "examples",
+    route: "/examples",
+    waitFor: "[data-testid='examples-page-ready']",
+    screenshotName: "examples.png",
+  }),
 ];

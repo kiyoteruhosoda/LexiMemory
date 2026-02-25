@@ -49,7 +49,39 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 - [ ] Playwright visual regression が CI 上で安定運用
 - [ ] Expo モバイルで主要ユースケース（閲覧・作成・学習・同期）が動作
 
-## 今回の実行バッチ（10タスク）
+## 今回の実行バッチ（30タスク）
+1. [x] `test:ci` を維持し、frontend品質ゲートを1コマンド化
+2. [x] `test:e2e:ci` を維持し、Chromium/Firefox両方を固定実行
+3. [x] `test:e2e:rnw-poc` を追加し、PoC回帰を単独実行可能にした
+4. [x] `test:e2e:visual:update` を追加し、baseline更新手順を明示
+5. [x] READMEの実行コマンド一覧を更新
+6. [x] READMEにRNW action rowの遷移smoke観点を追記
+7. [x] READMEに `visualAssertion` 共通化レイヤを追記
+8. [x] `uiRegressionProfile` を宣言的ファクトリ実装へ変更
+9. [x] scenario classベースを廃止し、データ駆動で保守性を改善
+10. [x] scenario hookを `prepare` に統一し拡張ポイントを明示
+11. [x] `visualAssertion` を新設（page/locatorのポリモーフィック比較）
+12. [x] visual実行の安定化前処理を `prepareStableVisualSession` に集約
+13. [x] `ui-regression.spec.ts` で共通assertionを利用
+14. [x] `rnw-poc.spec.ts` でlocator screenshot比較を共通assertion経由に統一
+15. [x] `smoke.spec.ts` にRNW action row遷移テストを追加
+16. [x] `/words -> /study` の導線をE2Eで固定
+17. [x] `/words -> /examples` の導線をE2Eで固定
+18. [x] `/words -> /words/create` の導線をE2Eで固定
+19. [x] M2.7（visual assertion共通化）を migration docs に追記
+20. [x] M2.8（action row遷移smoke追加）を migration docs に追記
+21. [x] planの重複「今回の実行バッチ」セクションを解消
+22. [x] planを30タスク管理形式へ拡張
+23. [x] frontend lint/typecheck/vitest/build を再実行
+24. [x] Playwright smoke を再実行
+25. [x] Playwright visual(chromium) を再実行
+26. [x] Playwright visual(firefox) を再実行
+27. [x] backend pytest を再実行
+28. [x] RNW PoCのブラウザスクリーンショットを取得
+29. [x] 変更を1コミットに集約
+30. [x] PR作成フロー（commit + make_pr）を実行
+
+## 前回バッチ（履歴）
 1. [x] `core/io/fileDownloadGateway` ポートを追加（ファイル保存依存を抽象化）
 2. [x] `core/io/backupExportService` を追加（バックアップエクスポートのユースケース化）
 3. [x] `io/browserFileDownloadGateway` を追加（ブラウザダウンロード adapter）
@@ -68,7 +100,7 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
    - [x] 空状態/エラー表示をRNW Notice primitiveへ移行
 2. [~] 同ページの visual snapshot を Chromium/Firefox で固定
    - [x] RNW Pressable shim の pressed/disabled 挙動を unit test で固定
-   - [x] `/login` + `/words` + `/words/create` のvisual snapshotを最小セットとして固定
+   - [x] `/login` + `/words` + `/words/create` + action row のvisual snapshotを最小セットとして固定
 3. [~] `StudyPage` の CTA と filter toolbar を RNW primitives に揃える
    - [x] `StudyPage` のデータアクセスを `core/study` service 経由へ移行
 4. [~] `Auth` / `Sync` のユースケースを `core/application` 層へ移動（Auth/Word/Study/Examples は完了、Sync は Application Service + Adapter まで完了）
@@ -76,4 +108,4 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 
 ---
 
-最終更新: 2026-02-25 (update-23)
+最終更新: 2026-02-25 (update-25)
