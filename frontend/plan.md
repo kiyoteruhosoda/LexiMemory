@@ -7,7 +7,7 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 - [x] 既存Web互換を維持する方針を文書化
 - [x] Vitest + Playwright の回帰検知基盤を導入
 - [x] Visual regression の安定化（時刻/乱数/アニメーション制御）
-- [~] CI で Chromium / Firefox 両プロジェクトの screenshot テストを必須化（ローカル実行済み・CI固定は次PR）
+- [~] CI で Chromium / Firefox 両プロジェクトの screenshot テストを必須化（ローカル実行済み・workflow固定は継続）
 
 ## 1. モジュール境界の確立（DDD）
 - [x] `src/core/storage` に Storage Port (`StorageAdapter`) を定義
@@ -22,17 +22,16 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 - [x] `*.web.tsx` / `*.native.tsx` 分岐ルールのテンプレート実装（RnwInlineNoticeで実装）
 
 ## 3. アプリ構成の段階的再編（モノレポ相当）
-- [~] `packages/core`（domain/application/shared types）を新設（Storage Portを先行配置）
-- [~] `packages/ui`（RNコンポーネント群）を新設（SurfaceCardを先行追加）
-- [ ] `apps/web`（既存Web）から `packages/*` を参照する形へ移行
-- [ ] `apps/mobile`（Expo想定）雛形を追加
+- [x] `packages/core`（domain/application/shared types）を新設
+- [x] `packages/ui`（RNコンポーネント群）を新設
+- [~] `apps/web`（既存Web）から `packages/*` を参照する形へ移行（scaffold追加済み、本体移動は継続）
+- [~] `apps/mobile`（Expo想定）雛形を追加（scaffold追加済み、Expo依存導入は継続）
 
 ## 4. 永続化戦略（Web/Mobile差し替え）
 - [x] Web localStorage adapter を抽象化層へ集約
-- [x] Mobile向け AsyncStorage adapter のスタブを追加
-- [ ] AsyncStorage 実装（RN）を追加
-- [ ] SQLite adapter（オフライン強化）を追加
-- [x] Repository単位でストレージ実装を切り替えるファクトリを導入（runtime selectorを追加）
+- [~] Mobile向け AsyncStorage adapter を追加（driver注入型adapterを実装、RN実体注入は継続）
+- [~] SQLite adapter を追加（driver注入型adapterを実装、DB実体注入は継続）
+- [x] Repository単位でストレージ実装を切り替えるファクトリを導入（runtime selector対応）
 
 ## 5. 画面移行（Screen-by-screen）
 - [x] `/words` の一部UIをRNW境界化（PoC）
@@ -45,67 +44,10 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 ## 6. 完全RNW化の完了条件（Definition of Done）
 - [ ] 主要画面の UI 実装が `src/rnw` or `packages/ui` 経由のみ
 - [ ] ドメインロジックが `core` へ集約され UI 層はユースケース呼び出しのみ
-- [ ] 永続化が Port/Adapter 経由で Web/Mobile の差し替え可能
-- [ ] Playwright visual regression が CI 上で安定運用
+- [~] 永続化が Port/Adapter 経由で Web/Mobile の差し替え可能（adapterの骨格は完了、実体注入が継続）
+- [~] Playwright visual regression が CI 上で安定運用（ローカル安定、CI運用固定化が継続）
 - [ ] Expo モバイルで主要ユースケース（閲覧・作成・学習・同期）が動作
-
-## 今回の実行バッチ（30タスク）
-1. [x] `test:ci` を維持し、frontend品質ゲートを1コマンド化
-2. [x] `test:e2e:ci` を維持し、Chromium/Firefox両方を固定実行
-3. [x] `test:e2e:rnw-poc` を追加し、PoC回帰を単独実行可能にした
-4. [x] `test:e2e:visual:update` を追加し、baseline更新手順を明示
-5. [x] READMEの実行コマンド一覧を更新
-6. [x] READMEにRNW action rowの遷移smoke観点を追記
-7. [x] READMEに `visualAssertion` 共通化レイヤを追記
-8. [x] `uiRegressionProfile` を宣言的ファクトリ実装へ変更
-9. [x] scenario classベースを廃止し、データ駆動で保守性を改善
-10. [x] scenario hookを `prepare` に統一し拡張ポイントを明示
-11. [x] `visualAssertion` を新設（page/locatorのポリモーフィック比較）
-12. [x] visual実行の安定化前処理を `prepareStableVisualSession` に集約
-13. [x] `ui-regression.spec.ts` で共通assertionを利用
-14. [x] `rnw-poc.spec.ts` でlocator screenshot比較を共通assertion経由に統一
-15. [x] `smoke.spec.ts` にRNW action row遷移テストを追加
-16. [x] `/words -> /study` の導線をE2Eで固定
-17. [x] `/words -> /examples` の導線をE2Eで固定
-18. [x] `/words -> /words/create` の導線をE2Eで固定
-19. [x] M2.7（visual assertion共通化）を migration docs に追記
-20. [x] M2.8（action row遷移smoke追加）を migration docs に追記
-21. [x] planの重複「今回の実行バッチ」セクションを解消
-22. [x] planを30タスク管理形式へ拡張
-23. [x] frontend lint/typecheck/vitest/build を再実行
-24. [x] Playwright smoke を再実行
-25. [x] Playwright visual(chromium) を再実行
-26. [x] Playwright visual(firefox) を再実行
-27. [x] backend pytest を再実行
-28. [x] RNW PoCのブラウザスクリーンショットを取得
-29. [x] 変更を1コミットに集約
-30. [x] PR作成フロー（commit + make_pr）を実行
-
-## 前回バッチ（履歴）
-1. [x] `core/io/fileDownloadGateway` ポートを追加（ファイル保存依存を抽象化）
-2. [x] `core/io/backupExportService` を追加（バックアップエクスポートのユースケース化）
-3. [x] `io/browserFileDownloadGateway` を追加（ブラウザダウンロード adapter）
-4. [x] `systemUtcClock` を導入しファイル名時刻をポリモーフィック注入に変更
-5. [x] `io/backupExportApplication` で runtime composition を追加
-6. [x] `WordListPage` の export処理を application service 呼び出しへ移行
-7. [x] UI層から `Blob/URL.createObjectURL` の直接利用を排除
-8. [x] `backupExportService` のユニットテストを追加
-9. [x] frontend test/lint/typecheck/build + backend pytest を再実行
-10. [x] plan/docs の進捗を更新（M3.21/M3.22）
-
-## 直近の実行順（次スプリント）
-1. [~] `WordListPage` の残り Bootstrap依存UIを RNW List/Filter primitives に置換
-   - [x] 上部アクション（Study/Examples/Search/Export/Import）をRNW Button primitivesへ移行
-   - [x] 検索フォームと一覧テーブルをRNW Form/List primitiveへ移行
-   - [x] 空状態/エラー表示をRNW Notice primitiveへ移行
-2. [~] 同ページの visual snapshot を Chromium/Firefox で固定
-   - [x] RNW Pressable shim の pressed/disabled 挙動を unit test で固定
-   - [x] `/login` + `/words` + `/words/create` + action row のvisual snapshotを最小セットとして固定
-3. [~] `StudyPage` の CTA と filter toolbar を RNW primitives に揃える
-   - [x] `StudyPage` のデータアクセスを `core/study` service 経由へ移行
-4. [~] `Auth` / `Sync` のユースケースを `core/application` 層へ移動（Auth/Word/Study/Examples は完了、Sync は Application Service + Adapter まで完了）
-5. [x] `ExamplesTestPage` のデータアクセスを `core/examples` service 経由へ移行
 
 ---
 
-最終更新: 2026-02-25 (update-25)
+最終更新: 2026-02-25 (update-26)

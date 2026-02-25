@@ -2,6 +2,7 @@
 
 ## 現状のCI相当コマンド
 
+- CI: `.github/workflows/frontend-visual.yml` で `test:ci` + `test:e2e:ci` を実行
 - `npm run dev`: 開発サーバー
 - `npm run build`: TypeScriptビルド + Vite build
 - `npm run preview`: build成果物のプレビュー
@@ -19,6 +20,7 @@
 - `npm run test:e2e:firefox`: Firefoxプロジェクトのみ実行
 - `npm run test:e2e:ci`: Chromium/Firefox 両方の visual regression をCI相当で実行
 - `npm run test:e2e:rnw-poc`: RNW PoCコンポーネントのvisual回帰のみを実行
+- `npm run dev --workspace @leximemory/apps-web`: apps/webスコープから既存Web開発サーバーを起動
 
 ## ルーティング方式
 
@@ -80,7 +82,8 @@
 - `src/`: 既存Web UI（当面維持）
 - `packages/core`: UI非依存のPort/ドメイン共有コード
 - `packages/ui`: RN/RNWで再利用するUIコンポーネント
-- 将来: `apps/web`, `apps/mobile` へ再配置予定
+- `apps/web`: Web runtimeの移行シーム（scaffold）
+- `apps/mobile`: Expo想定のモバイルエントリ（scaffold）
 
 ## RNW移行の進捗管理
 

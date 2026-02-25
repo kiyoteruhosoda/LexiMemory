@@ -54,6 +54,8 @@
 - M3.20: `webSpeechGateway` / `noopSpeechGateway` を追加し、実行環境ごとの音声実装をポリモーフィックに切替（完了）
 - M3.21: `backupExportService` + `fileDownloadGateway` を導入し、WordList exportロジックをUIから分離（完了）
 - M3.22: `browserFileDownloadGateway` と `systemUtcClock` を追加し、I/Oと時刻依存をポート注入化（完了）
+- M3.23: `apps/web` / `apps/mobile` のscaffoldを追加し、モノレポ移行シームを作成（完了）
+- M3.24: Storage Portに `native-async` / `native-sqlite` adapter factory を追加（完了）
 - M3.15: `exampleSentencePolicy` を導入し、Examplesの文処理ロジックをUIから分離（完了）
 - M3.13: `useTagFilterState` hook を導入し、Study/Examples のタグ状態管理を再利用化（完了）
 - M3.11: `WordDetailPage` の destructive actions を `RnwActionGroup` へ統合（完了）

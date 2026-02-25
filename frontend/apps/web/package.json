@@ -1,0 +1,12 @@
+{
+  "name": "@leximemory/apps-web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "npm run dev --prefix ../..",
+    "build": "npm run build --prefix ../..",
+    "test": "npm run test --prefix ../..",
+    "typecheck": "npm run typecheck --prefix ../.."
+  }
+}
