@@ -32,14 +32,14 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 - [x] Mobile向け AsyncStorage adapter のスタブを追加
 - [ ] AsyncStorage 実装（RN）を追加
 - [ ] SQLite adapter（オフライン強化）を追加
-- [ ] Repository単位でストレージ実装を切り替えるファクトリを導入
+- [x] Repository単位でストレージ実装を切り替えるファクトリを導入（runtime selectorを追加）
 
 ## 5. 画面移行（Screen-by-screen）
 - [x] `/words` の一部UIをRNW境界化（PoC）
 - [ ] `/words` 全UIを RNW component に統一
-- [~] `/study` を RNW component に統一（CTA/Tag filter toolbarは置換済み）
-- [ ] `/examples` を RNW component に統一
-- [ ] `/words/create` と `/words/:id` を RNW component に統一
+- [~] `/study` を RNW component に統一（CTA/Tag filter toolbar/notice は置換済み）
+- [~] `/examples` を RNW component に統一（action bar/tag panel/notice は置換済み）
+- [~] `/words/create` と `/words/:id` を RNW component に統一（detail actions はRNW group化済み）
 - [x] `/login` 画面を RNW component に統一（入力/通知/CTAをRNW primitive化）
 
 ## 6. 完全RNW化の完了条件（Definition of Done）
@@ -48,6 +48,18 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 - [ ] 永続化が Port/Adapter 経由で Web/Mobile の差し替え可能
 - [ ] Playwright visual regression が CI 上で安定運用
 - [ ] Expo モバイルで主要ユースケース（閲覧・作成・学習・同期）が動作
+
+## 今回の実行バッチ（10タスク）
+1. [x] `core/io/fileDownloadGateway` ポートを追加（ファイル保存依存を抽象化）
+2. [x] `core/io/backupExportService` を追加（バックアップエクスポートのユースケース化）
+3. [x] `io/browserFileDownloadGateway` を追加（ブラウザダウンロード adapter）
+4. [x] `systemUtcClock` を導入しファイル名時刻をポリモーフィック注入に変更
+5. [x] `io/backupExportApplication` で runtime composition を追加
+6. [x] `WordListPage` の export処理を application service 呼び出しへ移行
+7. [x] UI層から `Blob/URL.createObjectURL` の直接利用を排除
+8. [x] `backupExportService` のユニットテストを追加
+9. [x] frontend test/lint/typecheck/build + backend pytest を再実行
+10. [x] plan/docs の進捗を更新（M3.21/M3.22）
 
 ## 直近の実行順（次スプリント）
 1. [~] `WordListPage` の残り Bootstrap依存UIを RNW List/Filter primitives に置換
@@ -64,4 +76,4 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 
 ---
 
-最終更新: 2026-02-25 (update-14)
+最終更新: 2026-02-25 (update-23)

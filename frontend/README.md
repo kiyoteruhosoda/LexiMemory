@@ -10,6 +10,7 @@
 - `npm run test:coverage`: Vitest coverage
 - `npm run typecheck`: 型チェック（`tsc -b`）
 - `npm run test:e2e`: Playwright E2E（smoke + visual）
+- 初回のみ: `npx playwright install chromium firefox && npx playwright install-deps`（E2E実行前のブラウザ準備）
 - `npm run test:e2e:smoke`: Playwright smoke（ログイン前導線 + RNW PoC導線）
 - `npm run test:e2e:visual`: Visual regressionのみ実行（`RUN_VISUAL_REGRESSION=1`）
 - `npm run test:e2e:update`: Playwrightスクリーンショットのベースライン更新
@@ -36,7 +37,7 @@
   - ログイン前の主要導線（`/login`→`/words`）の導通を確認
 - `e2e/specs/ui-regression.spec.ts`
   - `toHaveScreenshot` を使用した visual regression
-  - まずは `/login` と `/words` の2画面を固定
+  - 現在は `/login`・`/words`・`/words/create`・`/study`・`/examples` を最小セットとして固定
   - `RUN_VISUAL_REGRESSION=1` のときのみ実行（バイナリ非コミット運用）
 - 実行先URLは `PLAYWRIGHT_BASE_URL` で上書き可能（デフォルト: `http://localhost:${PLAYWRIGHT_WEB_PORT:-4173}`）
 - 安定化施策

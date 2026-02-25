@@ -45,13 +45,25 @@ class WordListScenario extends BaseScenario {
 }
 
 
-
-
 class WordCreateScenario extends BaseScenario {
   readonly id = "word-create";
   readonly route = "/words/create";
   readonly waitFor = "[data-testid='word-create-page-ready']";
   readonly screenshotName = "word-create.png";
+}
+
+class StudyScenario extends BaseScenario {
+  readonly id = "study";
+  readonly route = "/study";
+  readonly waitFor = "[data-testid='study-page-ready']";
+  readonly screenshotName = "study.png";
+}
+
+class ExamplesScenario extends BaseScenario {
+  readonly id = "examples";
+  readonly route = "/examples";
+  readonly waitFor = "[data-testid='examples-page-ready']";
+  readonly screenshotName = "examples.png";
 }
 
 class LoginScenario extends BaseScenario {
@@ -75,4 +87,10 @@ export const uiRegressionProfiles: readonly UiRegressionProfile[] = [
   },
 ];
 
-export const uiScenarios: readonly UiScenario[] = [new WordListScenario(), new WordCreateScenario(), new LoginScenario()];
+export const uiScenarios: readonly UiScenario[] = [
+  new WordListScenario(),
+  new WordCreateScenario(),
+  new LoginScenario(),
+  new StudyScenario(),
+  new ExamplesScenario(),
+];

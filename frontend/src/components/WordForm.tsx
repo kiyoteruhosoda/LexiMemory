@@ -2,6 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Pos, WordEntry, ExampleSentence } from "../api/types";
+import {
+  buildWordSaveDraft,
+  createEmptyExample,
+} from "../core/word/wordDraftPolicy";
+import { speechApplicationService } from "../speech/speechApplication";
 
 const POS: Pos[] = ["noun","verb","adj","adv","prep","conj","pron","det","interj","other"];
 
@@ -12,6 +17,10 @@ type Props = {
 };
 
 export function WordForm({ initial, onSave, onCancel }: Props) {
+  const idGenerator = useMemo(() => ({
+    nextId: () => crypto.randomUUID(),
+  }), []);
+
   const [headword, setHeadword] = useState(initial?.headword ?? "");
   const [pos, setPos] = useState<Pos>(initial?.pos ?? "noun");
   const [meaningJa, setMeaningJa] = useState(initial?.meaningJa ?? "");
@@ -19,7 +28,7 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
   const [examples, setExamples] = useState<ExampleSentence[]>(
     initial?.examples && initial.examples.length > 0
       ? initial.examples
-      : [{ id: crypto.randomUUID(), en: "", ja: null, source: null }]
+      : [createEmptyExample(idGenerator)]
   );
   const [busy, setBusy] = useState(false);
 
@@ -33,35 +42,29 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
       setExamples(
         initial.examples && initial.examples.length > 0
           ? initial.examples
-          : [{ id: crypto.randomUUID(), en: "", ja: null, source: null }]
+          : [createEmptyExample(idGenerator)]
       );
     }
-  }, [initial]);
+  }, [idGenerator, initial]);
 
-  const canSpeak = useMemo(() => typeof window !== "undefined" && "speechSynthesis" in window, []);
+  const canSpeak = useMemo(() => speechApplicationService.canSpeak(), []);
 
   function speakHeadword(e?: React.MouseEvent<HTMLButtonElement>) {
     if (!canSpeak || !headword.trim()) return;
-    const ut = new SpeechSynthesisUtterance(headword.trim());
-    ut.lang = "en-US";
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(ut);
+    speechApplicationService.speakEnglish(headword);
     // Blur to remove focus/hover state on touch devices
     if (e) e.currentTarget.blur();
   }
 
   function speakExample(text: string, e?: React.MouseEvent<HTMLButtonElement>) {
     if (!canSpeak || !text.trim()) return;
-    const ut = new SpeechSynthesisUtterance(text.trim());
-    ut.lang = "en-US";
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(ut);
+    speechApplicationService.speakEnglish(text);
     // Blur to remove focus/hover state on touch devices
     if (e) e.currentTarget.blur();
   }
 
   function addExample() {
-    setExamples([...examples, { id: crypto.randomUUID(), en: "", ja: null, source: null }]);
+    setExamples([...examples, createEmptyExample(idGenerator)]);
   }
 
   function updateExample(id: string, field: keyof ExampleSentence, value: string) {
@@ -76,20 +79,12 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
     e.preventDefault();
     setBusy(true);
     try {
-      await onSave({
-        headword: headword.trim(),
-        pos,
-        meaningJa: meaningJa.trim(),
-        pronunciation: initial?.pronunciation ?? null,
-        tags: initial?.tags ?? [],
-        examples: examples.filter(ex => ex.en.trim()),
-        memo: memo.trim() || null,
-      });
+      await onSave(buildWordSaveDraft({ headword, pos, meaningJa, memo, examples }, initial));
       if (!initial) {
         setHeadword("");
         setMeaningJa("");
         setMemo("");
-        setExamples([{ id: crypto.randomUUID(), en: "", ja: null, source: null }]);
+        setExamples([createEmptyExample(idGenerator)]);
         setPos("noun");
       }
     } finally {

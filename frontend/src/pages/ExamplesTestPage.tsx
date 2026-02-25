@@ -3,109 +3,16 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { examplesApplicationService } from "../examples/examplesApplication";
-import { TagFilterStorageService } from "../core/tagFilter/tagFilterStorageService";
+import { checkAnswer, createBlankedSentence } from "../core/examples/exampleSentencePolicy";
+import { useTagFilterState } from "../hooks/useTagFilterState";
 import type { ExampleTestItem } from "../api/types";
 import SyncButton from "../components/SyncButton";
+import { speechApplicationService } from "../speech/speechApplication";
 import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
 import { RnwTagFilterButton } from "../rnw/components/RnwTagFilterButton";
-
-/**
- * Normalize a word for comparison (handles inflections and case)
- */
-function normalizeWord(word: string): string {
-  return word.toLowerCase().trim();
-}
-
-/**
- * Get word stems by removing common suffixes
- */
-function getWordStems(word: string): string[] {
-  const normalized = normalizeWord(word);
-  const stems = [normalized];
-  
-  // Remove common suffixes to handle inflections
-  if (normalized.endsWith('ing')) {
-    stems.push(normalized.slice(0, -3)); // running -> run
-    stems.push(normalized.slice(0, -3) + 'e'); // taking -> take
-  }
-  if (normalized.endsWith('ed')) {
-    stems.push(normalized.slice(0, -2)); // walked -> walk
-    stems.push(normalized.slice(0, -2) + 'e'); // moved -> move
-    stems.push(normalized.slice(0, -1)); // stopped -> stop
-  }
-  if (normalized.endsWith('s')) {
-    stems.push(normalized.slice(0, -1)); // checks -> check
-  }
-  if (normalized.endsWith('es')) {
-    stems.push(normalized.slice(0, -2)); // reaches -> reach
-  }
-  
-  return [...new Set(stems)];
-}
-
-/**
- * Check if user input matches the target word (exact match, case-insensitive)
- */
-function checkAnswer(userInput: string, targetWord: string): boolean {
-  return normalizeWord(userInput) === normalizeWord(targetWord);
-}
-
-/**
- * Create a blanked sentence by removing the target word
- * Returns the actual word found in the sentence (with correct inflection)
- */
-function createBlankedSentence(sentence: string, targetWord: string): { blanked: string; actualWord: string | null; found: boolean } {
-  // Handle multi-word targets (like "check in")
-  // Try case-insensitive replacement
-  const regex = new RegExp(`\\b${targetWord.replace(/[.*+?^${}()|\\[\\]\\\\]/g, '\\$&')}\\b`, 'gi');
-  const match = sentence.match(regex);
-  
-  if (match) {
-    const blanked = sentence.replace(regex, '______');
-    // Return the actual matched word (with original case and inflection)
-    return { blanked, actualWord: match[0], found: true };
-  }
-  
-  // If not found as-is, try to find inflected forms
-  const words = sentence.split(/\s+/);
-  let foundIndex = -1;
-  let actualWord: string | null = null;
-  
-  for (let i = 0; i < words.length; i++) {
-    // Remove punctuation for comparison
-    const cleanWord = words[i].replace(/[.,!?;:()[\]{}"]/g, '');
-    const userStems = getWordStems(cleanWord);
-    const targetStems = getWordStems(targetWord);
-    
-    // Check if any stem matches (for finding the word in sentence)
-    for (const userStem of userStems) {
-      for (const targetStem of targetStems) {
-        if (userStem === targetStem) {
-          foundIndex = i;
-          actualWord = cleanWord;
-          break;
-        }
-        // Also allow partial matches for compound words
-        if (userStem.includes(targetStem) || targetStem.includes(userStem)) {
-          if (Math.abs(userStem.length - targetStem.length) <= 3) {
-            foundIndex = i;
-            actualWord = cleanWord;
-            break;
-          }
-        }
-      }
-      if (foundIndex >= 0) break;
-    }
-    if (foundIndex >= 0) break;
-  }
-  
-  if (foundIndex >= 0 && actualWord) {
-    const blanked = words.map((w, i) => i === foundIndex ? '______' : w).join(' ');
-    return { blanked, actualWord, found: true };
-  }
-  
-  return { blanked: sentence, actualWord: null, found: false };
-}
+import { RnwTagFilterPanel } from "../rnw/components/RnwTagFilterPanel";
+import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
+import { RnwActionBar } from "@leximemory/ui";
 
 export function ExamplesTestPage() {
   const navigate = useNavigate();
@@ -119,15 +26,18 @@ export function ExamplesTestPage() {
   const [showWordInfo, setShowWordInfo] = useState(false);
   const [showTranslation, setShowTranslation] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const canSpeak = useMemo(() => typeof window !== "undefined" && "speechSynthesis" in window, []);
+  const canSpeak = useMemo(() => speechApplicationService.canSpeak(), []);
   
-  // Tag filter state
   const [allTags, setAllTags] = useState<string[]>([]);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [appliedTags, setAppliedTags] = useState<string[] | undefined>();
-  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-
-  const tagFilterStorage = useMemo(() => new TagFilterStorageService("examples"), []);
+  const {
+    selectedTags,
+    appliedTags,
+    isFilterExpanded,
+    setFilterExpanded,
+    handleToggleTagSelection,
+    applyFilter,
+    clearFilter,
+  } = useTagFilterState("examples");
 
   const loadTags = useCallback(async () => {
     try {
@@ -170,17 +80,8 @@ export function ExamplesTestPage() {
     void loadNext(); 
   }, [loadTags, loadNext]);
   useEffect(() => {
-    void (async () => {
-      const restored = await tagFilterStorage.restore();
-      setAppliedTags(restored);
-    })();
-  }, [tagFilterStorage]);
-
-
-  useEffect(() => {
-    void tagFilterStorage.save(appliedTags);
     void loadNext();
-  }, [appliedTags, loadNext, tagFilterStorage]);
+  }, [appliedTags, loadNext]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -208,44 +109,16 @@ export function ExamplesTestPage() {
 
   function speakSentence(e?: React.MouseEvent<HTMLButtonElement>) {
     if (!canSpeak || !example?.en) return;
-    const ut = new SpeechSynthesisUtterance(example.en);
-    ut.lang = "en-US";
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(ut);
+    speechApplicationService.speakEnglish(example.en);
     // Blur to remove focus/hover state on touch devices
     if (e) e.currentTarget.blur();
   }
 
-  function toggleTagSelection(tag: string) {
-    setSelectedTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
-    );
-  }
-
-  function applyFilter() {
-    const newTags = selectedTags.length > 0 ? selectedTags : undefined;
-    setAppliedTags(newTags);
-    setIsFilterExpanded(false);
-  }
-
-  function clearFilter() {
-    setSelectedTags([]);
-    setAppliedTags(undefined);
-    setIsFilterExpanded(false);
-  }
-
-  // Initialize selectedTags from appliedTags
-  useEffect(() => {
-    if (appliedTags && appliedTags.length > 0) {
-      setSelectedTags(appliedTags);
-    }
-  }, [appliedTags]);
 
   return (
     <div className="vstack gap-3" data-testid="examples-page-ready">
-      {/* Header with actions */}
-      <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <div className="d-flex gap-2 align-items-center">
+      <RnwActionBar
+        leading={<>
           <RnwOutlineButton
             label="Words"
             onPress={() => navigate("/words")}
@@ -260,83 +133,43 @@ export function ExamplesTestPage() {
             testID="rnw-examples-study"
           />
 
-          {/* Tag Filter Button */}
           {allTags.length > 0 && (
             <RnwTagFilterButton
               activeCount={appliedTags?.length ?? 0}
-              onPress={() => setIsFilterExpanded(!isFilterExpanded)}
+              onPress={() => setFilterExpanded(!isFilterExpanded)}
               testID="rnw-examples-tags"
             />
           )}
-        </div>
+        </>}
+        trailing={<SyncButton onSyncSuccess={() => { void loadTags(); void loadNext(); }} />}
+        testID="rnw-examples-action-bar"
+      />
 
-        <SyncButton onSyncSuccess={() => { void loadTags(); void loadNext(); }} />
-      </div>
-
-      {/* Tag Filter Panel - Collapsible */}
       {isFilterExpanded && allTags.length > 0 && (
-        <div className="card border shadow-sm">
-          <div className="card-body">
-            <div className="d-flex align-items-center justify-content-between mb-3">
-              <strong>Filter by Tags</strong>
-              <button
-                className="btn btn-sm btn-outline-secondary"
-                onClick={() => setIsFilterExpanded(false)}
-              >
-                <i className="fa-solid fa-times" />
-              </button>
-            </div>
-            
-            <div className="d-flex flex-wrap gap-2 mb-3">
-              {allTags.map((tag) => (
-                <button
-                  key={tag}
-                  className={`btn btn-sm ${
-                    selectedTags.includes(tag)
-                      ? "btn-primary"
-                      : "btn-outline-secondary"
-                  }`}
-                  onClick={() => toggleTagSelection(tag)}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-            <div className="d-flex gap-2 justify-content-end">
-              <button
-                className="btn btn-sm btn-outline-secondary"
-                onClick={clearFilter}
-              >
-                Clear
-              </button>
-              <button
-                className="btn btn-sm btn-primary"
-                onClick={applyFilter}
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-        </div>
+        <RnwTagFilterPanel
+          allTags={allTags}
+          selectedTags={selectedTags}
+          onToggleTag={handleToggleTagSelection}
+          onClose={() => setFilterExpanded(false)}
+          onClear={clearFilter}
+          onApply={applyFilter}
+        />
       )}
 
       {error ? (
-        <div className="alert alert-danger" role="alert">
-          <i className="fa-solid fa-triangle-exclamation me-2" />
-          {error}
-        </div>
+        <RnwInlineNotice
+          tone="error"
+          message={error}
+          icon={<i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />}
+        />
       ) : null}
 
       {!example ? (
-        <div className="alert alert-info border shadow-sm">
-          <div className="fw-semibold">
-            <i className="fa-solid fa-circle-info me-2" />
-            No Examples Available
-          </div>
-          <div className="text-secondary small">
-            No example sentences found. Add examples to your words first.
-          </div>
-        </div>
+        <RnwInlineNotice
+          tone="info"
+          message="No examples available. Add example sentences to your words first."
+          icon={<i className="fa-solid fa-circle-info" aria-hidden="true" />}
+        />
       ) : (
         <div className="card border shadow-sm">
           <div className="card-body">

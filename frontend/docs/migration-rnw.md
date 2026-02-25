@@ -37,6 +37,24 @@
 - M3.2: Word系ページを `core/word` application service + gateway adapter 経由へ整理
 - M3.3: Study/Examples ページを `core/study`, `core/examples` usecase + adapter 経由へ整理
 - M3.4: Word create/detail のページヘッダー/CTA を `packages/ui` primitive へ置換
+- M3.5: Storage runtime selector (`createStorageAdapter`) を導入し、Web/Native差し替えポイントを明示（完了）
+- M3.6: Syncバックアップの保持ポリシーを `core/sync/VocabBackupService` へ抽出し、Storage/Clock Portでテスト可能化（完了）
+- M3.7: `RnwActionBar` を `packages/ui` に追加し、Study/Examples のヘッダー導線を共通化（完了）
+- M3.8: `ExamplesTestPage` の tag filter panel / notice を RNW primitives へ置換（完了）
+- M3.9: visual regression 対象へ `/examples` を追加（完了）
+- M3.12: visual regression 対象へ `/study` を追加（完了）
+- M3.14: tag filter hydration時の保存制御を追加し、初期化時の誤上書きを防止（完了）
+- M3.16: `WordDetailPage` のreset完了通知を RNW notice 化しWeb依存 alert を排除（完了）
+- M3.17: `wordDraftPolicy` を導入し、WordFormの保存データ整形ロジックをUIから分離（完了）
+- M3.18: `ExampleIdGenerator` ポートを導入し、example id採番の実装差し替えポイントを明示（完了）
+- M3.19: `speechApplicationService` + `speechGateway` を導入し、音声読み上げロジックをUIから分離（完了）
+- M3.20: `webSpeechGateway` / `noopSpeechGateway` を追加し、実行環境ごとの音声実装をポリモーフィックに切替（完了）
+- M3.21: `backupExportService` + `fileDownloadGateway` を導入し、WordList exportロジックをUIから分離（完了）
+- M3.22: `browserFileDownloadGateway` と `systemUtcClock` を追加し、I/Oと時刻依存をポート注入化（完了）
+- M3.15: `exampleSentencePolicy` を導入し、Examplesの文処理ロジックをUIから分離（完了）
+- M3.13: `useTagFilterState` hook を導入し、Study/Examples のタグ状態管理を再利用化（完了）
+- M3.11: `WordDetailPage` の destructive actions を `RnwActionGroup` へ統合（完了）
+- M3.10: `tagFilterSelectionPolicy` を導入し、Study/Examples の選択ロジックをUIから分離（完了）
 - M4: `apps/mobile`(Expo) 追加と共通UI再利用
 
 
