@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
   },
   iconSlot: {
     minWidth: 46,
+    height: 40,
     borderColor: "#ced4da",
     borderWidth: 1,
     borderRightWidth: 0,
@@ -77,11 +78,14 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    minHeight: 40,
+    height: 40,
+    boxSizing: "border-box",
+    lineHeight: "20px",
     borderColor: "#ced4da",
     borderWidth: 1,
     borderRadius: 6,
     paddingInline: 12,
+    paddingBlock: 0,
     fontSize: 16,
     backgroundColor: "#ffffff",
   },

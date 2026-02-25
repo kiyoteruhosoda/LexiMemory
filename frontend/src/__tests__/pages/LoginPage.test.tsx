@@ -64,4 +64,34 @@ describe("LoginPage", () => {
       password: "secret",
     });
   });
+  it("normalizes username before authenticate", async () => {
+    const user = userEvent.setup();
+    const authenticateMock = vi.fn().mockResolvedValue(undefined);
+
+    useAuthMock.mockReturnValue({
+      state: { status: "guest" },
+      authenticate: authenticateMock,
+      login: vi.fn().mockResolvedValue(undefined),
+      registerAndLogin: vi.fn().mockResolvedValue(undefined),
+      logout: vi.fn().mockResolvedValue(undefined),
+      refresh: vi.fn().mockResolvedValue(undefined),
+    });
+
+    render(
+      <MemoryRouter>
+        <LoginPage />
+      </MemoryRouter>
+    );
+
+    await user.type(screen.getByTestId("rnw-login-username"), "  alice  ");
+    await user.type(screen.getByTestId("rnw-login-password"), "secret");
+    await user.click(screen.getByTestId("rnw-login-submit"));
+
+    expect(authenticateMock).toHaveBeenCalledWith({
+      intent: "login",
+      username: "alice",
+      password: "secret",
+    });
+  });
+
 });

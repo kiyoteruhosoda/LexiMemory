@@ -33,4 +33,11 @@ describe("RnwTextField", () => {
 
     expect(input).toHaveValue("alice");
   });
+  it("keeps input height to a single row", () => {
+    render(<Harness />);
+
+    const input = screen.getByTestId("rnw-text-field");
+    expect(input).toHaveStyle({ height: "40px", lineHeight: "20px" });
+  });
+
 });
