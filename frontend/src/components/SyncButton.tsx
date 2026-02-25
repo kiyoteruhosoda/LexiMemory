@@ -6,13 +6,8 @@
 
 import { useState, useEffect } from "react";
 import { Modal } from "./Modal";
-import {
-  getSyncStatus,
-  syncToServer,
-  resolveConflict,
-  type SyncStatus,
-  type SyncConflict,
-} from "../db/syncService";
+import type { SyncStatus, SyncConflict } from "../db/syncService";
+import { syncUseCase } from "../sync/syncGatewayAdapter";
 import type { ConflictResolution } from "../db/types";
 import { useAuth } from "../auth/useAuth";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
@@ -70,7 +65,7 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
     try {
       // We get the full status, but only store the parts we need, ignoring 'online'
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { online, ...rest } = await getSyncStatus();
+      const { online, ...rest } = await syncUseCase.getStatus();
       setStatus(rest);
     } catch (err: unknown) {
       console.error("Failed to load sync status:", err);
@@ -94,7 +89,7 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
     setSuccessMessage(null);
 
     try {
-      const result = await syncToServer();
+      const result = await syncUseCase.sync();
 
       if (result.status === "success") {
         // Success
@@ -134,7 +129,7 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
     }
 
     try {
-      await resolveConflict(selectedResolution);
+      await syncUseCase.resolve(selectedResolution);
       setConflict(null);
       setSelectedResolution("fetch-server"); // Reset to default
       await loadStatus();

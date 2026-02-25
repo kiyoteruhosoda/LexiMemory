@@ -8,7 +8,8 @@
 - `npm run lint`: ESLint
 - `npm run test`: Vitest
 - `npm run test:coverage`: Vitest coverage
-- `npm run test:e2e`: Playwright E2E（visual regression含む）
+- `npm run test:e2e`: Playwright E2E（smoke + visualはデフォルトskip）
+- `npm run test:e2e:visual`: Visual regressionのみ実行（`RUN_VISUAL_REGRESSION=1`）
 - `npm run test:e2e:update`: Playwrightスクリーンショットのベースライン更新
 - `npm run test:e2e:firefox`: Firefoxプロジェクトのみ実行
 - `npm run typecheck`: 型チェック（`tsc -b`）
@@ -31,7 +32,8 @@
 ## UIリグレッションテスト
 
 - `e2e/specs/ui-regression.spec.ts`
-  - `toHaveScreenshot` を使用し、`/words` と `/login` を desktop/mobile で比較
+  - `toHaveScreenshot` を使用した visual regression
+  - `RUN_VISUAL_REGRESSION=1` のときのみ実行（バイナリ非コミット運用）
 - `e2e/specs/smoke.spec.ts`
   - ログイン前の主要導線（`/login`→`/words`）の導通を確認
 - 実行先URLは `PLAYWRIGHT_BASE_URL` で上書き可能（デフォルト: `http://localhost:${PLAYWRIGHT_WEB_PORT:-4173}`）

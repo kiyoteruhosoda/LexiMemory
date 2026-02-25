@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Text, View } from "../react-native";
+import { StyleSheet } from "../stylesheet";
 
 export function RnwPlatformBadge() {
   return (

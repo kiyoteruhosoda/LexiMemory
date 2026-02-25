@@ -24,4 +24,6 @@ dist-ssr
 *.sw?
 
 # Playwright visual baselines are managed outside git in this repo
-frontend/e2e/specs/ui-regression.spec.ts-snapshots/
+
+# Image artifacts
+*.png

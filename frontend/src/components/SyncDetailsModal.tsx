@@ -4,7 +4,8 @@
 
 import { useState, useEffect } from "react";
 import { Modal } from "./Modal";
-import { getSyncStatus, syncToServer, type SyncStatus } from "../db/syncService";
+import type { SyncStatus } from "../db/syncService";
+import { syncUseCase } from "../sync/syncGatewayAdapter";
 import { useAuth } from "../auth/useAuth";
 import { getVocabFile } from "../db/indexeddb";
 import { api } from "../api/client";
@@ -41,7 +42,7 @@ export function SyncDetailsModal({ show, onClose }: SyncDetailsModalProps) {
 
   const loadStatus = async () => {
     try {
-      const s = await getSyncStatus();
+      const s = await syncUseCase.getStatus();
       setStatus(s);
     } catch (err: unknown) {
       console.error("Failed to load sync status:", err);
@@ -82,7 +83,7 @@ export function SyncDetailsModal({ show, onClose }: SyncDetailsModalProps) {
     setSuccessMessage(null);
 
     try {
-      const result = await syncToServer();
+      const result = await syncUseCase.sync();
 
       if (result.status === "success") {
         await loadStatus();

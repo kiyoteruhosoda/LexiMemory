@@ -173,6 +173,25 @@ This separation ensures testability, maintainability, and clear boundaries.
 
 For frontend details, see `frontend/README.md`.
 
+### Frontend CI-equivalent commands
+
+- `cd frontend && npm run lint`
+- `cd frontend && npm run typecheck`
+- `cd frontend && npm run test`
+- `cd frontend && npm run build`
+- `cd frontend && npm run test:e2e`
+
+### Frontend routing summary
+
+- Router: `react-router-dom` BrowserRouter (`frontend/src/App.tsx`)
+- `/login`: login/register
+- `/words`: word list (root redirect target)
+- `/words/create`: create word
+- `/words/:id`: word details
+- `/study`: study flow
+- `/examples`: examples testing
+
+
 ## Import/Export
 
 ### Export

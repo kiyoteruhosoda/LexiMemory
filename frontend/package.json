@@ -14,7 +14,8 @@
     "test:e2e": "playwright test",
     "test:e2e:update": "playwright test --update-snapshots",
     "typecheck": "tsc -b",
-    "test:e2e:firefox": "playwright test --project=firefox"
+    "test:e2e:firefox": "playwright test --project=firefox",
+    "test:e2e:visual": "RUN_VISUAL_REGRESSION=1 playwright test e2e/specs/ui-regression.spec.ts"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",
