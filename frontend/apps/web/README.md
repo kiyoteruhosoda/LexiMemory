@@ -1,13 +1,15 @@
-# apps/web (scaffold)
+# apps/web
 
-This directory is the future home of the Web application runtime.
+This directory is now the Web runtime entrypoint for gradual monorepo migration.
 
-Current strategy keeps compatibility by running the existing `frontend/` app as the source of truth.
-`apps/web` is intentionally added as a migration seam so that route/UI modules can be moved incrementally.
+## Implemented in Phase C
 
-## Planned migration flow
+- Dedicated app entry files:
+  - `apps/web/index.html`
+  - `apps/web/src/main.tsx`
+  - `apps/web/src/App.tsx`
+- Dedicated Vite config: `apps/web/vite.config.ts`
+- Dedicated typecheck config: `apps/web/tsconfig.json`
 
-1. Move entry points (`main.tsx`, `App.tsx`) into `apps/web`.
-2. Keep feature modules in `src/*` during transition.
-3. Gradually replace imports to `packages/core` and `packages/ui`.
-4. Use this directory as the final Vite app root.
+The feature modules still live in `frontend/src` and are imported from this entrypoint.
+This preserves existing behavior while allowing progressive migration.

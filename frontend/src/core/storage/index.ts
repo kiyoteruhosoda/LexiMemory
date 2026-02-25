@@ -8,3 +8,9 @@ export { createAsyncStorageAdapter, type AsyncStorageDriver } from "./asyncStora
 export { createSqliteStorageAdapter, type SqliteStorageDriver } from "./sqliteStorageAdapter";
 export type { StorageAdapter };
 export type { StorageRuntime, StorageAdapterFactoryOptions } from "./storageAdapterFactory";
+export {
+  prepareVersionedStorage,
+  type StorageMigrationOptions,
+  type StoragePreparationResult,
+  type StorageVersionSnapshot,
+} from "./storageMigrationPolicy";

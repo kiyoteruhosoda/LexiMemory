@@ -1,4 +1,3 @@
-import { WordApplicationService } from "../core/word/wordApplicationService";
-import { wordGatewayAdapter } from "./wordGatewayAdapter";
+import { appCompositionRoot } from "../app/compositionRoot";
 
-export const wordApplicationService = new WordApplicationService(wordGatewayAdapter);
+export const wordApplicationService = appCompositionRoot.wordApplicationService;

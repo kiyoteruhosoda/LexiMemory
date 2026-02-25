@@ -1,4 +1,3 @@
-import { ExamplesApplicationService } from "../core/examples/examplesApplicationService";
-import { examplesGatewayAdapter } from "./examplesGatewayAdapter";
+import { appCompositionRoot } from "../app/compositionRoot";
 
-export const examplesApplicationService = new ExamplesApplicationService(examplesGatewayAdapter);
+export const examplesApplicationService = appCompositionRoot.examplesApplicationService;

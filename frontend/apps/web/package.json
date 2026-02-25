@@ -4,9 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "npm run dev --prefix ../..",
-    "build": "npm run build --prefix ../..",
+    "dev": "vite --config ./vite.config.ts",
+    "build": "vite build --config ./vite.config.ts",
+    "preview": "vite preview --config ./vite.config.ts",
     "test": "npm run test --prefix ../..",
-    "typecheck": "npm run typecheck --prefix ../.."
+    "typecheck": "tsc -p ./tsconfig.json --noEmit"
   }
 }

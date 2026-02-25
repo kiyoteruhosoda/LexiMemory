@@ -24,13 +24,13 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 ## 3. アプリ構成の段階的再編（モノレポ相当）
 - [x] `packages/core`（domain/application/shared types）を新設
 - [x] `packages/ui`（RNコンポーネント群）を新設
-- [~] `apps/web`（既存Web）から `packages/*` を参照する形へ移行（scaffold追加済み、本体移送が継続）
-- [~] `apps/mobile`（Expo想定）雛形を追加（scaffold追加済み、Expo依存導入と画面接続が継続）
+- [x] `apps/web`（既存Web）から `packages/*` を参照する形へ移行（`apps/web` を独立エントリとして起動可能化）
+- [x] `apps/mobile`（Expo想定）雛形を追加（Expo依存 + `App.tsx` + `packages/core/ui` 接続まで完了）
 
 ## 4. 永続化戦略（Web/Mobile差し替え）
 - [x] Web localStorage adapter を抽象化層へ集約
-- [~] Mobile向け AsyncStorage adapter を追加（driver注入型adapterは完了、RN実体注入と実機検証が継続）
-- [~] SQLite adapter を追加（driver注入型adapterは完了、DB実体注入と移行戦略定義が継続）
+- [x] Mobile向け AsyncStorage adapter を追加（`apps/mobile/src/storage/mobileAsyncStorageAdapter.ts` で RN AsyncStorage 実体注入を追加）
+- [x] SQLite adapter を追加（`apps/mobile/src/storage/mobileSqliteStorageAdapter.ts` で Expo SQLite 実体注入を追加）
 - [x] Repository単位でストレージ実装を切り替えるファクトリを導入（runtime selector対応）
 
 ## 5. 画面移行（Screen-by-screen）
@@ -53,21 +53,21 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 ## 残タスク（未実施のみ・実施順）
 
 ### Phase A: DDD境界の仕上げ
-1. [ ] Sync 関連ユースケースを `src/core` へ完全移送し、UI からの直接分岐ロジックを排除する。
-2. [ ] `apps/web` 側の composition root を整理し、Application Service / Port 依存の注入責務を1箇所に集約する。
+1. [x] Sync 関連ユースケースを `src/core` へ完全移送し、UI からの直接分岐ロジックを排除する。（`SyncOrchestrationService` で pending/auth/offline 分岐を集約）
+2. [x] `apps/web` 側の composition root を整理し、Application Service / Port 依存の注入責務を1箇所に集約する。（`src/app/compositionRoot.ts` を追加）
 
 ### Phase B: Mobile adapter 実体化
-3. [ ] `native-async` に実際の AsyncStorage ドライバを注入する mobile adapter 実装を追加する。
-4. [ ] `native-sqlite` に SQLite ドライバを注入する mobile adapter 実装を追加する。
-5. [ ] adapter 切替時のデータ移行ポリシー（versioning / fallback）を仕様化し、テストを追加する。
+3. [x] `native-async` に実際の AsyncStorage ドライバを注入する mobile adapter 実装を追加する。
+4. [x] `native-sqlite` に SQLite ドライバを注入する mobile adapter 実装を追加する。
+5. [x] adapter 切替時のデータ移行ポリシー（versioning / fallback）を仕様化し、テストを追加する。（`docs/storage-migration-policy.md` + `storageMigrationPolicy.test.ts`）
 
 ### Phase C: モノレポ移送完了
-6. [ ] `apps/web` へ画面エントリを移し、現行 frontend からの依存を段階削除する。
-7. [ ] `apps/mobile` (Expo) を起動可能な最小構成まで拡張し、`packages/core` + `packages/ui` を接続する。
+6. [x] `apps/web` へ画面エントリを移し、現行 frontend からの依存を段階削除する。（entryを `apps/web/src/main.tsx` に移送）
+7. [x] `apps/mobile` (Expo) を起動可能な最小構成まで拡張し、`packages/core` + `packages/ui` を接続する。（`App.tsx` + Expo scripts追加）
 
 ### Phase D: Expo実行可能状態の達成
 8. [ ] Expo 上で `/words` 相当（閲覧・検索）を動作させる。
 9. [ ] Expo 上で作成/編集ユースケースを動作させる。
 10. [ ] Expo 上で学習/同期ユースケースを動作させ、E2E相当の検証手順を整備する。
 
-最終更新: 2026-02-25 (update-27)
+最終更新: 2026-02-25 (update-30)

@@ -8,7 +8,7 @@ import { SyncApplicationService } from "../core/sync/syncApplicationService";
 import type { SyncGateway } from "../core/sync/syncGateway";
 import type { ConflictResolution } from "../db/types";
 
-const syncGatewayAdapter: SyncGateway = {
+export const syncGatewayAdapter: SyncGateway = {
   async getSyncStatus() {
     return getSyncStatus();
   },

@@ -7,7 +7,7 @@
 import { useState, useEffect } from "react";
 import { Modal } from "./Modal";
 import type { SyncStatus, SyncConflict } from "../db/syncService";
-import { syncUseCase } from "../sync/syncGatewayAdapter";
+import { appCompositionRoot, syncOrchestrationService } from "../app/compositionRoot";
 import type { ConflictResolution } from "../db/types";
 import { useAuth } from "../auth/useAuth";
 import { useOnlineStatus } from "../hooks/useOnlineStatus";
@@ -35,21 +35,20 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
 
   // Auto-sync after login if there was a pending sync and we are online
   useEffect(() => {
-    if (isAuthenticated && isOnline) {
-      void (async () => {
-        const pendingSync = await storage.get("pendingSync");
-        if (pendingSync !== "true") {
-          return;
-        }
+    void (async () => {
+      const shouldSync = await syncOrchestrationService.consumePendingSyncIfReady({
+        isAuthenticated,
+        isOnline,
+      });
+      if (!shouldSync) {
+        return;
+      }
 
-        await storage.remove("pendingSync");
-        // Execute sync automatically after a short delay to ensure auth is fully ready
-        const timer = setTimeout(() => {
-          void handleSync();
-        }, 100);
-        return () => clearTimeout(timer);
-      })();
-    }
+      const timer = setTimeout(() => {
+        void handleSync();
+      }, 100);
+      return () => clearTimeout(timer);
+    })();
   // eslint-disable-next-line react-hooks/exhaustive-deps -- handleSync depends on state
   }, [isAuthenticated, isOnline]);
 
@@ -65,7 +64,7 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
     try {
       // We get the full status, but only store the parts we need, ignoring 'online'
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { online, ...rest } = await syncUseCase.getStatus();
+      const { online, ...rest } = await appCompositionRoot.syncApplicationService.getStatus();
       setStatus(rest);
     } catch (err: unknown) {
       console.error("Failed to load sync status:", err);
@@ -73,45 +72,41 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
   };
 
   const handleSync = async () => {
-    // Prevent sync if offline
-    if (!isOnline) {
-      console.log("Sync prevented: You are offline.");
-      return;
-    }
-
-    if (!isAuthenticated) {
-      setShowLoginPrompt(true);
-      void storage.set("pendingSync", "true");
-      return;
-    }
-
     setSyncing(true);
     setSuccessMessage(null);
 
     try {
-      const result = await syncUseCase.sync();
+      const outcome = await syncOrchestrationService.requestSync({
+        isAuthenticated,
+        isOnline,
+      });
 
-      if (result.status === "success") {
-        // Success
+      if (outcome.status === "blocked-offline") {
+        console.log("Sync prevented: You are offline.");
+        return;
+      }
+
+      if (outcome.status === "requires-auth") {
+        setShowLoginPrompt(true);
+        return;
+      }
+
+      if (outcome.status === "success") {
         await loadStatus();
         setSuccessMessage("Sync completed successfully");
-        // Notify parent component to refresh data
         if (onSyncSuccess) {
           onSyncSuccess();
         }
-      } else if (result.status === "conflict") {
-        // Conflict - show resolution dialog
-        setConflict(result);
+        return;
       }
-      // Errors are now handled by the API client layer setting online status
+
+      if (outcome.status === "conflict") {
+        setConflict(outcome.conflict);
+        return;
+      }
+
+      console.error("Sync failed:", { code: outcome.code, message: outcome.message });
     } catch (err: unknown) {
-      // Check if authentication error
-      const error = err as { status?: number };
-      if (error.status === 401) {
-        setShowLoginPrompt(true);
-        void storage.set("pendingSync", "true");
-      }
-      // Other errors are now more gracefully handled by the online status store
       console.error("Sync failed:", err);
     } finally {
       setSyncing(false);
@@ -122,14 +117,19 @@ export default function SyncButton({ onSyncSuccess }: SyncButtonProps = {}) {
     setSyncing(true);
     setSuccessMessage(null);
 
-    if (!isOnline) {
-      console.log("Conflict resolution prevented: You are offline.");
-      setSyncing(false);
-      return;
-    }
-
     try {
-      await syncUseCase.resolve(selectedResolution);
+      const outcome = await syncOrchestrationService.resolveConflict(
+        { isAuthenticated, isOnline },
+        selectedResolution
+      );
+      if (outcome.status === "blocked-offline") {
+        console.log("Conflict resolution prevented: You are offline.");
+        return;
+      }
+      if (outcome.status === "error") {
+        console.error("Failed to resolve conflict:", outcome.message);
+        return;
+      }
       setConflict(null);
       setSelectedResolution("fetch-server"); // Reset to default
       await loadStatus();

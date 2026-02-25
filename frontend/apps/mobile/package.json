@@ -3,7 +3,16 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "start": "echo \"Expo scaffold pending dependency install\"",
-    "test": "echo \"Mobile tests will be added in mobile migration phase\""
+    "start": "expo start --clear",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.1.0",
+    "expo": "^52.0.24",
+    "expo-sqlite": "^15.0.7",
+    "react": "^19.2.0",
+    "react-native": "^0.84.0"
   }
 }
