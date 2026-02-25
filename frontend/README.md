@@ -2,7 +2,7 @@
 
 ## 現状のCI相当コマンド
 
-- CI: `.github/workflows/frontend-visual.yml` で `test:ci` + `test:e2e:ci` を実行
+- CI: `.github/workflows/frontend-visual.yml` で `test:ci` + `test:e2e:ci` + `test:mobile:regression` を実行
 - `npm run dev`: 開発サーバー
 - `npm run build`: TypeScriptビルド + Vite build
 - `npm run preview`: build成果物のプレビュー
@@ -20,7 +20,12 @@
 - `npm run test:e2e:firefox`: Firefoxプロジェクトのみ実行
 - `npm run test:e2e:ci`: Chromium/Firefox 両方の visual regression をCI相当で実行
 - `npm run test:e2e:rnw-poc`: RNW PoCコンポーネントのvisual回帰のみを実行
+- `npm run test:mobile:regression`: Mobile向けE2E相当フロー（create→study→sync）の回帰テスト
 - `npm run dev --workspace @leximemory/apps-web`: apps/webスコープから既存Web開発サーバーを起動
+- `npm run start --workspace @leximemory/apps-mobile`: Expo mobile dev server
+- `npm run android --workspace @leximemory/apps-mobile`: Expo Android launcher
+- `npm run ios --workspace @leximemory/apps-mobile`: Expo iOS launcher
+- `EXPO_PUBLIC_MOBILE_STORAGE_RUNTIME=native-async|native-sqlite` で mobile persistence adapter を切替
 
 ## ルーティング方式
 

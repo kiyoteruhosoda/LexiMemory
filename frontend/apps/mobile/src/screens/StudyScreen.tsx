@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import type { Rating } from "../../../../src/api/types";
-import { mobileCompositionRoot } from "../app/mobileCompositionRoot";
+import type { MobileStudyService } from "../app/mobileServices";
 
 const ratingOrder: Rating[] = ["again", "hard", "good", "easy"];
 
-export function StudyScreen() {
-  const studyService = mobileCompositionRoot.studyService;
+export function StudyScreen({ studyService }: { studyService: MobileStudyService }) {
   const [card, setCard] = useState<Awaited<ReturnType<typeof studyService.fetchNextCard>>>(null);
   const [message, setMessage] = useState("");
 

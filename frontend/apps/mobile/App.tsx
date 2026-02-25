@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 import { RnwPageHeader, RnwSurfaceCard } from "../../packages/ui/src";
+import { createMobileCompositionRoot, type MobileCompositionRoot } from "./src/app/mobileCompositionRoot";
 import { WordsScreen } from "./src/screens/WordsScreen";
 import { StudyScreen } from "./src/screens/StudyScreen";
 import { SyncScreen } from "./src/screens/SyncScreen";
@@ -9,18 +10,29 @@ type MobileRoute = "words" | "study" | "sync";
 
 export default function App() {
   const [route, setRoute] = useState<MobileRoute>("words");
+  const [compositionRoot, setCompositionRoot] = useState<MobileCompositionRoot | null>(null);
+
+  useEffect(() => {
+    void createMobileCompositionRoot().then((root) => {
+      setCompositionRoot(root);
+    });
+  }, []);
 
   const routeContent = useMemo(() => {
+    if (!compositionRoot) {
+      return <Text>Initializing mobile services...</Text>;
+    }
+
     if (route === "study") {
-      return <StudyScreen />;
+      return <StudyScreen studyService={compositionRoot.studyService} />;
     }
 
     if (route === "sync") {
-      return <SyncScreen />;
+      return <SyncScreen syncService={compositionRoot.syncService} />;
     }
 
-    return <WordsScreen />;
-  }, [route]);
+    return <WordsScreen service={compositionRoot.wordService} />;
+  }, [compositionRoot, route]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f9fa", padding: 16 }}>

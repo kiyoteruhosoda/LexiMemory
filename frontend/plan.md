@@ -12,7 +12,7 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 ## 1. モジュール境界の確立（DDD）
 - [x] `src/core/storage` に Storage Port (`StorageAdapter`) を定義
 - [x] `TagFilterStorageService` を Port DI に変更（インフラ依存を注入）
-- [~] 認証・同期・学習状態のユースケースを `src/core` に再配置（Auth + Word + Study/Examples usecase は移行済み、Sync usecase は継続）
+- [x] 認証・同期・学習状態のユースケースを `src/core` に再配置（Auth + Word + Study/Examples/Sync usecase を application service 経由へ統一）
 - [x] UI 層から API クライアント直参照を排除し、Application Service 経由に統一（Auth/Word/Study/Examples/Backup）
 
 ## 2. UIポリモーフィズム（RNW境界）
@@ -43,10 +43,10 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 
 ## 6. 完全RNW化の完了条件（Definition of Done）
 - [x] 主要画面の UI 実装が `src/rnw` or `packages/ui` 経由のみ
-- [~] ドメインロジックが `core` へ集約され UI 層はユースケース呼び出しのみ（Sync横断処理の最終移送が継続）
-- [~] 永続化が Port/Adapter 経由で Web/Mobile の差し替え可能（adapter骨格は完了、実体注入が継続）
+- [x] ドメインロジックが `core` へ集約され UI 層はユースケース呼び出しのみ（Sync orchestration + mobile sync gateway も service 経由へ統一）
+- [x] 永続化が Port/Adapter 経由で Web/Mobile の差し替え可能（Web localStorage / Mobile async-storage / mobile sqlite の runtime selector を実体注入）
 - [x] Playwright visual regression が CI 上で安定運用（workflow + local/CI command を固定）
-- [~] Expo モバイルで主要ユースケース（閲覧・作成・学習・同期）が動作（Phase D prototype は完了。永続化/実サーバー連携/回帰テストの本番化は Phase E で継続）
+- [x] Expo モバイルで主要ユースケース（閲覧・作成・学習・同期）が動作（永続化 + 実サーバー契約 + mobile regression flow テストを追加）
 
 ---
 
@@ -70,11 +70,11 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 9. [x] Expo 上で作成/編集ユースケースを動作させる。（`WordsScreen` で create/update を実装）
 10. [x] Expo 上で学習/同期ユースケースを動作させ、E2E相当の検証手順を整備する。（`StudyScreen` / `SyncScreen` と `expo config` smoke で検証）
 
-最終更新: 2026-02-25 (update-32)
+最終更新: 2026-02-25 (update-35)
 
 
 ### Phase E: 本番化ハードニング（Prototype -> Production）
-11. [ ] `apps/mobile` の in-memory repository を永続化Repositoryへ置換し、AsyncStorage/SQLite runtime selector を composition root へ統合する。
-12. [ ] Mobile Sync を実サーバー契約へ接続し、認証/409 conflict/force-local|fetch-server を Gateway 層で実装する。
-13. [ ] Mobile向けE2E相当の回帰テスト（create→study→sync）を追加し、CIジョブを分離する。
-14. [ ] lockfile差分を最小化する運用（依存更新PR分離）を docs に明文化する。
+11. [x] `apps/mobile` の in-memory repository を永続化Repositoryへ置換し、AsyncStorage/SQLite runtime selector を composition root へ統合する。（`PersistedMobileLearningRepository` + `mobileStorageRuntime` を追加）
+12. [x] Mobile Sync を実サーバー契約へ接続し、認証/409 conflict/force-local|fetch-server を Gateway 層で実装する。（`mobileSyncGateway` で `/api/vocab` 契約 + 409競合解決を実装）
+13. [x] Mobile向けE2E相当の回帰テスト（create→study→sync）を追加し、CIジョブを分離する。（`mobileRegressionFlow.test.ts` + `mobile-regression` workflow job）
+14. [x] lockfile差分を最小化する運用（依存更新PR分離）を docs に明文化する。（`docs/mobile-production-hardening.md` に運用ルールを追加）
