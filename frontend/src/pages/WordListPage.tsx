@@ -4,6 +4,7 @@ import { wordApplicationService } from "../word/wordApplication";
 import type { WordEntry, MemoryState } from "../api/types";
 import { ImportModal } from "../components/ImportModal";
 import SyncButton from "../components/SyncButton";
+import { backupExportService } from "../io/backupExportApplication";
 import { RnwPrimaryButton } from "../rnw/components/RnwPrimaryButton";
 import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
 import { RnwIconButton } from "../rnw/components/RnwIconButton";
@@ -46,15 +47,7 @@ export function WordListPage() {
     setBusy(true);
     try {
       const data = await wordApplicationService.exportSnapshot();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `linguisticnode-backup-${new Date().toISOString()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      backupExportService.exportBackup(data);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Export failed");
     } finally {

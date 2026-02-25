@@ -50,16 +50,16 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 - [ ] Expo モバイルで主要ユースケース（閲覧・作成・学習・同期）が動作
 
 ## 今回の実行バッチ（10タスク）
-1. [x] `core/speech/speechGateway` ポートを追加（音声読み上げ依存を抽象化）
-2. [x] `core/speech/speechApplicationService` を追加（入力正規化 + ユースケース化）
-3. [x] `speech/webSpeechGateway` を追加（Web Speech API adapter）
-4. [x] `speech/noopSpeechGateway` を追加（非ブラウザ環境のポリモーフィックfallback）
-5. [x] `speechApplication` で runtime gateway を切替（SSR安全化）
-6. [x] `WordForm` の読み上げロジックを application service 経由へ移行
-7. [x] `ExamplesTestPage` の読み上げロジックを application service 経由へ移行
-8. [x] `speechApplicationService` のユニットテストを追加
+1. [x] `core/io/fileDownloadGateway` ポートを追加（ファイル保存依存を抽象化）
+2. [x] `core/io/backupExportService` を追加（バックアップエクスポートのユースケース化）
+3. [x] `io/browserFileDownloadGateway` を追加（ブラウザダウンロード adapter）
+4. [x] `systemUtcClock` を導入しファイル名時刻をポリモーフィック注入に変更
+5. [x] `io/backupExportApplication` で runtime composition を追加
+6. [x] `WordListPage` の export処理を application service 呼び出しへ移行
+7. [x] UI層から `Blob/URL.createObjectURL` の直接利用を排除
+8. [x] `backupExportService` のユニットテストを追加
 9. [x] frontend test/lint/typecheck/build + backend pytest を再実行
-10. [x] plan/docs の進捗を更新（M3.19/M3.20）
+10. [x] plan/docs の進捗を更新（M3.21/M3.22）
 
 ## 直近の実行順（次スプリント）
 1. [~] `WordListPage` の残り Bootstrap依存UIを RNW List/Filter primitives に置換
@@ -76,4 +76,4 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 
 ---
 
-最終更新: 2026-02-25 (update-22)
+最終更新: 2026-02-25 (update-23)

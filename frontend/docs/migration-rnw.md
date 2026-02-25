@@ -49,6 +49,8 @@
 - M3.18: `ExampleIdGenerator` ポートを導入し、example id採番の実装差し替えポイントを明示（完了）
 - M3.19: `speechApplicationService` + `speechGateway` を導入し、音声読み上げロジックをUIから分離（完了）
 - M3.20: `webSpeechGateway` / `noopSpeechGateway` を追加し、実行環境ごとの音声実装をポリモーフィックに切替（完了）
+- M3.21: `backupExportService` + `fileDownloadGateway` を導入し、WordList exportロジックをUIから分離（完了）
+- M3.22: `browserFileDownloadGateway` と `systemUtcClock` を追加し、I/Oと時刻依存をポート注入化（完了）
 - M3.15: `exampleSentencePolicy` を導入し、Examplesの文処理ロジックをUIから分離（完了）
 - M3.13: `useTagFilterState` hook を導入し、Study/Examples のタグ状態管理を再利用化（完了）
 - M3.11: `WordDetailPage` の destructive actions を `RnwActionGroup` へ統合（完了）
