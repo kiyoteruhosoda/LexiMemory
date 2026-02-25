@@ -1,4 +1,3 @@
-import { StudyApplicationService } from "../core/study/studyApplicationService";
-import { studyGatewayAdapter } from "./studyGatewayAdapter";
+import { appCompositionRoot } from "../app/compositionRoot";
 
-export const studyApplicationService = new StudyApplicationService(studyGatewayAdapter);
+export const studyApplicationService = appCompositionRoot.studyApplicationService;

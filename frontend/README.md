@@ -88,3 +88,21 @@
 ## RNW移行の進捗管理
 
 - 詳細な完了までのチェックリストは `plan.md` を参照してください。
+
+
+## Phase C (Monorepo migration seam)
+
+- `apps/web` now has its own runtime entrypoint (`index.html`, `src/main.tsx`, `vite.config.ts`).
+- `apps/mobile` now has a runnable Expo scaffold (`App.tsx`, `app.json`) and is connected to shared `packages/core` + `packages/ui`.
+
+### Additional workspace commands
+
+- `npm run dev --workspace @leximemory/apps-web`
+- `npm run build --workspace @leximemory/apps-web`
+- `npm run typecheck --workspace @leximemory/apps-web`
+- `npm run start --workspace @leximemory/apps-mobile`
+
+
+## Phase E (prototype hardening)
+
+- Mobile production hardening roadmap: `docs/mobile-production-hardening.md`

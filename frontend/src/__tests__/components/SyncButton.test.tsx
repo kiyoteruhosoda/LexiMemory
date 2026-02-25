@@ -1,29 +1,35 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import SyncButton from '../../components/SyncButton';
-import { useOnlineStatus } from '../../hooks/useOnlineStatus';
-import { syncUseCase } from '../../sync/syncGatewayAdapter';
-import * as useAuthModule from '../../auth/useAuth';
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import SyncButton from "../../components/SyncButton";
+import { useOnlineStatus } from "../../hooks/useOnlineStatus";
+import * as useAuthModule from "../../auth/useAuth";
+import { appCompositionRoot, syncOrchestrationService } from "../../app/compositionRoot";
 
-vi.mock('../../hooks/useOnlineStatus');
-vi.mock('../../sync/syncGatewayAdapter', () => ({
-  syncUseCase: {
-    getStatus: vi.fn(),
-    sync: vi.fn(),
-    resolve: vi.fn(),
-    initializeFromServer: vi.fn(),
+vi.mock("../../hooks/useOnlineStatus");
+vi.mock("../../auth/useAuth");
+vi.mock("../../app/compositionRoot", () => ({
+  appCompositionRoot: {
+    syncApplicationService: {
+      getStatus: vi.fn(),
+    },
+  },
+  syncOrchestrationService: {
+    consumePendingSyncIfReady: vi.fn(),
+    requestSync: vi.fn(),
+    resolveConflict: vi.fn(),
   },
 }));
-vi.mock('../../auth/useAuth');
 
 const useOnlineStatusMock = vi.mocked(useOnlineStatus);
-const syncUseCaseMock = vi.mocked(syncUseCase);
 const useAuthMock = vi.mocked(useAuthModule.useAuth);
+const getStatusMock = vi.mocked(appCompositionRoot.syncApplicationService.getStatus);
+const requestSyncMock = vi.mocked(syncOrchestrationService.requestSync);
+const consumePendingMock = vi.mocked(syncOrchestrationService.consumePendingSyncIfReady);
 
-describe('SyncButton', () => {
+describe("SyncButton", () => {
   const mockSyncStatus = {
     dirty: false,
     lastSyncAt: null,
-    clientId: 'test-client',
+    clientId: "test-client",
     serverRev: 0,
   };
 
@@ -31,68 +37,69 @@ describe('SyncButton', () => {
     vi.resetAllMocks();
 
     useAuthMock.mockReturnValue({
-      state: { status: 'authed', me: { userId: 'test', username: 'test' } },
+      state: { status: "authed", me: { userId: "test", username: "test" } },
       authenticate: vi.fn().mockResolvedValue(undefined),
       login: vi.fn().mockResolvedValue(undefined),
       registerAndLogin: vi.fn().mockResolvedValue(undefined),
       logout: vi.fn().mockResolvedValue(undefined),
       refresh: vi.fn().mockResolvedValue(undefined),
     });
-    syncUseCaseMock.getStatus.mockResolvedValue({ ...mockSyncStatus, online: true });
-    syncUseCaseMock.sync.mockResolvedValue({ status: 'success', serverRev: 1, updatedAt: new Date().toISOString() });
+    getStatusMock.mockResolvedValue({ ...mockSyncStatus, online: true });
+    requestSyncMock.mockResolvedValue({ status: "success" });
+    consumePendingMock.mockResolvedValue(false);
   });
 
-  it('should be disabled and show offline status when offline', async () => {
+  it("should be disabled and show offline status when offline", async () => {
     useOnlineStatusMock.mockReturnValue(false);
     render(<SyncButton />);
 
-    const button = await screen.findByRole('button');
+    const button = await screen.findByRole("button");
     expect(button).toBeDisabled();
-    expect(button).toHaveAttribute('title', 'Offline');
-    expect(button.querySelector('.bg-secondary')).toBeInTheDocument();
+    expect(button).toHaveAttribute("title", "Offline");
+    expect(button.querySelector(".bg-secondary")).toBeInTheDocument();
   });
 
-  it('should be enabled and show online status when online', async () => {
+  it("should be enabled and show online status when online", async () => {
     useOnlineStatusMock.mockReturnValue(true);
     render(<SyncButton />);
 
-    const button = await screen.findByRole('button');
+    const button = await screen.findByRole("button");
     expect(button).toBeEnabled();
-    expect(button).toHaveAttribute('title', 'Online');
-    expect(button.querySelector('.bg-success')).toBeInTheDocument();
+    expect(button).toHaveAttribute("title", "Online");
+    expect(button.querySelector(".bg-success")).toBeInTheDocument();
   });
 
-  it('should show unsaved changes (dirty) status when online', async () => {
+  it("should show unsaved changes (dirty) status when online", async () => {
     useOnlineStatusMock.mockReturnValue(true);
-    syncUseCaseMock.getStatus.mockResolvedValue({ ...mockSyncStatus, online: true, dirty: true });
+    getStatusMock.mockResolvedValue({ ...mockSyncStatus, online: true, dirty: true });
 
     render(<SyncButton />);
 
-    const button = await screen.findByRole('button');
+    const button = await screen.findByRole("button");
     expect(button).toBeEnabled();
-    expect(button).toHaveAttribute('title', 'Unsaved changes');
-    expect(button.querySelector('.bg-warning')).toBeInTheDocument();
+    expect(button).toHaveAttribute("title", "Unsaved changes");
+    expect(button.querySelector(".bg-warning")).toBeInTheDocument();
   });
 
-  it('should not call syncToServer when clicked if offline', async () => {
+  it("should not request sync when clicked if offline", async () => {
     useOnlineStatusMock.mockReturnValue(false);
     render(<SyncButton />);
 
-    const button = await screen.findByRole('button');
+    const button = await screen.findByRole("button");
     fireEvent.click(button);
 
-    expect(syncUseCaseMock.sync).not.toHaveBeenCalled();
+    expect(requestSyncMock).not.toHaveBeenCalled();
   });
 
-  it('should call syncToServer when clicked if online and authenticated', async () => {
+  it("should request sync when clicked if online and authenticated", async () => {
     useOnlineStatusMock.mockReturnValue(true);
     render(<SyncButton />);
 
-    const button = await screen.findByRole('button');
+    const button = await screen.findByRole("button");
     fireEvent.click(button);
 
     await waitFor(() => {
-      expect(syncUseCaseMock.sync).toHaveBeenCalledTimes(1);
+      expect(requestSyncMock).toHaveBeenCalledTimes(1);
     });
   });
 });

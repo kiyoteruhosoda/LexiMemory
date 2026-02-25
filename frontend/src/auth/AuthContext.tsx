@@ -3,14 +3,13 @@ import { tokenManager } from "../api/client";
 import { logger } from "../utils/logger";
 import { AuthContext, type AuthState } from "./context";
 import {
-  AuthSessionService,
   type AuthCommand,
   type AuthIntent,
   type AuthStateSnapshot,
 } from "../core/auth/authSessionService";
-import { authGatewayAdapter } from "./authGatewayAdapter";
+import { appCompositionRoot } from "../app/compositionRoot";
 
-const authSessionService = new AuthSessionService(authGatewayAdapter);
+const authSessionService = appCompositionRoot.authSessionService;
 
 const successLogMessages: Record<AuthIntent, string> = {
   login: "User logged in successfully",

@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.app.json",
+  "compilerOptions": {
+    "baseUrl": "../..",
+    "paths": {
+      "react-native": ["./src/rnw/react-native.tsx"],
+      "@leximemory/core": ["./packages/core/src/index.ts"],
+      "@leximemory/core/*": ["./packages/core/src/*"],
+      "@leximemory/ui": ["./packages/ui/src/index.ts"],
+      "@leximemory/ui/*": ["./packages/ui/src/*"]
+    }
+  },
+  "include": ["src", "../../src", "../../packages"]
+}
