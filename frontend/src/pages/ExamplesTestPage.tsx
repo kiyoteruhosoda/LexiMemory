@@ -1,5 +1,3 @@
-// frontend/src/pages/ExamplesTestPage.tsx
-
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { examplesApplicationService } from "../examples/examplesApplication";
@@ -12,6 +10,7 @@ import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
 import { RnwTagFilterButton } from "../rnw/components/RnwTagFilterButton";
 import { RnwTagFilterPanel } from "../rnw/components/RnwTagFilterPanel";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
+import { RnwExamplesQuizCard } from "../rnw/components/RnwExamplesQuizCard";
 import { RnwActionBar } from "@leximemory/ui";
 
 export function ExamplesTestPage() {
@@ -27,7 +26,7 @@ export function ExamplesTestPage() {
   const [showTranslation, setShowTranslation] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const canSpeak = useMemo(() => speechApplicationService.canSpeak(), []);
-  
+
   const [allTags, setAllTags] = useState<string[]>([]);
   const {
     selectedTags,
@@ -53,7 +52,7 @@ export function ExamplesTestPage() {
     setUserInput("");
     setFeedback(null);
     setShowAnswer(false);
-    
+
     try {
       const nextExample = await examplesApplicationService.fetchNextExample(appliedTags, lastExampleId);
       if (!nextExample) {
@@ -75,26 +74,24 @@ export function ExamplesTestPage() {
     }
   }, [appliedTags, lastExampleId]);
 
-  useEffect(() => { 
+  useEffect(() => {
     void loadTags();
-    void loadNext(); 
+    void loadNext();
   }, [loadTags, loadNext]);
+
   useEffect(() => {
     void loadNext();
   }, [appliedTags, loadNext]);
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  function handleSubmitAnswer() {
     if (!example) return;
-    
-    // Allow empty input (treated as incorrect/skip)
+
     if (!userInput.trim()) {
       setFeedback("incorrect");
       setShowAnswer(true);
       return;
     }
-    
-    // Check against the actual word in the sentence (with inflection)
+
     const targetWord = actualWordInSentence || example.word.headword;
     const isCorrect = checkAnswer(userInput, targetWord);
     setFeedback(isCorrect ? "correct" : "incorrect");
@@ -107,13 +104,10 @@ export function ExamplesTestPage() {
     void loadNext();
   }
 
-  function speakSentence(e?: React.MouseEvent<HTMLButtonElement>) {
+  function speakSentence() {
     if (!canSpeak || !example?.en) return;
     speechApplicationService.speakEnglish(example.en);
-    // Blur to remove focus/hover state on touch devices
-    if (e) e.currentTarget.blur();
   }
-
 
   return (
     <div className="vstack gap-3" data-testid="examples-page-ready">
@@ -171,132 +165,23 @@ export function ExamplesTestPage() {
           icon={<i className="fa-solid fa-circle-info" aria-hidden="true" />}
         />
       ) : (
-        <div className="card border shadow-sm">
-          <div className="card-body">
-            {/* Word Info Toggle */}
-            <div className="mb-3 pb-3 border-bottom">
-              {!showWordInfo ? (
-                <button
-                  className="btn btn-sm btn-outline-secondary"
-                  onClick={() => setShowWordInfo(true)}
-                >
-                  <i className="fa-solid fa-circle-info me-1" />
-                  Show Word Info
-                </button>
-              ) : (
-                <div className="d-flex align-items-center gap-2">
-                  <span className="badge text-bg-secondary">
-                    {example.word.pos}
-                  </span>
-                  <span className="fw-medium">
-                    {example.word.meaningJa}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Blanked Sentence */}
-            <div className="mb-3">
-              <div className="d-flex align-items-start gap-2">
-                <div className="fs-5 fw-medium flex-grow-1">
-                  {blankedSentence}
-                </div>
-                <button
-                  className="btn btn-outline-secondary btn-sm"
-                  onClick={speakSentence}
-                  disabled={!canSpeak}
-                  title="Speak"
-                >
-                  <i className="fa-solid fa-volume-high" />
-                </button>
-              </div>
-              
-              {/* Translation Toggle */}
-              {example.ja && (
-                <div className="mt-2">
-                  {!showTranslation ? (
-                    <button 
-                      className="btn btn-sm btn-outline-secondary"
-                      onClick={() => setShowTranslation(true)}
-                    >
-                      <i className="fa-solid fa-language me-1" />
-                      Show Translation
-                    </button>
-                  ) : (
-                    <div className="text-muted small">
-                      <i className="fa-solid fa-language me-1" />
-                      {example.ja}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Input Form */}
-            {!showAnswer ? (
-              <form onSubmit={handleSubmit} className="mb-3">
-                <div className="input-group">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Type the missing word... (or leave empty to skip)"
-                    value={userInput}
-                    onChange={(e) => setUserInput(e.target.value)}
-                    autoFocus
-                  />
-                  <button className="btn btn-primary" type="submit">
-                    <i className="fa-solid fa-check me-1" />
-                    Check
-                  </button>
-                </div>
-                <div className="form-text small text-muted mt-1">
-                  Press Enter to check or skip if you don't know
-                </div>
-              </form>
-            ) : (
-              <div className="mb-3">
-                {/* Feedback */}
-                <div className={`alert ${feedback === "correct" ? "alert-success" : "alert-danger"} mb-3`}>
-                  <div className="d-flex align-items-center gap-2">
-                    <i className={`fa-solid ${feedback === "correct" ? "fa-circle-check" : "fa-circle-xmark"} fs-4`} />
-                    <div>
-                      <div className="fw-semibold">
-                        {feedback === "correct" ? "Correct!" : userInput.trim() ? "Incorrect" : "Skipped"}
-                      </div>
-                      {userInput.trim() && (
-                        <div className="small">
-                          Your answer: <strong>{userInput}</strong>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Answer */}
-                <div className="alert alert-info">
-                  <div className="fw-semibold mb-2">Correct Answer:</div>
-                  <div className="fs-5">
-                    <strong>{actualWordInSentence || example.word.headword}</strong>
-                  </div>
-                  {actualWordInSentence && actualWordInSentence !== example.word.headword && (
-                    <div className="text-muted small mt-1">
-                      (Base form: {example.word.headword})
-                    </div>
-                  )}
-                  <div className="text-muted small mt-2">
-                    Complete sentence: {example.en}
-                  </div>
-                </div>
-
-                {/* Next Button */}
-                <button className="btn btn-primary w-100" onClick={handleNext}>
-                  <i className="fa-solid fa-arrow-right me-1" />
-                  Next Example
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+        <RnwExamplesQuizCard
+          example={example}
+          blankedSentence={blankedSentence}
+          actualWordInSentence={actualWordInSentence}
+          userInput={userInput}
+          feedback={feedback}
+          showAnswer={showAnswer}
+          showWordInfo={showWordInfo}
+          showTranslation={showTranslation}
+          canSpeak={canSpeak}
+          onShowWordInfo={() => setShowWordInfo(true)}
+          onToggleTranslation={() => setShowTranslation(true)}
+          onSpeakSentence={speakSentence}
+          onInputChange={setUserInput}
+          onSubmitAnswer={handleSubmitAnswer}
+          onNext={handleNext}
+        />
       )}
     </div>
   );
