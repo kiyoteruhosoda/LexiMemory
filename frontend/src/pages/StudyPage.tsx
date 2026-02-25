@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { studyApplicationService } from "../study/studyApplication";
 import type { WordEntry, MemoryState, Rating } from "../api/types";
-import { FlashCard } from "../components/FlashCard";
+import { RnwFlashCard } from "../rnw/components/RnwFlashCard";
 import SyncButton from "../components/SyncButton";
 import { useTagFilterState } from "../hooks/useTagFilterState";
 import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
@@ -125,7 +125,7 @@ export function StudyPage() {
           icon={<i className="fa-solid fa-circle-check" aria-hidden="true" />}
         />
       ) : (
-        <FlashCard word={word} memory={memory} onRate={rate} />
+        <RnwFlashCard word={word} memory={memory} onRate={rate} />
       )}
     </div>
   );

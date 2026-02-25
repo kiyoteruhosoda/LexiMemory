@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { wordApplicationService } from "../word/wordApplication";
 import type { WordEntry } from "../api/types";
-import { WordForm } from "../components/WordForm";
-import { ConfirmModal } from "../components/Modal";
+import { RnwWordForm } from "../rnw/components/RnwWordForm";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
+import { RnwConfirmDialog } from "../rnw/components/RnwConfirmDialog";
 import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
 import { RnwActionGroup, RnwDangerButton, RnwPageHeader, RnwPanelCard, RnwWarningButton } from "@leximemory/ui";
 
@@ -147,7 +147,7 @@ export function WordDetailPage() {
       ) : null}
 
       <RnwPanelCard testID="rnw-word-detail-form-panel">
-        <WordForm
+        <RnwWordForm
           initial={word}
           onSave={handleUpdate}
           onCancel={() => navigate("/words")}
@@ -169,26 +169,26 @@ export function WordDetailPage() {
         />
       </RnwActionGroup>
 
-      <ConfirmModal
+      <RnwConfirmDialog
         show={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDelete}
+        onConfirm={() => { void handleDelete(); }}
         title="Delete Word"
         message={`Are you sure you want to delete "${word.headword}"? This action cannot be undone.`}
         confirmText="Delete"
         cancelText="Cancel"
-        variant="danger"
+        tone="danger"
       />
 
-      <ConfirmModal
+      <RnwConfirmDialog
         show={showResetModal}
         onClose={() => setShowResetModal(false)}
-        onConfirm={handleResetMemory}
+        onConfirm={() => { void handleResetMemory(); }}
         title="Reset Memory Level"
         message={`Are you sure you want to reset the memory level for "${word.headword}"?`}
         confirmText="Reset"
         cancelText="Cancel"
-        variant="warning"
+        tone="warning"
       />
     </div>
   );

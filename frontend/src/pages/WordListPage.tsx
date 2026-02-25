@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { wordApplicationService } from "../word/wordApplication";
 import type { WordEntry, MemoryState } from "../api/types";
-import { ImportModal } from "../components/ImportModal";
+import { RnwImportDialog } from "../rnw/components/RnwImportDialog";
 import SyncButton from "../components/SyncButton";
 import { backupExportService } from "../io/backupExportApplication";
 import { RnwPrimaryButton } from "../rnw/components/RnwPrimaryButton";
@@ -150,7 +150,7 @@ export function WordListPage() {
         />
       )}
 
-      <ImportModal
+      <RnwImportDialog
         show={showImportModal}
         onClose={() => setShowImportModal(false)}
         onSuccess={handleImportSuccess}
