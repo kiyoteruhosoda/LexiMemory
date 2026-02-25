@@ -21,6 +21,7 @@ The mobile app currently connects shared modules from:
 - `npm run android --workspace @leximemory/apps-mobile`
 - `npm run ios --workspace @leximemory/apps-mobile`
 - `npm run web --workspace @leximemory/apps-mobile`
+- `npm run test:mobile:regression`
 
 ## Runtime env
 

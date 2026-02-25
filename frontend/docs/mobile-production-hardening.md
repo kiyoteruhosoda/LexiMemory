@@ -33,8 +33,8 @@ Move the Expo prototype from a validation setup to a production-ready runtime wh
 - Handle conflict strategies in gateway (`fetch-server`, `force-local`).
 
 ### WP-3 Mobile regression testing
-- Add E2E-like scenario runner for create→study→sync.
-- Add CI job isolated from web visual regression.
+- Add E2E-like scenario runner for create→study→sync.（完了: `mobileRegressionFlow.test.ts`）
+- Add CI job isolated from web visual regression.（完了: `mobile-regression` job in `.github/workflows/frontend-visual.yml`）
 
 ### WP-4 Operations and traceability
 - Add structured logs around adapter selection/fallback/migration version.

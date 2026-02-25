@@ -20,6 +20,7 @@
 - `npm run test:e2e:firefox`: Firefoxプロジェクトのみ実行
 - `npm run test:e2e:ci`: Chromium/Firefox 両方の visual regression をCI相当で実行
 - `npm run test:e2e:rnw-poc`: RNW PoCコンポーネントのvisual回帰のみを実行
+- `npm run test:mobile:regression`: Mobile向けE2E相当フロー（create→study→sync）の回帰テスト
 - `npm run dev --workspace @leximemory/apps-web`: apps/webスコープから既存Web開発サーバーを起動
 - `npm run start --workspace @leximemory/apps-mobile`: Expo mobile dev server
 - `npm run android --workspace @leximemory/apps-mobile`: Expo Android launcher
