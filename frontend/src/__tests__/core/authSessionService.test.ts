@@ -82,4 +82,14 @@ describe("AuthSessionService", () => {
     expect(gateway.register).toHaveBeenCalledWith("dana", "secret");
     expect(gateway.login).toHaveBeenCalledWith("dana", "secret");
   });
+  it("normalizes username in auth command before dispatch", async () => {
+    const gateway = createGatewayMock();
+    vi.mocked(gateway.me).mockResolvedValue({ userId: "u5", username: "eve" });
+
+    const service = new AuthSessionService(gateway);
+    await service.authenticate({ intent: "login", username: "  eve  ", password: "secret" });
+
+    expect(gateway.login).toHaveBeenCalledWith("eve", "secret");
+  });
+
 });

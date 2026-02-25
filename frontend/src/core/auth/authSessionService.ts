@@ -15,6 +15,14 @@ export type AuthCommand = {
 
 type AuthCommandHandler = (username: string, password: string) => Promise<void>;
 
+
+function normalizeAuthCommand(command: AuthCommand): AuthCommand {
+  return {
+    ...command,
+    username: command.username.trim(),
+  };
+}
+
 export class AuthSessionService {
   private readonly authGateway: AuthGateway;
   private readonly authCommandHandlers: Record<AuthIntent, AuthCommandHandler>;
@@ -51,7 +59,11 @@ export class AuthSessionService {
   }
 
   async authenticate(command: AuthCommand): Promise<AuthStateSnapshot> {
-    await this.authCommandHandlers[command.intent](command.username, command.password);
+    const normalizedCommand = normalizeAuthCommand(command);
+    await this.authCommandHandlers[normalizedCommand.intent](
+      normalizedCommand.username,
+      normalizedCommand.password
+    );
     return this.refreshUserState();
   }
 
