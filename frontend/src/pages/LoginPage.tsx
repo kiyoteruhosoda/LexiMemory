@@ -48,14 +48,16 @@ export function LoginPage() {
   }
 
   const title = mode === "login" ? "Login" : "Create account";
-  const subtitle =
-    mode === "login" ? "Sign in to continue." : "Register once, then you can sign in.";
+  const subtitle = mode === "login" ? "Sign in to continue." : "Register once, then you can sign in.";
 
   return (
     <View style={styles.pageWrap}>
       <View style={styles.card} testID="rnw-login-card">
         <View style={styles.headingWrap}>
-          <h1 style={styles.heading}>{title}</h1>
+          <h1 style={styles.heading}>
+            <i className="fa-solid fa-lock" aria-hidden="true" style={styles.headingIcon} />
+            {title}
+          </h1>
           <Text style={styles.subtitle}>{subtitle}</Text>
         </View>
 
@@ -80,7 +82,6 @@ export function LoginPage() {
             value={username}
             onChange={setUsername}
             autoComplete="username"
-            placeholder="Input your username"
             icon={<i className="fa-solid fa-user" aria-hidden="true" />}
             testID="rnw-login-username"
           />
@@ -91,7 +92,6 @@ export function LoginPage() {
             onChange={setPassword}
             secureTextEntry
             autoComplete={mode === "login" ? "current-password" : "new-password"}
-            placeholder="Input your password"
             icon={<i className="fa-solid fa-key" aria-hidden="true" />}
             testID="rnw-login-password"
           />
@@ -100,6 +100,7 @@ export function LoginPage() {
             label={busy ? "Processing..." : mode === "login" ? "Login" : "Register & Login"}
             onPress={() => void submit()}
             disabled={busy || !username.trim() || !password.trim()}
+            fullWidth
             icon={
               mode === "login" ? (
                 <i className="fa-solid fa-right-to-bracket" aria-hidden="true" />
@@ -113,6 +114,7 @@ export function LoginPage() {
           <RnwOutlineButton
             label={mode === "login" ? "Switch to Register" : "Switch to Login"}
             onPress={() => setMode(mode === "login" ? "register" : "login")}
+            fullWidth
             testID="rnw-login-toggle-mode"
           />
         </form>
@@ -132,7 +134,7 @@ const styles = StyleSheet.create({
     maxWidth: 520,
     borderColor: "#dee2e6",
     borderWidth: 1,
-    borderRadius: 12,
+    borderRadius: 8,
     backgroundColor: "#ffffff",
     padding: 24,
     marginInline: "auto",
@@ -145,9 +147,18 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   heading: {
+    margin: 0,
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: 500,
     color: "#212529",
+    lineHeight: 1.2,
+  },
+  headingIcon: {
+    color: "#0d6efd",
+    fontSize: 24,
   },
   subtitle: {
     fontSize: 14,

@@ -8,18 +8,27 @@ type RnwPrimaryButtonProps = {
   icon?: ReactNode;
   testID?: string;
   disabled?: boolean;
+  fullWidth?: boolean;
 };
 
-export function RnwPrimaryButton({ label, onPress, icon, testID, disabled }: RnwPrimaryButtonProps) {
+export function RnwPrimaryButton({
+  label,
+  onPress,
+  icon,
+  testID,
+  disabled,
+  fullWidth,
+}: RnwPrimaryButtonProps) {
   return (
     <Pressable
       onPress={onPress}
-      testID={testID}
       disabled={disabled}
+      testID={testID}
       style={({ pressed }) => ({
         ...styles.button,
         ...(pressed ? styles.buttonPressed : {}),
         ...(disabled ? styles.buttonDisabled : {}),
+        ...(fullWidth ? styles.fullWidth : {}),
       })}
       accessibilityRole="button"
     >
@@ -43,6 +52,9 @@ const styles = StyleSheet.create({
     paddingInline: 12,
     gap: 6,
     cursor: "pointer",
+  },
+  fullWidth: {
+    width: "100%",
   },
   buttonPressed: {
     opacity: 0.92,

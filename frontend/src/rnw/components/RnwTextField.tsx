@@ -26,7 +26,7 @@ export function RnwTextField({
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <View style={styles.inputWrap}>
+      <View style={styles.inputGroup}>
         {icon ? <View style={styles.iconSlot}>{icon}</View> : null}
         <TextInput
           value={value}
@@ -52,30 +52,41 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    fontWeight: "600",
-    color: "#343a40",
+    fontWeight: "400",
+    color: "#212529",
+    lineHeight: "1.5",
   },
-  inputWrap: {
-    position: "relative",
+  inputGroup: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "stretch",
   },
   iconSlot: {
-    position: "absolute",
-    top: 9,
-    left: 10,
-    zIndex: 1,
-    color: "#6c757d",
+    minWidth: 46,
+    borderColor: "#ced4da",
+    borderWidth: 1,
+    borderRightWidth: 0,
+    borderTopLeftRadius: 6,
+    borderBottomLeftRadius: 6,
+    backgroundColor: "#e9ecef",
+    color: "#495057",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 16,
   },
   input: {
     width: "100%",
     minHeight: 40,
     borderColor: "#ced4da",
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 6,
     paddingInline: 12,
-    fontSize: 14,
+    fontSize: 16,
     backgroundColor: "#ffffff",
   },
   inputWithIcon: {
-    paddingLeft: 34,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
   },
 });
