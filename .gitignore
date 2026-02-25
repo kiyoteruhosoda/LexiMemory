@@ -80,3 +80,6 @@ htmlcov/
 *.orig
 app/git_version.txt
 .coverage
+
+# Images
+*.png

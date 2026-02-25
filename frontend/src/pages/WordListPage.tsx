@@ -11,6 +11,7 @@ import { RnwIconButton } from "../rnw/components/RnwIconButton";
 import { RnwSearchPanel } from "../rnw/components/RnwSearchPanel";
 import { RnwWordListTable } from "../rnw/components/RnwWordListTable";
 import { RnwPlatformBadge } from "../rnw/components/RnwPlatformBadge";
+import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
 
 export function WordListPage() {
   const navigate = useNavigate();
@@ -135,17 +136,19 @@ export function WordListPage() {
       )}
 
       {error ? (
-        <div className="alert alert-danger" role="alert">
-          <i className="fa-solid fa-triangle-exclamation me-2" />
-          {error}
-        </div>
+        <RnwInlineNotice
+          tone="error"
+          message={error}
+          icon={<i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />}
+        />
       ) : null}
 
       {items.length === 0 ? (
-        <div className="alert alert-info">
-          <i className="fa-solid fa-circle-info me-2" />
-          No words yet. Click "Add" to create one.
-        </div>
+        <RnwInlineNotice
+          tone="info"
+          message="No words yet. Click 'Add' to create one."
+          icon={<i className="fa-solid fa-circle-info" aria-hidden="true" />}
+        />
       ) : (
         <RnwWordListTable
           items={items}

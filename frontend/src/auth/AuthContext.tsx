@@ -1,112 +1,93 @@
-// frontend/src/auth/AuthContext.tsx
-
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { authApi } from "../api/auth";
 import { tokenManager } from "../api/client";
 import { logger } from "../utils/logger";
 import { AuthContext, type AuthState } from "./context";
+import { AuthSessionService, type AuthStateSnapshot } from "../core/auth/authSessionService";
+import { authGatewayAdapter } from "./authGatewayAdapter";
+
+const authSessionService = new AuthSessionService(authGatewayAdapter);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: "loading" });
 
+  const applyAuthState = useCallback((snapshot: AuthStateSnapshot) => {
+    if (snapshot.status === "authed") {
+      setState({ status: "authed", me: snapshot.me });
+      logger.setUserId(snapshot.me.userId);
+      return;
+    }
+
+    setState({ status: "guest" });
+    logger.setUserId(null);
+    tokenManager.clearToken();
+  }, []);
+
   const refresh = useCallback(async () => {
     try {
-      const me = await authApi.me();
-
-      if (me) {
-        setState({ status: "authed", me });
-        logger.setUserId(me.userId);
-      } else {
-        setState({ status: "guest" });
-        logger.setUserId(null);
-        tokenManager.clearToken();
-      }
+      const snapshot = await authSessionService.refreshUserState();
+      applyAuthState(snapshot);
     } catch (error) {
       logger.error("Failed to fetch user info", { error });
-      setState({ status: "guest" });
-      logger.setUserId(null);
-      tokenManager.clearToken();
+      applyAuthState({ status: "guest" });
     }
-  }, []);
+  }, [applyAuthState]);
 
   const handleUnauthorized = useCallback(async () => {
     logger.info("Token expired, attempting refresh");
-    const refreshed = await authApi.refresh();
-    
-    if (refreshed) {
+    const snapshot = await authSessionService.recoverFromUnauthorized();
+    applyAuthState(snapshot);
+    if (snapshot.status === "authed") {
       logger.info("Token refreshed successfully");
-      await refresh();
-    } else {
-      logger.info("Refresh failed, logging out");
-      setState({ status: "guest" });
-      logger.setUserId(null);
+      return;
     }
-  }, [refresh]);
+    logger.info("Refresh failed, logging out");
+  }, [applyAuthState]);
 
   useEffect(() => {
-    // Register unauthorized callback
     tokenManager.onUnauthorized(handleUnauthorized);
   }, [handleUnauthorized]);
 
   const initialize = useCallback(async () => {
     try {
-      // Check authentication status (access token and refresh token)
       logger.info("Checking authentication status");
-      const status = await authApi.status();
-      
-      if (status.authenticated && status.userId && status.username) {
-        // We have a valid access token
+      const snapshot = await authSessionService.initialize();
+      applyAuthState(snapshot);
+
+      if (snapshot.status === "authed") {
         logger.info("Valid access token found");
-        setState({ 
-          status: "authed", 
-          me: { userId: status.userId, username: status.username } 
-        });
-        logger.setUserId(status.userId);
-      } else if (status.canRefresh) {
-        // No access token, but we have a refresh token - try to restore session
-        logger.info("No access token, but refresh token exists - attempting refresh");
-        const refreshed = await authApi.refresh();
-        
-        if (refreshed) {
-          logger.info("Session restored successfully");
-          await refresh();
-        } else {
-          logger.info("Refresh failed, starting as guest");
-          setState({ status: "guest" });
-        }
       } else {
-        // No tokens at all - start as guest
         logger.info("No tokens found, starting as guest");
-        setState({ status: "guest" });
       }
     } catch (error) {
       logger.error("Failed to initialize auth", { error });
-      setState({ status: "guest" });
+      applyAuthState({ status: "guest" });
     }
-  }, [refresh]);
+  }, [applyAuthState]);
 
-  const login = useCallback(async (username: string, password: string) => {
-    try {
-      await authApi.login(username, password);
-      await refresh();
-      logger.info("User logged in successfully", { username });
-    } catch (error) {
-      logger.error("Login failed", { username, error });
-      throw error;
-    }
-  }, [refresh]);
+  const login = useCallback(
+    async (username: string, password: string) => {
+      try {
+        const snapshot = await authSessionService.login(username, password);
+        applyAuthState(snapshot);
+        logger.info("User logged in successfully", { username });
+      } catch (error) {
+        logger.error("Login failed", { username, error });
+        throw error;
+      }
+    },
+    [applyAuthState]
+  );
 
   const logout = useCallback(async () => {
     try {
-      await authApi.logout();
+      const snapshot = await authSessionService.logout();
+      applyAuthState(snapshot);
       logger.info("User logged out");
     } catch (error) {
       logger.error("Logout failed", { error });
-    } finally {
-      setState({ status: "guest" });
-      logger.setUserId(null);
+      applyAuthState({ status: "guest" });
     }
-  }, []);
+  }, [applyAuthState]);
 
   useEffect(() => {
     void initialize();

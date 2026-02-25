@@ -7,16 +7,16 @@
     "module": "ESNext",
     "types": ["vite/client", "vitest/globals"],
     "skipLibCheck": true,
-
-    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
     "moduleDetection": "force",
     "noEmit": true,
     "jsx": "react-jsx",
-
-    /* Linting */
+    "baseUrl": ".",
+    "paths": {
+      "react-native": ["./node_modules/react-native-web"]
+    },
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,

@@ -12,14 +12,14 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 ## 1. モジュール境界の確立（DDD）
 - [x] `src/core/storage` に Storage Port (`StorageAdapter`) を定義
 - [x] `TagFilterStorageService` を Port DI に変更（インフラ依存を注入）
-- [ ] 認証・同期・学習状態のユースケースを `src/core` に再配置
-- [ ] UI 層から API クライアント直参照を排除し、Application Service 経由に統一
+- [~] 認証・同期・学習状態のユースケースを `src/core` に再配置（Auth session usecase を先行移行）
+- [~] UI 層から API クライアント直参照を排除し、Application Service 経由に統一（AuthContext は Service 経由化済み）
 
 ## 2. UIポリモーフィズム（RNW境界）
 - [x] `src/rnw` に RN風コンポーネント境界を作成
 - [x] 小粒度コンポーネント（Button系）のRNW境界採用
 - [~] Form / Modal / Card / List を RNWコンポーネントに置換（Form/Listは着手済み）
-- [ ] `*.web.tsx` / `*.native.tsx` 分岐ルールのテンプレート実装
+- [x] `*.web.tsx` / `*.native.tsx` 分岐ルールのテンプレート実装（RnwInlineNoticeで実装）
 
 ## 3. アプリ構成の段階的再編（モノレポ相当）
 - [ ] `packages/core`（domain/application/shared types）を新設
@@ -50,14 +50,15 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 - [ ] Expo モバイルで主要ユースケース（閲覧・作成・学習・同期）が動作
 
 ## 直近の実行順（次スプリント）
-1. [ ] `WordListPage` の残り Bootstrap依存UIを RNW List/Filter primitives に置換
+1. [~] `WordListPage` の残り Bootstrap依存UIを RNW List/Filter primitives に置換
    - [x] 上部アクション（Study/Examples/Search/Export/Import）をRNW Button primitivesへ移行
    - [x] 検索フォームと一覧テーブルをRNW Form/List primitiveへ移行
+   - [x] 空状態/エラー表示をRNW Notice primitiveへ移行
 2. [ ] 同ページの visual snapshot を Chromium/Firefox で固定
    - [x] RNW Pressable shim の pressed/disabled 挙動を unit test で固定
 3. [x] `StudyPage` の CTA と filter toolbar を RNW primitives に揃える
-4. [ ] `Auth` / `Sync` のユースケースを `core/application` 層へ移動
+4. [~] `Auth` / `Sync` のユースケースを `core/application` 層へ移動（Auth は完了、Sync は Application Service + Adapter まで完了）
 
 ---
 
-最終更新: 2026-02-24 (update-6)
+最終更新: 2026-02-24 (update-9)
