@@ -5,6 +5,7 @@ Tests for JWT authentication with refresh token rotation.
 
 import pytest
 from datetime import datetime, timezone
+from app.domain.exceptions import RefreshTokenReusedError
 from app.infra.jwt_provider import JWTProvider
 from app.infra.token_store_json import JsonTokenStore, hash_refresh_token
 from app.service.auth_service import AuthService
@@ -210,9 +211,9 @@ class TestAuthService:
         assert result1 is not None
         
         # Try to reuse old token (should detect replay)
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(RefreshTokenReusedError) as exc_info:
             await auth_service.refresh(refresh_token)
-        
+
         assert str(exc_info.value) == "REFRESH_REUSED"
         
         # Verify entire family is revoked
