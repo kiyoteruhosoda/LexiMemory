@@ -13,6 +13,7 @@ describe("LoginPage", () => {
     vi.resetAllMocks();
     useAuthMock.mockReturnValue({
       state: { status: "guest" },
+      authenticate: vi.fn().mockResolvedValue(undefined),
       login: vi.fn().mockResolvedValue(undefined),
       registerAndLogin: vi.fn().mockResolvedValue(undefined),
       logout: vi.fn().mockResolvedValue(undefined),
@@ -33,15 +34,15 @@ describe("LoginPage", () => {
     expect(screen.getByText("Create account")).toBeInTheDocument();
   });
 
-  it("calls registerAndLogin in register mode", async () => {
+  it("calls authenticate with register intent in register mode", async () => {
     const user = userEvent.setup();
-    const loginMock = vi.fn().mockResolvedValue(undefined);
-    const registerAndLoginMock = vi.fn().mockResolvedValue(undefined);
+    const authenticateMock = vi.fn().mockResolvedValue(undefined);
 
     useAuthMock.mockReturnValue({
       state: { status: "guest" },
-      login: loginMock,
-      registerAndLogin: registerAndLoginMock,
+      authenticate: authenticateMock,
+      login: vi.fn().mockResolvedValue(undefined),
+      registerAndLogin: vi.fn().mockResolvedValue(undefined),
       logout: vi.fn().mockResolvedValue(undefined),
       refresh: vi.fn().mockResolvedValue(undefined),
     });
@@ -57,7 +58,10 @@ describe("LoginPage", () => {
     await user.type(screen.getByTestId("rnw-login-password"), "secret");
     await user.click(screen.getByTestId("rnw-login-submit"));
 
-    expect(registerAndLoginMock).toHaveBeenCalledWith("alice", "secret");
-    expect(loginMock).not.toHaveBeenCalled();
+    expect(authenticateMock).toHaveBeenCalledWith({
+      intent: "register",
+      username: "alice",
+      password: "secret",
+    });
   });
 });

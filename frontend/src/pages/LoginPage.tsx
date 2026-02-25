@@ -10,7 +10,7 @@ import { Text, View } from "../rnw/react-native";
 import { StyleSheet } from "../rnw/stylesheet";
 
 export function LoginPage() {
-  const { state, login, registerAndLogin } = useAuth();
+  const { state, authenticate } = useAuth();
   const nav = useNavigate();
 
   const [username, setUsername] = useState("");
@@ -29,11 +29,11 @@ export function LoginPage() {
     setError(null);
     setBusy(true);
     try {
-      if (mode === "register") {
-        await registerAndLogin(username, password);
-      } else {
-        await login(username, password);
-      }
+      await authenticate({
+        intent: mode === "register" ? "register" : "login",
+        username,
+        password,
+      });
       nav("/words", { replace: true });
     } catch (caughtError: unknown) {
       setError(caughtError instanceof ApiError ? caughtError : new ApiError(0, "Unexpected error"));

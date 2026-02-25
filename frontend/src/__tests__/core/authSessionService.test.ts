@@ -50,4 +50,36 @@ describe("AuthSessionService", () => {
     const service = new AuthSessionService(gateway);
     await expect(service.recoverFromUnauthorized()).resolves.toEqual({ status: "guest" });
   });
+
+  it("authenticates with login intent", async () => {
+    const gateway = createGatewayMock();
+    vi.mocked(gateway.me).mockResolvedValue({ userId: "u3", username: "charlie" });
+
+    const service = new AuthSessionService(gateway);
+    await expect(
+      service.authenticate({ intent: "login", username: "charlie", password: "secret" })
+    ).resolves.toEqual({
+      status: "authed",
+      me: { userId: "u3", username: "charlie" },
+    });
+
+    expect(gateway.login).toHaveBeenCalledWith("charlie", "secret");
+    expect(gateway.register).not.toHaveBeenCalled();
+  });
+
+  it("authenticates with register intent using register then login", async () => {
+    const gateway = createGatewayMock();
+    vi.mocked(gateway.me).mockResolvedValue({ userId: "u4", username: "dana" });
+
+    const service = new AuthSessionService(gateway);
+    await expect(
+      service.authenticate({ intent: "register", username: "dana", password: "secret" })
+    ).resolves.toEqual({
+      status: "authed",
+      me: { userId: "u4", username: "dana" },
+    });
+
+    expect(gateway.register).toHaveBeenCalledWith("dana", "secret");
+    expect(gateway.login).toHaveBeenCalledWith("dana", "secret");
+  });
 });

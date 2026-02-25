@@ -5,11 +5,29 @@ export type AuthStateSnapshot =
   | { status: "guest" }
   | { status: "authed"; me: MeResponse };
 
+export type AuthIntent = "login" | "register";
+
+export type AuthCommand = {
+  intent: AuthIntent;
+  username: string;
+  password: string;
+};
+
+type AuthCommandHandler = (username: string, password: string) => Promise<void>;
+
 export class AuthSessionService {
   private readonly authGateway: AuthGateway;
+  private readonly authCommandHandlers: Record<AuthIntent, AuthCommandHandler>;
 
   constructor(authGateway: AuthGateway) {
     this.authGateway = authGateway;
+    this.authCommandHandlers = {
+      login: (username, password) => this.authGateway.login(username, password),
+      register: async (username, password) => {
+        await this.authGateway.register(username, password);
+        await this.authGateway.login(username, password);
+      },
+    };
   }
 
   async initialize(): Promise<AuthStateSnapshot> {
@@ -32,15 +50,17 @@ export class AuthSessionService {
     return { status: "guest" };
   }
 
-  async login(username: string, password: string): Promise<AuthStateSnapshot> {
-    await this.authGateway.login(username, password);
+  async authenticate(command: AuthCommand): Promise<AuthStateSnapshot> {
+    await this.authCommandHandlers[command.intent](command.username, command.password);
     return this.refreshUserState();
   }
 
+  async login(username: string, password: string): Promise<AuthStateSnapshot> {
+    return this.authenticate({ intent: "login", username, password });
+  }
 
   async registerAndLogin(username: string, password: string): Promise<AuthStateSnapshot> {
-    await this.authGateway.register(username, password);
-    return this.login(username, password);
+    return this.authenticate({ intent: "register", username, password });
   }
 
   async logout(): Promise<AuthStateSnapshot> {

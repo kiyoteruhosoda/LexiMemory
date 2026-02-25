@@ -2,10 +2,25 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { tokenManager } from "../api/client";
 import { logger } from "../utils/logger";
 import { AuthContext, type AuthState } from "./context";
-import { AuthSessionService, type AuthStateSnapshot } from "../core/auth/authSessionService";
+import {
+  AuthSessionService,
+  type AuthCommand,
+  type AuthIntent,
+  type AuthStateSnapshot,
+} from "../core/auth/authSessionService";
 import { authGatewayAdapter } from "./authGatewayAdapter";
 
 const authSessionService = new AuthSessionService(authGatewayAdapter);
+
+const successLogMessages: Record<AuthIntent, string> = {
+  login: "User logged in successfully",
+  register: "User registered and logged in successfully",
+};
+
+const failureLogMessages: Record<AuthIntent, string> = {
+  login: "Login failed",
+  register: "Register and login failed",
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: "loading" });
@@ -64,32 +79,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [applyAuthState]);
 
-  const login = useCallback(
-    async (username: string, password: string) => {
+  const authenticate = useCallback(
+    async (command: AuthCommand) => {
       try {
-        const snapshot = await authSessionService.login(username, password);
+        const snapshot = await authSessionService.authenticate(command);
         applyAuthState(snapshot);
-        logger.info("User logged in successfully", { username });
+        logger.info(successLogMessages[command.intent], { username: command.username });
       } catch (error) {
-        logger.error("Login failed", { username, error });
+        logger.error(failureLogMessages[command.intent], { username: command.username, error });
         throw error;
       }
     },
     [applyAuthState]
   );
 
+  const login = useCallback(
+    async (username: string, password: string) => {
+      await authenticate({ intent: "login", username, password });
+    },
+    [authenticate]
+  );
+
   const registerAndLogin = useCallback(
     async (username: string, password: string) => {
-      try {
-        const snapshot = await authSessionService.registerAndLogin(username, password);
-        applyAuthState(snapshot);
-        logger.info("User registered and logged in successfully", { username });
-      } catch (error) {
-        logger.error("Register and login failed", { username, error });
-        throw error;
-      }
+      await authenticate({ intent: "register", username, password });
     },
-    [applyAuthState]
+    [authenticate]
   );
 
   const logout = useCallback(async () => {
@@ -107,6 +122,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void initialize();
   }, [initialize]);
 
-  const value = useMemo(() => ({ state, login, registerAndLogin, logout, refresh }), [state, login, registerAndLogin, logout, refresh]);
+  const value = useMemo(
+    () => ({ state, authenticate, login, registerAndLogin, logout, refresh }),
+    [state, authenticate, login, registerAndLogin, logout, refresh]
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

@@ -32,6 +32,7 @@ describe('SyncButton', () => {
 
     useAuthMock.mockReturnValue({
       state: { status: 'authed', me: { userId: 'test', username: 'test' } },
+      authenticate: vi.fn().mockResolvedValue(undefined),
       login: vi.fn().mockResolvedValue(undefined),
       registerAndLogin: vi.fn().mockResolvedValue(undefined),
       logout: vi.fn().mockResolvedValue(undefined),
