@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { studyApi } from "../api/study.offline";
+import { studyApplicationService } from "../study/studyApplication";
 import type { WordEntry, MemoryState, Rating } from "../api/types";
 import { FlashCard } from "../components/FlashCard";
 import SyncButton from "../components/SyncButton";
@@ -25,10 +25,8 @@ export function StudyPage() {
 
   const loadTags = useCallback(async () => {
     try {
-      const res = await studyApi.getTags();
-      if (res.ok) {
-        setAllTags(res.tags);
-      }
+      const tags = await studyApplicationService.getAllTags();
+      setAllTags(tags);
     } catch (e) {
       console.error("Failed to load tags:", e);
     }
@@ -37,13 +35,13 @@ export function StudyPage() {
   const loadNext = useCallback(async () => {
     setError(null);
     try {
-      const res = await studyApi.next(appliedTags);
-      if (!res.card) {
+      const card = await studyApplicationService.fetchNextCard(appliedTags);
+      if (!card) {
         setWord(null);
         setMemory(null);
       } else {
-        setWord(res.card.word);
-        setMemory(res.card.memory);
+        setWord(card.word);
+        setMemory(card.memory);
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to load");
@@ -69,7 +67,7 @@ export function StudyPage() {
 
   async function rate(rating: Rating) {
     if (!word) return;
-    await studyApi.grade(word.id, rating);
+    await studyApplicationService.gradeCard(word.id, rating);
     await loadNext();
   }
 

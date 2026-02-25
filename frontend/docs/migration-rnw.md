@@ -32,7 +32,10 @@
 - M2.3: `/words` 一覧テーブルを RNW List primitive (`RnwWordListTable`) へ置換（完了）
 - M2.4: `react-native` + `react-native-web` 導入と `react-native` alias 解決（完了）
 - M2.5: `/study` の tag filter toolbar を RNW primitives (`RnwTagFilterPanel`) へ置換（完了）
-- M3: `packages/core` 相当へのドメインロジック再配置
+- M3: `packages/core` 相当へのドメインロジック再配置（Storage Portを先行導入済み）
+- M3.1: `packages/ui` へRNW共通部品を抽出（`RnwSurfaceCard` を Loginへ適用）
+- M3.2: Word系ページを `core/word` application service + gateway adapter 経由へ整理
+- M3.3: Study/Examples ページを `core/study`, `core/examples` usecase + adapter 経由へ整理
 - M4: `apps/mobile`(Expo) 追加と共通UI再利用
 
 

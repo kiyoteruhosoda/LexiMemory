@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { wordsApi } from "../api/words.offline";
-import { studyApi } from "../api/study.offline";
+import { wordApplicationService } from "../word/wordApplication";
 import type { WordEntry } from "../api/types";
 import { WordForm } from "../components/WordForm";
 import { ConfirmModal } from "../components/Modal";
@@ -15,12 +14,13 @@ export function WordDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
 
+
   async function loadWord() {
     if (!id) return;
     setError(null);
     setBusy(true);
     try {
-      const found = await wordsApi.get(id);
+      const found = await wordApplicationService.getWord(id);
       if (!found) {
         setError("Word not found");
         return;
@@ -42,7 +42,7 @@ export function WordDetailPage() {
     if (!word) return;
     setError(null);
     try {
-      await wordsApi.update(word.id, draft);
+      await wordApplicationService.updateWord(word.id, draft);
       navigate("/words");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to update word");
@@ -54,7 +54,7 @@ export function WordDetailPage() {
     
     setError(null);
     try {
-      await wordsApi.delete(word.id);
+      await wordApplicationService.deleteWord(word.id);
       navigate("/words");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to delete word");
@@ -66,7 +66,7 @@ export function WordDetailPage() {
     
     setError(null);
     try {
-      await studyApi.resetMemory(word.id);
+      await wordApplicationService.resetWordMemory(word.id);
       setShowResetModal(false);
       alert("Memory level reset.");
     } catch (e: unknown) {

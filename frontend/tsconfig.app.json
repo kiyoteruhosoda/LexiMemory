@@ -15,7 +15,11 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "react-native": ["./node_modules/react-native-web"]
+      "react-native": ["./src/rnw/react-native.tsx"],
+      "@leximemory/core": ["./packages/core/src/index.ts"],
+      "@leximemory/core/*": ["./packages/core/src/*"],
+      "@leximemory/ui": ["./packages/ui/src/index.ts"],
+      "@leximemory/ui/*": ["./packages/ui/src/*"]
     },
     "strict": true,
     "noUnusedLocals": true,
@@ -24,5 +28,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src", "packages"]
 }
