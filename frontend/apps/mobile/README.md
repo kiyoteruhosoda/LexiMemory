@@ -22,6 +22,12 @@ The mobile app currently connects shared modules from:
 - `npm run ios --workspace @leximemory/apps-mobile`
 - `npm run web --workspace @leximemory/apps-mobile`
 
+## Runtime env
+
+- `EXPO_PUBLIC_MOBILE_STORAGE_RUNTIME=native-async|native-sqlite`
+- `EXPO_PUBLIC_API_BASE_URL=http://localhost:8000`
+- `EXPO_PUBLIC_ACCESS_TOKEN=<jwt access token>`
+- `EXPO_PUBLIC_CLIENT_ID=<optional mobile client id>`
 
 ## Phase D implemented use-cases
 
@@ -30,11 +36,18 @@ The mobile app currently connects shared modules from:
 - Study card review (`again/hard/good/easy`)
 - Sync status and manual sync trigger
 
+## Phase E hardening status
+
+- Composition root resolves persistence adapter at runtime (`native-async` / `native-sqlite`).
+- Mobile sync gateway supports backend `/api/vocab` contract.
+- Conflict handling supports both `fetch-server` and `force-local` strategies.
+- If sync env is missing, gateway falls back to local-only sync mode for prototype safety.
+
 Architecture notes:
 - Application services are resolved via `src/app/mobileCompositionRoot.ts`.
-- Infrastructure is polymorphic (`mobileWordGateway`, `mobileStudyGateway`, `mobileSyncGateway`) over a shared in-memory repository for Expo prototype validation.
-
+- Infrastructure remains polymorphic (`mobileWordGateway`, `mobileStudyGateway`, `mobileSyncGateway`) via `MobileLearningRepositoryPort`.
 
 ## Next production steps
 
-- See `../docs/mobile-production-hardening.md` for the Phase E hardening plan.
+- Add mobile E2E-like regression scenario (`create -> study -> sync`) and CI split job.
+- See `../docs/mobile-production-hardening.md` for details.

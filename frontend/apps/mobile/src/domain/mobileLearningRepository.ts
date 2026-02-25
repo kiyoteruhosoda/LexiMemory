@@ -2,7 +2,7 @@ import type { MemoryState, Rating, WordEntry } from "../../../../src/api/types";
 import type { WordDraft, WordListQuery, WordListResult } from "../../../../src/core/word/wordGateway";
 import type { StudyCard } from "../../../../src/core/study/studyGateway";
 import type { SyncResult, SyncStatus, SyncSuccess } from "../../../../src/core/sync/syncGateway";
-import type { ConflictResolution } from "../../../../src/db/types";
+import type { ConflictResolution, VocabFile } from "../../../../src/db/types";
 import type { StorageAdapter } from "../../../../src/core/storage";
 import type { MobileLearningRepositoryPort } from "./mobileLearningRepository.types";
 
@@ -180,6 +180,34 @@ export class MobileLearningRepository implements MobileLearningRepositoryPort {
     };
   }
 
+  exportVocabFile(): VocabFile {
+    return {
+      schemaVersion: 1,
+      words: this.words,
+      memory: Object.values(this.memoryMap),
+      updatedAt: nowIso(),
+    };
+  }
+
+  applyServerFile(file: VocabFile, serverRev: number, syncedAt: string): void {
+    const memoryMap = file.memory.reduce<Record<string, MemoryState>>((acc, state) => {
+      acc[state.wordId] = state;
+      return acc;
+    }, {});
+
+    this.words = file.words;
+    this.memoryMap = memoryMap;
+    this.serverRev = serverRev;
+    this.lastSyncAt = syncedAt;
+    this.dirty = false;
+  }
+
+  markSynced(serverRev: number, syncedAt: string): void {
+    this.serverRev = serverRev;
+    this.lastSyncAt = syncedAt;
+    this.dirty = false;
+  }
+
   sync(): SyncResult {
     this.serverRev += 1;
     this.lastSyncAt = nowIso();
@@ -327,6 +355,20 @@ export class PersistedMobileLearningRepository implements MobileLearningReposito
 
   getSyncStatus(): SyncStatus {
     return this.repository.getSyncStatus();
+  }
+
+  exportVocabFile(): VocabFile {
+    return this.repository.exportVocabFile();
+  }
+
+  applyServerFile(file: VocabFile, serverRev: number, syncedAt: string): void {
+    this.repository.applyServerFile(file, serverRev, syncedAt);
+    void this.persist();
+  }
+
+  markSynced(serverRev: number, syncedAt: string): void {
+    this.repository.markSynced(serverRev, syncedAt);
+    void this.persist();
   }
 
   sync(): SyncResult {

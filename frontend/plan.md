@@ -70,11 +70,11 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 9. [x] Expo 上で作成/編集ユースケースを動作させる。（`WordsScreen` で create/update を実装）
 10. [x] Expo 上で学習/同期ユースケースを動作させ、E2E相当の検証手順を整備する。（`StudyScreen` / `SyncScreen` と `expo config` smoke で検証）
 
-最終更新: 2026-02-25 (update-33)
+最終更新: 2026-02-25 (update-34)
 
 
 ### Phase E: 本番化ハードニング（Prototype -> Production）
 11. [x] `apps/mobile` の in-memory repository を永続化Repositoryへ置換し、AsyncStorage/SQLite runtime selector を composition root へ統合する。（`PersistedMobileLearningRepository` + `mobileStorageRuntime` を追加）
-12. [ ] Mobile Sync を実サーバー契約へ接続し、認証/409 conflict/force-local|fetch-server を Gateway 層で実装する。
+12. [x] Mobile Sync を実サーバー契約へ接続し、認証/409 conflict/force-local|fetch-server を Gateway 層で実装する。（`mobileSyncGateway` で `/api/vocab` 契約 + 409競合解決を実装）
 13. [ ] Mobile向けE2E相当の回帰テスト（create→study→sync）を追加し、CIジョブを分離する。
 14. [x] lockfile差分を最小化する運用（依存更新PR分離）を docs に明文化する。（`docs/mobile-production-hardening.md` に運用ルールを追加）

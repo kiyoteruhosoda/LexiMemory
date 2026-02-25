@@ -3,6 +3,7 @@ import type { WordDraft, WordListQuery, WordListResult } from "../../../../src/c
 import type { StudyCard } from "../../../../src/core/study/studyGateway";
 import type { SyncResult, SyncStatus, SyncSuccess } from "../../../../src/core/sync/syncGateway";
 import type { ConflictResolution } from "../../../../src/db/types";
+import type { VocabFile } from "../../../../src/db/types";
 
 export interface MobileLearningRepositoryPort {
   listWords(query: WordListQuery): WordListResult;
@@ -15,6 +16,9 @@ export interface MobileLearningRepositoryPort {
   nextCard(tags?: string[]): StudyCard | null;
   gradeCard(wordId: string, rating: Rating): MemoryState;
   getSyncStatus(): SyncStatus;
+  exportVocabFile(): VocabFile;
+  applyServerFile(file: VocabFile, serverRev: number, syncedAt: string): void;
+  markSynced(serverRev: number, syncedAt: string): void;
   sync(): SyncResult;
   resolveConflict(strategy: ConflictResolution): SyncSuccess;
 }
