@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { examplesApi } from "../api/examples.offline";
+import { examplesApplicationService } from "../examples/examplesApplication";
 import { TagFilterStorageService } from "../core/tagFilter/tagFilterStorageService";
 import type { ExampleTestItem } from "../api/types";
 import SyncButton from "../components/SyncButton";
@@ -131,8 +131,8 @@ export function ExamplesTestPage() {
 
   const loadTags = useCallback(async () => {
     try {
-      const res = await examplesApi.getTags();
-      setAllTags(res.tags);
+      const tags = await examplesApplicationService.getAllTags();
+      setAllTags(tags);
     } catch (e) {
       console.error("Failed to load tags:", e);
     }
@@ -145,20 +145,20 @@ export function ExamplesTestPage() {
     setShowAnswer(false);
     
     try {
-      const res = await examplesApi.next(appliedTags, lastExampleId);
-      if (!res.example) {
+      const nextExample = await examplesApplicationService.fetchNextExample(appliedTags, lastExampleId);
+      if (!nextExample) {
         setExample(null);
         setBlankedSentence("");
         setActualWordInSentence(null);
       } else {
-        setExample(res.example);
-        const { blanked, actualWord, found } = createBlankedSentence(res.example.en, res.example.word.headword);
+        setExample(nextExample);
+        const { blanked, actualWord, found } = createBlankedSentence(nextExample.en, nextExample.word.headword);
         if (!found) {
-          console.warn("Target word not found in sentence:", res.example.word.headword, res.example.en);
+          console.warn("Target word not found in sentence:", nextExample.word.headword, nextExample.en);
         }
         setBlankedSentence(blanked);
         setActualWordInSentence(actualWord);
-        setLastExampleId(res.example.id);
+        setLastExampleId(nextExample.id);
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to load");

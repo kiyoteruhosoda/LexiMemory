@@ -7,6 +7,7 @@ import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
 import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
 import { RnwPrimaryButton } from "../rnw/components/RnwPrimaryButton";
 import { RnwTextField } from "../rnw/components/RnwTextField";
+import { RnwSurfaceCard } from "@leximemory/ui";
 import { Text, View } from "../rnw/react-native";
 import { StyleSheet } from "../rnw/stylesheet";
 
@@ -85,7 +86,7 @@ export function LoginPage() {
 
   return (
     <View style={styles.pageWrap}>
-      <View style={styles.card} testID="rnw-login-card">
+      <RnwSurfaceCard testID="rnw-login-card">
         <View style={styles.headingWrap}>
           <h1 style={styles.heading}>
             <i className="fa-solid fa-lock" aria-hidden="true" style={styles.headingIcon} />
@@ -145,7 +146,7 @@ export function LoginPage() {
             testID="rnw-login-toggle-mode"
           />
         </form>
-      </View>
+      </RnwSurfaceCard>
     </View>
   );
 }
@@ -155,19 +156,6 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     paddingInline: 8,
-  },
-  card: {
-    width: "100%",
-    maxWidth: 520,
-    borderColor: "#dee2e6",
-    borderWidth: 1,
-    borderRadius: 8,
-    backgroundColor: "#ffffff",
-    padding: 24,
-    marginInline: "auto",
-    boxShadow: "0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)",
-    display: "flex",
-    gap: 12,
   },
   headingWrap: {
     display: "flex",

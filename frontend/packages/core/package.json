@@ -1,0 +1,10 @@
+{
+  "name": "@leximemory/core",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./storage": "./src/storage/index.ts"
+  }
+}

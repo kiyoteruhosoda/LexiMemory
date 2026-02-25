@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { wordsApi } from "../api/words.offline";
-import { ioApi } from "../api/io.offline";
+import { wordApplicationService } from "../word/wordApplication";
 import type { WordEntry, MemoryState } from "../api/types";
 import { ImportModal } from "../components/ImportModal";
 import SyncButton from "../components/SyncButton";
@@ -23,12 +22,13 @@ export function WordListPage() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
 
+
   async function reload() {
     setError(null);
     setBusy(true);
     try {
-      const result = await wordsApi.list(q);
-      setItems(result.words);
+      const result = await wordApplicationService.listWords({ q });
+      setItems(result.items);
       setMemoryMap(result.memoryMap);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to load");
@@ -45,7 +45,7 @@ export function WordListPage() {
     setError(null);
     setBusy(true);
     try {
-      const data = await ioApi.export();
+      const data = await wordApplicationService.exportSnapshot();
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
