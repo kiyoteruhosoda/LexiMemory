@@ -39,3 +39,10 @@ Move the Expo prototype from a validation setup to a production-ready runtime wh
 ### WP-4 Operations and traceability
 - Add structured logs around adapter selection/fallback/migration version.
 - Add lockfile operation guideline for workspace dependency updates.
+
+## Lockfile operation guideline
+
+- Keep dependency update PRs separate from feature PRs whenever possible.
+- Use workspace-scoped install/update commands to avoid unrelated lockfile churn.
+- If a feature PR requires dependency changes, include only direct dependencies required for that feature and document why each package is necessary.
+- Regenerate lockfiles once per PR and avoid reordering caused by mixed npm client versions (pin Node/npm versions in CI and local dev containers).

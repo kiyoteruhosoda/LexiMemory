@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
-import { mobileCompositionRoot } from "../app/mobileCompositionRoot";
+import type { MobileSyncService } from "../app/mobileServices";
 
-export function SyncScreen() {
-  const syncService = mobileCompositionRoot.syncService;
+export function SyncScreen({ syncService }: { syncService: MobileSyncService }) {
   const [statusMessage, setStatusMessage] = useState("Loading sync status...");
   const [rev, setRev] = useState(0);
 

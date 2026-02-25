@@ -21,6 +21,10 @@
 - `npm run test:e2e:ci`: Chromium/Firefox 両方の visual regression をCI相当で実行
 - `npm run test:e2e:rnw-poc`: RNW PoCコンポーネントのvisual回帰のみを実行
 - `npm run dev --workspace @leximemory/apps-web`: apps/webスコープから既存Web開発サーバーを起動
+- `npm run start --workspace @leximemory/apps-mobile`: Expo mobile dev server
+- `npm run android --workspace @leximemory/apps-mobile`: Expo Android launcher
+- `npm run ios --workspace @leximemory/apps-mobile`: Expo iOS launcher
+- `EXPO_PUBLIC_MOBILE_STORAGE_RUNTIME=native-async|native-sqlite` で mobile persistence adapter を切替
 
 ## ルーティング方式
 

@@ -1,7 +1,7 @@
 import type { StudyGateway } from "../../../../src/core/study/studyGateway";
-import { MobileLearningRepository } from "../domain/mobileLearningRepository";
+import type { MobileLearningRepositoryPort } from "../domain/mobileLearningRepository.types";
 
-export function createMobileStudyGateway(repository: MobileLearningRepository): StudyGateway {
+export function createMobileStudyGateway(repository: MobileLearningRepositoryPort): StudyGateway {
   return {
     async getTags() {
       return repository.listTags();

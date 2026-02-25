@@ -1,7 +1,7 @@
 import type { SyncGateway } from "../../../../src/core/sync/syncGateway";
-import { MobileLearningRepository } from "../domain/mobileLearningRepository";
+import type { MobileLearningRepositoryPort } from "../domain/mobileLearningRepository.types";
 
-export function createMobileSyncGateway(repository: MobileLearningRepository): SyncGateway {
+export function createMobileSyncGateway(repository: MobileLearningRepositoryPort): SyncGateway {
   return {
     async getSyncStatus() {
       return repository.getSyncStatus();

@@ -3,8 +3,11 @@ import type { WordDraft, WordListQuery, WordListResult } from "../../../../src/c
 import type { StudyCard } from "../../../../src/core/study/studyGateway";
 import type { SyncResult, SyncStatus, SyncSuccess } from "../../../../src/core/sync/syncGateway";
 import type { ConflictResolution } from "../../../../src/db/types";
+import type { StorageAdapter } from "../../../../src/core/storage";
+import type { MobileLearningRepositoryPort } from "./mobileLearningRepository.types";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+const MOBILE_REPOSITORY_STORAGE_KEY = "mobile.learning-repository.v1";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -27,7 +30,15 @@ function nextIntervalByRating(rating: Rating, current: number): number {
   }
 }
 
-export class MobileLearningRepository {
+interface MobileLearningRepositorySnapshot {
+  words: WordEntry[];
+  memoryMap: Record<string, MemoryState>;
+  serverRev: number;
+  lastSyncAt: string | null;
+  dirty: boolean;
+}
+
+export class MobileLearningRepository implements MobileLearningRepositoryPort {
   private words: WordEntry[] = [];
   private memoryMap: Record<string, MemoryState> = {};
   private serverRev = 1;
@@ -193,6 +204,24 @@ export class MobileLearningRepository {
     };
   }
 
+  exportSnapshot(): MobileLearningRepositorySnapshot {
+    return {
+      words: this.words,
+      memoryMap: this.memoryMap,
+      serverRev: this.serverRev,
+      lastSyncAt: this.lastSyncAt,
+      dirty: this.dirty,
+    };
+  }
+
+  importSnapshot(snapshot: MobileLearningRepositorySnapshot): void {
+    this.words = snapshot.words;
+    this.memoryMap = snapshot.memoryMap;
+    this.serverRev = snapshot.serverRev;
+    this.lastSyncAt = snapshot.lastSyncAt;
+    this.dirty = snapshot.dirty;
+  }
+
   private markDirty(): void {
     this.dirty = true;
   }
@@ -233,5 +262,102 @@ export class MobileLearningRepository {
     this.memoryMap[first.id] = this.createMemory(first.id);
     this.memoryMap[second.id] = this.createMemory(second.id);
     this.dirty = false;
+  }
+}
+
+export class PersistedMobileLearningRepository implements MobileLearningRepositoryPort {
+  private readonly repository: MobileLearningRepository;
+  private readonly storage: StorageAdapter;
+
+  private constructor(repository: MobileLearningRepository, storage: StorageAdapter) {
+    this.repository = repository;
+    this.storage = storage;
+  }
+
+  static async create(storage: StorageAdapter): Promise<PersistedMobileLearningRepository> {
+    const repository = new MobileLearningRepository();
+    const instance = new PersistedMobileLearningRepository(repository, storage);
+    await instance.hydrate();
+    return instance;
+  }
+
+  listWords(query: WordListQuery): WordListResult {
+    return this.repository.listWords(query);
+  }
+
+  getWord(wordId: string): WordEntry | null {
+    return this.repository.getWord(wordId);
+  }
+
+  createWord(draft: WordDraft): WordEntry {
+    const created = this.repository.createWord(draft);
+    void this.persist();
+    return created;
+  }
+
+  updateWord(wordId: string, draft: WordDraft): WordEntry {
+    const updated = this.repository.updateWord(wordId, draft);
+    void this.persist();
+    return updated;
+  }
+
+  deleteWord(wordId: string): void {
+    this.repository.deleteWord(wordId);
+    void this.persist();
+  }
+
+  resetMemory(wordId: string): void {
+    this.repository.resetMemory(wordId);
+    void this.persist();
+  }
+
+  listTags(): string[] {
+    return this.repository.listTags();
+  }
+
+  nextCard(tags?: string[]): StudyCard | null {
+    return this.repository.nextCard(tags);
+  }
+
+  gradeCard(wordId: string, rating: Rating): MemoryState {
+    const state = this.repository.gradeCard(wordId, rating);
+    void this.persist();
+    return state;
+  }
+
+  getSyncStatus(): SyncStatus {
+    return this.repository.getSyncStatus();
+  }
+
+  sync(): SyncResult {
+    const result = this.repository.sync();
+    void this.persist();
+    return result;
+  }
+
+  resolveConflict(strategy: ConflictResolution): SyncSuccess {
+    const result = this.repository.resolveConflict(strategy);
+    void this.persist();
+    return result;
+  }
+
+  private async hydrate(): Promise<void> {
+    try {
+      const serialized = await this.storage.get(MOBILE_REPOSITORY_STORAGE_KEY);
+      if (!serialized) {
+        await this.persist();
+        return;
+      }
+
+      const snapshot = JSON.parse(serialized) as MobileLearningRepositorySnapshot;
+      this.repository.importSnapshot(snapshot);
+    } catch {
+      await this.persist();
+    }
+  }
+
+  private async persist(): Promise<void> {
+    const serialized = JSON.stringify(this.repository.exportSnapshot());
+    await this.storage.set(MOBILE_REPOSITORY_STORAGE_KEY, serialized);
   }
 }

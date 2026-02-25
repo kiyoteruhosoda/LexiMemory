@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import type { Pos } from "../../../../src/api/types";
 import type { WordDraft } from "../../../../src/core/word/wordGateway";
-import { mobileCompositionRoot } from "../app/mobileCompositionRoot";
+import type { MobileWordService } from "../app/mobileServices";
 
 const posOptions: Pos[] = ["noun", "verb", "adj", "adv", "prep", "conj", "pron", "det", "interj", "other"];
 
@@ -16,8 +16,7 @@ const emptyDraft: WordDraft = {
   memo: "",
 };
 
-export function WordsScreen() {
-  const service = mobileCompositionRoot.wordService;
+export function WordsScreen({ service }: { service: MobileWordService }) {
   const [query, setQuery] = useState("");
   const [selectedPos, setSelectedPos] = useState<Pos | undefined>(undefined);
   const [draft, setDraft] = useState<WordDraft>(emptyDraft);

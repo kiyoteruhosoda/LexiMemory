@@ -1,8 +1,8 @@
 import type { WordGateway } from "../../../../src/core/word/wordGateway";
 import type { AppData } from "../../../../src/api/types";
-import { MobileLearningRepository } from "../domain/mobileLearningRepository";
+import type { MobileLearningRepositoryPort } from "../domain/mobileLearningRepository.types";
 
-export function createMobileWordGateway(repository: MobileLearningRepository): WordGateway {
+export function createMobileWordGateway(repository: MobileLearningRepositoryPort): WordGateway {
   return {
     async list(query) {
       return repository.listWords(query);
