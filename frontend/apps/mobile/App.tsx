@@ -1,32 +1,59 @@
-import { useEffect, useMemo, useState } from "react";
-import { SafeAreaView, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 import { RnwPageHeader, RnwSurfaceCard } from "../../packages/ui/src";
-import { createUnimplementedStoragePort } from "../../packages/core/src/storage";
+import { WordsScreen } from "./src/screens/WordsScreen";
+import { StudyScreen } from "./src/screens/StudyScreen";
+import { SyncScreen } from "./src/screens/SyncScreen";
+
+type MobileRoute = "words" | "study" | "sync";
 
 export default function App() {
-  const storagePort = useMemo(() => createUnimplementedStoragePort(), []);
-  const [statusMessage, setStatusMessage] = useState("Bootstrapping mobile app...");
+  const [route, setRoute] = useState<MobileRoute>("words");
 
-  useEffect(() => {
-    void (async () => {
-      try {
-        await storagePort.keys();
-        setStatusMessage("Storage port is available.");
-      } catch {
-        setStatusMessage("Storage port is connected. Provide runtime adapter in composition root.");
-      }
-    })();
-  }, [storagePort]);
+  const routeContent = useMemo(() => {
+    if (route === "study") {
+      return <StudyScreen />;
+    }
+
+    if (route === "sync") {
+      return <SyncScreen />;
+    }
+
+    return <WordsScreen />;
+  }, [route]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f9fa", padding: 16 }}>
-      <RnwSurfaceCard>
-        <RnwPageHeader title="LexiMemory Mobile" />
-        <View style={{ display: "flex", gap: 8 }}>
-          <Text>Expo scaffold is now runnable.</Text>
-          <Text>{statusMessage}</Text>
-        </View>
-      </RnwSurfaceCard>
+      <ScrollView contentContainerStyle={{ gap: 12, paddingBottom: 24 }}>
+        <RnwSurfaceCard>
+          <RnwPageHeader title="LexiMemory Mobile" />
+          <Text>Phase D prototype: words / study / sync use-cases on Expo.</Text>
+          <View style={{ display: "flex", flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+            <TabButton label="Words" active={route === "words"} onPress={() => setRoute("words")} />
+            <TabButton label="Study" active={route === "study"} onPress={() => setRoute("study")} />
+            <TabButton label="Sync" active={route === "sync"} onPress={() => setRoute("sync")} />
+          </View>
+          {routeContent}
+        </RnwSurfaceCard>
+      </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function TabButton({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        borderWidth: 1,
+        borderColor: active ? "#0d6efd" : "#adb5bd",
+        backgroundColor: active ? "#e7f1ff" : "#fff",
+        borderRadius: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+      }}
+    >
+      <Text style={{ fontWeight: "600" }}>{label}</Text>
+    </Pressable>
   );
 }

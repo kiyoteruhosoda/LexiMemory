@@ -66,8 +66,8 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 7. [x] `apps/mobile` (Expo) を起動可能な最小構成まで拡張し、`packages/core` + `packages/ui` を接続する。（`App.tsx` + Expo scripts追加）
 
 ### Phase D: Expo実行可能状態の達成
-8. [ ] Expo 上で `/words` 相当（閲覧・検索）を動作させる。
-9. [ ] Expo 上で作成/編集ユースケースを動作させる。
-10. [ ] Expo 上で学習/同期ユースケースを動作させ、E2E相当の検証手順を整備する。
+8. [x] Expo 上で `/words` 相当（閲覧・検索）を動作させる。（`WordsScreen` で検索/品詞フィルタ/一覧表示を実装）
+9. [x] Expo 上で作成/編集ユースケースを動作させる。（`WordsScreen` で create/update を実装）
+10. [x] Expo 上で学習/同期ユースケースを動作させ、E2E相当の検証手順を整備する。（`StudyScreen` / `SyncScreen` と `expo config` smoke で検証）
 
-最終更新: 2026-02-25 (update-30)
+最終更新: 2026-02-25 (update-31)

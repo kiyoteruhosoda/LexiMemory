@@ -1,0 +1,35 @@
+import type { WordGateway } from "../../../../src/core/word/wordGateway";
+import type { AppData } from "../../../../src/api/types";
+import { MobileLearningRepository } from "../domain/mobileLearningRepository";
+
+export function createMobileWordGateway(repository: MobileLearningRepository): WordGateway {
+  return {
+    async list(query) {
+      return repository.listWords(query);
+    },
+    async get(wordId) {
+      return repository.getWord(wordId);
+    },
+    async create(draft) {
+      return repository.createWord(draft);
+    },
+    async update(wordId, draft) {
+      return repository.updateWord(wordId, draft);
+    },
+    async delete(wordId) {
+      repository.deleteWord(wordId);
+    },
+    async resetMemory(wordId) {
+      repository.resetMemory(wordId);
+    },
+    async exportWords(): Promise<AppData> {
+      const listed = repository.listWords({});
+      return {
+        schemaVersion: 1,
+        exportedAt: new Date().toISOString(),
+        words: listed.words,
+        memory: Object.values(listed.memoryMap),
+      };
+    },
+  };
+}
