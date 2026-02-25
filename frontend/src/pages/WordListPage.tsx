@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { wordApplicationService } from "../word/wordApplication";
 import type { WordEntry, MemoryState } from "../api/types";
-import { ImportModal } from "../components/ImportModal";
+import { RnwImportDialog } from "../rnw/components/RnwImportDialog";
 import SyncButton from "../components/SyncButton";
 import { backupExportService } from "../io/backupExportApplication";
 import { RnwPrimaryButton } from "../rnw/components/RnwPrimaryButton";
@@ -63,7 +63,7 @@ export function WordListPage() {
   return (
     <div className="vstack gap-3" data-testid="word-list-page-ready">
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <div className="d-flex gap-2 align-items-center flex-wrap">
+        <div className="d-flex gap-2 align-items-center flex-wrap" data-testid="rnw-word-list-action-row">
           <RnwPlatformBadge />
           <RnwPrimaryButton
             label="Add"
@@ -150,7 +150,7 @@ export function WordListPage() {
         />
       )}
 
-      <ImportModal
+      <RnwImportDialog
         show={showImportModal}
         onClose={() => setShowImportModal(false)}
         onSuccess={handleImportSuccess}

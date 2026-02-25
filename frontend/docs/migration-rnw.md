@@ -32,6 +32,9 @@
 - M2.3: `/words` 一覧テーブルを RNW List primitive (`RnwWordListTable`) へ置換（完了）
 - M2.4: `react-native` + `react-native-web` 導入と `react-native` alias 解決（完了）
 - M2.5: `/study` の tag filter toolbar を RNW primitives (`RnwTagFilterPanel`) へ置換（完了）
+- M2.6: RNW PoCのcomponent-level visual regressionを追加（`/words` action row screenshot 固定）（完了）
+- M2.7: visual assertionを `visualAssertion` に共通化し、page/locator screenshot をポリモーフィック実行（完了）
+- M2.8: smoke test にRNW action row遷移シナリオを追加（完了）
 - M3: `packages/core` 相当へのドメインロジック再配置（Storage Portを先行導入済み）
 - M3.1: `packages/ui` へRNW共通部品を抽出（`RnwSurfaceCard` を Loginへ適用）
 - M3.2: Word系ページを `core/word` application service + gateway adapter 経由へ整理
@@ -51,6 +54,8 @@
 - M3.20: `webSpeechGateway` / `noopSpeechGateway` を追加し、実行環境ごとの音声実装をポリモーフィックに切替（完了）
 - M3.21: `backupExportService` + `fileDownloadGateway` を導入し、WordList exportロジックをUIから分離（完了）
 - M3.22: `browserFileDownloadGateway` と `systemUtcClock` を追加し、I/Oと時刻依存をポート注入化（完了）
+- M3.23: `apps/web` / `apps/mobile` のscaffoldを追加し、モノレポ移行シームを作成（完了）
+- M3.24: Storage Portに `native-async` / `native-sqlite` adapter factory を追加（完了）
 - M3.15: `exampleSentencePolicy` を導入し、Examplesの文処理ロジックをUIから分離（完了）
 - M3.13: `useTagFilterState` hook を導入し、Study/Examples のタグ状態管理を再利用化（完了）
 - M3.11: `WordDetailPage` の destructive actions を `RnwActionGroup` へ統合（完了）

@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "apps/*"
   ],
   "scripts": {
     "dev": "vite",
@@ -18,8 +19,12 @@
     "test:e2e:smoke": "playwright test e2e/specs/smoke.spec.ts",
     "test:e2e:update": "playwright test --update-snapshots",
     "typecheck": "tsc -b",
+    "test:ci": "npm run lint && npm run typecheck && npm run test -- --run && npm run build",
+    "test:e2e:ci": "RUN_VISUAL_REGRESSION=1 playwright test --project=chromium --project=firefox",
     "test:e2e:firefox": "playwright test --project=firefox",
-    "test:e2e:visual": "RUN_VISUAL_REGRESSION=1 playwright test e2e/specs/ui-regression.spec.ts"
+    "test:e2e:visual": "RUN_VISUAL_REGRESSION=1 playwright test e2e/specs/ui-regression.spec.ts",
+    "test:e2e:rnw-poc": "RUN_VISUAL_REGRESSION=1 playwright test e2e/specs/rnw-poc.spec.ts",
+    "test:e2e:visual:update": "RUN_VISUAL_REGRESSION=1 playwright test e2e/specs/ui-regression.spec.ts --update-snapshots"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",

@@ -1,0 +1,9 @@
+{
+  "name": "@leximemory/apps-mobile",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "start": "echo \"Expo scaffold pending dependency install\"",
+    "test": "echo \"Mobile tests will be added in mobile migration phase\""
+  }
+}

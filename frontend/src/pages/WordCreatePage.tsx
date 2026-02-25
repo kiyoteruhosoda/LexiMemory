@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { wordApplicationService } from "../word/wordApplication";
 import type { WordEntry } from "../api/types";
-import { WordForm } from "../components/WordForm";
+import { RnwWordForm } from "../rnw/components/RnwWordForm";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
 import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
 import { RnwPageHeader, RnwPanelCard } from "@leximemory/ui";
@@ -47,7 +47,7 @@ export function WordCreatePage() {
       ) : null}
 
       <RnwPanelCard testID="rnw-word-create-form-panel">
-        <WordForm
+        <RnwWordForm
           onSave={handleCreate}
           onCancel={() => navigate("/words")}
         />
