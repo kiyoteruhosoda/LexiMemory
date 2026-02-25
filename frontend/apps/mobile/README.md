@@ -33,3 +33,8 @@ The mobile app currently connects shared modules from:
 Architecture notes:
 - Application services are resolved via `src/app/mobileCompositionRoot.ts`.
 - Infrastructure is polymorphic (`mobileWordGateway`, `mobileStudyGateway`, `mobileSyncGateway`) over a shared in-memory repository for Expo prototype validation.
+
+
+## Next production steps
+
+- See `../docs/mobile-production-hardening.md` for the Phase E hardening plan.

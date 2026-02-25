@@ -101,3 +101,8 @@
 - `npm run build --workspace @leximemory/apps-web`
 - `npm run typecheck --workspace @leximemory/apps-web`
 - `npm run start --workspace @leximemory/apps-mobile`
+
+
+## Phase E (prototype hardening)
+
+- Mobile production hardening roadmap: `docs/mobile-production-hardening.md`

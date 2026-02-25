@@ -46,7 +46,7 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 - [~] ドメインロジックが `core` へ集約され UI 層はユースケース呼び出しのみ（Sync横断処理の最終移送が継続）
 - [~] 永続化が Port/Adapter 経由で Web/Mobile の差し替え可能（adapter骨格は完了、実体注入が継続）
 - [x] Playwright visual regression が CI 上で安定運用（workflow + local/CI command を固定）
-- [ ] Expo モバイルで主要ユースケース（閲覧・作成・学習・同期）が動作
+- [~] Expo モバイルで主要ユースケース（閲覧・作成・学習・同期）が動作（Phase D prototype は完了。永続化/実サーバー連携/回帰テストの本番化は Phase E で継続）
 
 ---
 
@@ -70,4 +70,11 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 9. [x] Expo 上で作成/編集ユースケースを動作させる。（`WordsScreen` で create/update を実装）
 10. [x] Expo 上で学習/同期ユースケースを動作させ、E2E相当の検証手順を整備する。（`StudyScreen` / `SyncScreen` と `expo config` smoke で検証）
 
-最終更新: 2026-02-25 (update-31)
+最終更新: 2026-02-25 (update-32)
+
+
+### Phase E: 本番化ハードニング（Prototype -> Production）
+11. [ ] `apps/mobile` の in-memory repository を永続化Repositoryへ置換し、AsyncStorage/SQLite runtime selector を composition root へ統合する。
+12. [ ] Mobile Sync を実サーバー契約へ接続し、認証/409 conflict/force-local|fetch-server を Gateway 層で実装する。
+13. [ ] Mobile向けE2E相当の回帰テスト（create→study→sync）を追加し、CIジョブを分離する。
+14. [ ] lockfile差分を最小化する運用（依存更新PR分離）を docs に明文化する。
