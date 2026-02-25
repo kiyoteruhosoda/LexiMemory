@@ -58,7 +58,7 @@ describe('StudyPage', () => {
     );
 
     await waitFor(() => {
-      expect(screen.getByText('Study Complete')).toBeInTheDocument();
+      expect(screen.getByText(/Study complete\./i)).toBeInTheDocument();
     });
   });
 

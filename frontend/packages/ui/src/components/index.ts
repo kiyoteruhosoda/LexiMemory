@@ -8,3 +8,8 @@ export { RnwDangerButton } from "./RnwDangerButton";
 export type { RnwDangerButtonProps } from "./RnwDangerButton";
 export { RnwWarningButton } from "./RnwWarningButton";
 export type { RnwWarningButtonProps } from "./RnwWarningButton";
+
+export { RnwActionBar } from "./RnwActionBar";
+export type { RnwActionBarProps } from "./RnwActionBar";
+export { RnwActionGroup } from "./RnwActionGroup";
+export type { RnwActionGroupProps } from "./RnwActionGroup";

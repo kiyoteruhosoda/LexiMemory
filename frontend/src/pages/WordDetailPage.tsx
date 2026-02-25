@@ -6,13 +6,14 @@ import { WordForm } from "../components/WordForm";
 import { ConfirmModal } from "../components/Modal";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
 import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
-import { RnwDangerButton, RnwPageHeader, RnwPanelCard, RnwWarningButton } from "@leximemory/ui";
+import { RnwActionGroup, RnwDangerButton, RnwPageHeader, RnwPanelCard, RnwWarningButton } from "@leximemory/ui";
 
 export function WordDetailPage() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [word, setWord] = useState<WordEntry | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -21,6 +22,7 @@ export function WordDetailPage() {
   async function loadWord() {
     if (!id) return;
     setError(null);
+    setInfoMessage(null);
     setBusy(true);
     try {
       const found = await wordApplicationService.getWord(id);
@@ -44,6 +46,7 @@ export function WordDetailPage() {
   async function handleUpdate(draft: Omit<WordEntry, "id" | "createdAt" | "updatedAt">) {
     if (!word) return;
     setError(null);
+    setInfoMessage(null);
     try {
       await wordApplicationService.updateWord(word.id, draft);
       navigate("/words");
@@ -56,6 +59,7 @@ export function WordDetailPage() {
     if (!word) return;
     
     setError(null);
+    setInfoMessage(null);
     try {
       await wordApplicationService.deleteWord(word.id);
       navigate("/words");
@@ -68,10 +72,11 @@ export function WordDetailPage() {
     if (!word) return;
     
     setError(null);
+    setInfoMessage(null);
     try {
       await wordApplicationService.resetWordMemory(word.id);
       setShowResetModal(false);
-      alert("Memory level reset.");
+      setInfoMessage("Memory level has been reset.");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to reset memory");
     }
@@ -79,10 +84,12 @@ export function WordDetailPage() {
 
   if (busy) {
     return (
-      <div className="text-center p-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
+      <div className="vstack gap-3" data-testid="word-detail-page-ready">
+        <RnwInlineNotice
+          tone="info"
+          message="Loading word details..."
+          icon={<i className="fa-solid fa-spinner" aria-hidden="true" />}
+        />
       </div>
     );
   }
@@ -131,6 +138,14 @@ export function WordDetailPage() {
         />
       ) : null}
 
+      {infoMessage ? (
+        <RnwInlineNotice
+          tone="info"
+          message={infoMessage}
+          icon={<i className="fa-solid fa-circle-info" aria-hidden="true" />}
+        />
+      ) : null}
+
       <RnwPanelCard testID="rnw-word-detail-form-panel">
         <WordForm
           initial={word}
@@ -139,7 +154,7 @@ export function WordDetailPage() {
         />
       </RnwPanelCard>
 
-      <div className="d-flex gap-2 flex-wrap">
+      <RnwActionGroup testID="rnw-word-detail-action-group">
         <RnwWarningButton
           label="Reset Memory Level"
           onPress={() => setShowResetModal(true)}
@@ -152,7 +167,7 @@ export function WordDetailPage() {
           icon={<i className="fa-solid fa-trash" aria-hidden="true" />}
           testID="rnw-word-detail-delete"
         />
-      </div>
+      </RnwActionGroup>
 
       <ConfirmModal
         show={showDeleteModal}

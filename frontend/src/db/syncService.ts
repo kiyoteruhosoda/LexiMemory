@@ -22,10 +22,13 @@ import {
 } from "./indexeddb";
 import { api } from "../api/client";
 import { storage } from "../core/storage";
+import { SystemUtcClock, VocabBackupService } from "../core/sync/vocabBackupService";
 
 /**
  * Retry configuration
  */
+const vocabBackupService = new VocabBackupService(storage, new SystemUtcClock());
+
 const RETRY_CONFIG = {
   maxRetries: 3,
   initialDelayMs: 1000,
@@ -294,25 +297,11 @@ export async function resolveConflict(
 }
 
 /**
- * Backup local file to localStorage (simple backup)
+ * Backup local vocab snapshot through storage adapter
  */
 async function backupLocalFile(file: VocabFile): Promise<void> {
-  const timestamp = new Date().toISOString();
-  const backupKey = `vocab_backup_${timestamp}`;
-  
   try {
-    await storage.set(backupKey, JSON.stringify(file));
-    
-    // Keep only last 5 backups
-    const backupKeys = (await storage.keys()).filter((k) =>
-      k.startsWith("vocab_backup_")
-    );
-    if (backupKeys.length > 5) {
-      backupKeys.sort();
-      for (let i = 0; i < backupKeys.length - 5; i++) {
-        await storage.remove(backupKeys[i]);
-      }
-    }
+    await vocabBackupService.backup(file);
   } catch (error) {
     console.error("Failed to backup local file:", error);
   }
