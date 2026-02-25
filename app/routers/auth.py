@@ -11,6 +11,7 @@ from ..models import RegisterRequest, LoginRequest, MeResponse
 from ..services import register_user, delete_user, find_user_by_id
 from ..deps import require_auth, get_request_lang
 from ..i18n import get_message
+from ..domain.exceptions import RefreshTokenReusedError
 from ..settings import settings
 from .. import storage
 
@@ -285,23 +286,20 @@ async def refresh(
             "expires_in": expires_in
         }
         
-    except Exception as e:
-        # Handle replay attack
-        if str(e) == "REFRESH_REUSED":
-            logger.error("Refresh token replay detected")
-            # Clear cookie
-            response.delete_cookie(REFRESH_COOKIE_NAME, path="/")
-            raise HTTPException(
-                status_code=401,
-                detail={
-                    "error": {
-                        "error_code": "REFRESH_REUSED",
-                        "message": get_message("auth.refresh_reused", lang),
-                        "message_key": "auth.refresh_reused"
-                    }
+    except RefreshTokenReusedError:
+        logger.error("Refresh token replay detected")
+        # Clear cookie
+        response.delete_cookie(REFRESH_COOKIE_NAME, path="/")
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "error": {
+                    "error_code": "REFRESH_REUSED",
+                    "message": get_message("auth.refresh_reused", lang),
+                    "message_key": "auth.refresh_reused"
                 }
-            )
-        raise
+            }
+        )
 
 
 @router.post(

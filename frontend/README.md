@@ -110,4 +110,4 @@
 
 ## Phase E (prototype hardening)
 
-- Mobile production hardening roadmap: `docs/mobile-production-hardening.md`
+- Mobile production hardening roadmap: `plan.md` (Phase E section)

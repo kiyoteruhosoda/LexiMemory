@@ -52,6 +52,15 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 
 ## 残タスク（未実施のみ・実施順）
 
+## 依存更新・lockfile運用ルール（Phase E）
+
+- 依存更新PRと機能PRは可能な限り分離する。
+- workspace scoped コマンド（`--workspace`）を優先し、無関係な lockfile churn を避ける。
+- 機能PRで依存変更が必要な場合は、直接依存のみ追加し必要性をPR本文に明記する。
+- lockfile再生成は原則1PRあたり1回に留め、Node/npm バージョン差分による並び替えを回避する。
+
+
+
 ### Phase A: DDD境界の仕上げ
 1. [x] Sync 関連ユースケースを `src/core` へ完全移送し、UI からの直接分岐ロジックを排除する。（`SyncOrchestrationService` で pending/auth/offline 分岐を集約）
 2. [x] `apps/web` 側の composition root を整理し、Application Service / Port 依存の注入責務を1箇所に集約する。（`src/app/compositionRoot.ts` を追加）
@@ -77,4 +86,4 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 11. [x] `apps/mobile` の in-memory repository を永続化Repositoryへ置換し、AsyncStorage/SQLite runtime selector を composition root へ統合する。（`PersistedMobileLearningRepository` + `mobileStorageRuntime` を追加）
 12. [x] Mobile Sync を実サーバー契約へ接続し、認証/409 conflict/force-local|fetch-server を Gateway 層で実装する。（`mobileSyncGateway` で `/api/vocab` 契約 + 409競合解決を実装）
 13. [x] Mobile向けE2E相当の回帰テスト（create→study→sync）を追加し、CIジョブを分離する。（`mobileRegressionFlow.test.ts` + `mobile-regression` workflow job）
-14. [x] lockfile差分を最小化する運用（依存更新PR分離）を docs に明文化する。（`docs/mobile-production-hardening.md` に運用ルールを追加）
+14. [x] lockfile差分を最小化する運用（依存更新PR分離）を本ドキュメントに明文化する。

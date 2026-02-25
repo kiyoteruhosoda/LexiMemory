@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from typing import Optional, Dict
 
 from app import security, storage
+from app.domain.exceptions import RefreshTokenReusedError
 from app.infra.jwt_provider import JWTProvider
 from app.infra.token_store_json import (
     JsonTokenStore,
@@ -120,7 +121,7 @@ class AuthService:
             Tuple of (new_access_token, new_refresh_token, access_expires_at) if success, None otherwise
             
         Raises:
-            Exception with error code on replay detection
+            RefreshTokenReusedError when replay attack is detected
         """
         token_hash = hash_refresh_token(refresh_token, self.refresh_salt)
         result = await self.token_store.find_by_hash(token_hash)
@@ -150,7 +151,7 @@ class AuthService:
             )
             # Revoke entire family
             await self.token_store.revoke_family(record.family_id)
-            raise Exception("REFRESH_REUSED")
+            raise RefreshTokenReusedError()
         
         # Token is valid - perform rotation
         user_id = record.user_id
