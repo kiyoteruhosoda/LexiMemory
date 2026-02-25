@@ -8,11 +8,12 @@
 - `npm run lint`: ESLint
 - `npm run test`: Vitest
 - `npm run test:coverage`: Vitest coverage
-- `npm run test:e2e`: Playwright E2E（smoke + visualはデフォルトskip）
+- `npm run typecheck`: 型チェック（`tsc -b`）
+- `npm run test:e2e`: Playwright E2E（smoke + visual）
+- `npm run test:e2e:smoke`: Playwright smoke（ログイン前導線 + RNW PoC導線）
 - `npm run test:e2e:visual`: Visual regressionのみ実行（`RUN_VISUAL_REGRESSION=1`）
 - `npm run test:e2e:update`: Playwrightスクリーンショットのベースライン更新
 - `npm run test:e2e:firefox`: Firefoxプロジェクトのみ実行
-- `npm run typecheck`: 型チェック（`tsc -b`）
 
 ## ルーティング方式
 
@@ -31,11 +32,12 @@
 
 ## UIリグレッションテスト
 
-- `e2e/specs/ui-regression.spec.ts`
-  - `toHaveScreenshot` を使用した visual regression
-  - `RUN_VISUAL_REGRESSION=1` のときのみ実行（バイナリ非コミット運用）
 - `e2e/specs/smoke.spec.ts`
   - ログイン前の主要導線（`/login`→`/words`）の導通を確認
+- `e2e/specs/ui-regression.spec.ts`
+  - `toHaveScreenshot` を使用した visual regression
+  - まずは `/login` と `/words` の2画面を固定
+  - `RUN_VISUAL_REGRESSION=1` のときのみ実行（バイナリ非コミット運用）
 - 実行先URLは `PLAYWRIGHT_BASE_URL` で上書き可能（デフォルト: `http://localhost:${PLAYWRIGHT_WEB_PORT:-4173}`）
 - 安定化施策
   - viewport固定
@@ -45,12 +47,28 @@
 
 ## RNW段階移行に向けた現状
 
-- Storage直叩きを抽象化（`src/core/storage`）
+- Storage直叩きを抽象化（`src/core/storage` + `packages/core`）
 - タグフィルタ永続化をドメインサービス化（`src/core/tagFilter`）
-- RNW移行PoCとして、RN風UIコンポーネント境界（`src/rnw`）を導入
-  - `react-native` + `react-native-web` を導入し、`react-native` import をWebで解決するaliasを設定
-  - `WordListPage` で実コンポーネント (`RnwPlatformBadge`) を `react-native` APIで描画するPoCを配置
+- WordユースケースをApplication Service化（`src/core/word/wordApplicationService.ts`）
+  - Port: `src/core/word/wordGateway.ts`
+  - Adapter: `src/word/wordGatewayAdapter.ts`
+  - `WordListPage` / `WordCreatePage` / `WordDetailPage` が service 経由でユースケースを実行
+- Study/ExamplesユースケースをApplication Service化
+  - Study: `src/core/study/*` + `src/study/studyGatewayAdapter.ts`
+  - Examples: `src/core/examples/*` + `src/examples/examplesGatewayAdapter.ts`
+  - `StudyPage` / `ExamplesTestPage` が service 経由でユースケースを実行
+- RNW移行PoC
+  - `react-native` + `react-native-web` を導入
+  - `packages/ui` にRNコンポーネントの共通部品を新設（`RnwSurfaceCard`）
+  - `LoginPage` のカードを `@leximemory/ui` から参照して描画
   - 既存UIは当面 `src/rnw/react-native.tsx` の互換レイヤーを併用して段階置換
+
+## ディレクトリ方針（段階的ワークスペース）
+
+- `src/`: 既存Web UI（当面維持）
+- `packages/core`: UI非依存のPort/ドメイン共有コード
+- `packages/ui`: RN/RNWで再利用するUIコンポーネント
+- 将来: `apps/web`, `apps/mobile` へ再配置予定
 
 ## RNW移行の進捗管理
 

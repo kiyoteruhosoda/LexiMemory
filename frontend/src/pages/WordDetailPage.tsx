@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { wordsApi } from "../api/words.offline";
-import { studyApi } from "../api/study.offline";
+import { wordApplicationService } from "../word/wordApplication";
 import type { WordEntry } from "../api/types";
 import { WordForm } from "../components/WordForm";
 import { ConfirmModal } from "../components/Modal";
+import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
+import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
+import { RnwDangerButton, RnwPageHeader, RnwPanelCard, RnwWarningButton } from "@leximemory/ui";
 
 export function WordDetailPage() {
   const navigate = useNavigate();
@@ -15,12 +17,13 @@ export function WordDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
 
+
   async function loadWord() {
     if (!id) return;
     setError(null);
     setBusy(true);
     try {
-      const found = await wordsApi.get(id);
+      const found = await wordApplicationService.getWord(id);
       if (!found) {
         setError("Word not found");
         return;
@@ -42,7 +45,7 @@ export function WordDetailPage() {
     if (!word) return;
     setError(null);
     try {
-      await wordsApi.update(word.id, draft);
+      await wordApplicationService.updateWord(word.id, draft);
       navigate("/words");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to update word");
@@ -54,7 +57,7 @@ export function WordDetailPage() {
     
     setError(null);
     try {
-      await wordsApi.delete(word.id);
+      await wordApplicationService.deleteWord(word.id);
       navigate("/words");
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to delete word");
@@ -66,7 +69,7 @@ export function WordDetailPage() {
     
     setError(null);
     try {
-      await studyApi.resetMemory(word.id);
+      await wordApplicationService.resetWordMemory(word.id);
       setShowResetModal(false);
       alert("Memory level reset.");
     } catch (e: unknown) {
@@ -86,18 +89,18 @@ export function WordDetailPage() {
 
   if (error && !word) {
     return (
-      <div className="vstack gap-3">
-        <button
-          className="btn btn-outline-secondary align-self-start"
-          onClick={() => navigate("/words")}
-        >
-          <i className="fa-solid fa-arrow-left me-1" />
-          Back
-        </button>
-        <div className="alert alert-danger">
-          <i className="fa-solid fa-triangle-exclamation me-2" />
-          {error}
-        </div>
+      <div className="vstack gap-3" data-testid="word-detail-page-ready">
+        <RnwOutlineButton
+          label="Back"
+          onPress={() => navigate("/words")}
+          icon={<i className="fa-solid fa-arrow-left" aria-hidden="true" />}
+          testID="rnw-word-detail-back"
+        />
+        <RnwInlineNotice
+          tone="error"
+          message={error}
+          icon={<i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />}
+        />
       </div>
     );
   }
@@ -105,76 +108,50 @@ export function WordDetailPage() {
   if (!word) return null;
 
   return (
-    <div className="vstack gap-3">
-      <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <h2 className="mb-0">
-          <i className="fa-solid fa-edit me-2 text-primary" />
-          Edit Word
-        </h2>
-        <button
-          className="btn btn-outline-secondary"
-          onClick={() => navigate("/words")}
-        >
-          <i className="fa-solid fa-arrow-left me-1" />
-          Back
-        </button>
-      </div>
-
-      {error ? (
-        <div className="alert alert-danger" role="alert">
-          <i className="fa-solid fa-triangle-exclamation me-2" />
-          {error}
-        </div>
-      ) : null}
-
-      <WordForm
-        initial={word}
-        onSave={handleUpdate}
-        onCancel={() => navigate("/words")}
+    <div className="vstack gap-3" data-testid="word-detail-page-ready">
+      <RnwPageHeader
+        title="Edit Word"
+        icon={<i className="fa-solid fa-edit text-primary" aria-hidden="true" />}
+        action={
+          <RnwOutlineButton
+            label="Back"
+            onPress={() => navigate("/words")}
+            icon={<i className="fa-solid fa-arrow-left" aria-hidden="true" />}
+            testID="rnw-word-detail-back"
+          />
+        }
+        testID="rnw-word-detail-header"
       />
 
-      <div className="d-none d-md-block">
-        <div className="row g-3">
-          <div className="col-md-6">
-            <button
-              className="btn btn-warning w-100"
-              onClick={() => setShowResetModal(true)}
-            >
-              <i className="fa-solid fa-rotate-left me-1" />
-              Reset Memory Level
-            </button>
-          </div>
-          <div className="col-md-6">
-            <button
-              className="btn btn-danger w-100"
-              onClick={() => setShowDeleteModal(true)}
-            >
-              <i className="fa-solid fa-trash me-1" />
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
+      {error ? (
+        <RnwInlineNotice
+          tone="error"
+          message={error}
+          icon={<i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />}
+        />
+      ) : null}
 
-      <div className="d-md-none">
-        <div className="btn-group w-100" role="group">
-          <button
-            type="button"
-            className="btn btn-sm btn-warning"
-            onClick={() => setShowResetModal(true)}
-          >
-            <i className="fa-solid fa-rotate-left me-1" />
-            Reset
-          </button>
-          <button
-            type="button"
-            className="btn btn-sm btn-danger"
-            onClick={() => setShowDeleteModal(true)}
-          >
-            <i className="fa-solid fa-trash me-1" />
-            Delete
-          </button>
-        </div>
+      <RnwPanelCard testID="rnw-word-detail-form-panel">
+        <WordForm
+          initial={word}
+          onSave={handleUpdate}
+          onCancel={() => navigate("/words")}
+        />
+      </RnwPanelCard>
+
+      <div className="d-flex gap-2 flex-wrap">
+        <RnwWarningButton
+          label="Reset Memory Level"
+          onPress={() => setShowResetModal(true)}
+          icon={<i className="fa-solid fa-rotate-left" aria-hidden="true" />}
+          testID="rnw-word-detail-reset"
+        />
+        <RnwDangerButton
+          label="Delete"
+          onPress={() => setShowDeleteModal(true)}
+          icon={<i className="fa-solid fa-trash" aria-hidden="true" />}
+          testID="rnw-word-detail-delete"
+        />
       </div>
 
       <ConfirmModal

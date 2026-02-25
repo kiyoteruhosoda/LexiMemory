@@ -9,6 +9,10 @@ export default defineConfig({
     alias: {
       "react-native": "react-native-web",
       "@": path.resolve(__dirname, "./src"),
+      "@leximemory/core": path.resolve(__dirname, "./packages/core/src"),
+      "@leximemory/core/storage": path.resolve(__dirname, "./packages/core/src/storage"),
+      "@leximemory/ui": path.resolve(__dirname, "./packages/ui/src"),
+      "@leximemory/ui/components": path.resolve(__dirname, "./packages/ui/src/components"),
     },
   },
   server: {
@@ -28,6 +32,7 @@ export default defineConfig({
     include: [
       "src/**/*.{test,spec}.{ts,tsx}",
       "src/__tests__/**/*.{test,spec}.{ts,tsx}",
+      "packages/**/*.{test,spec}.{ts,tsx}",
     ],
     coverage: {
       provider: "v8",

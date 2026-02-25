@@ -1,8 +1,11 @@
 {
-  "name": "frontend",
+  "name": "@leximemory/web",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -12,6 +15,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:smoke": "playwright test e2e/specs/smoke.spec.ts",
     "test:e2e:update": "playwright test --update-snapshots",
     "typecheck": "tsc -b",
     "test:e2e:firefox": "playwright test --project=firefox",
