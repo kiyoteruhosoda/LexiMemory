@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiError } from "../api/client";
-import { authApi } from "../api/auth";
 import { useAuth } from "../auth/useAuth";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
 import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
@@ -11,7 +10,7 @@ import { Text, View } from "../rnw/react-native";
 import { StyleSheet } from "../rnw/stylesheet";
 
 export function LoginPage() {
-  const { state, login } = useAuth();
+  const { state, login, registerAndLogin } = useAuth();
   const nav = useNavigate();
 
   const [username, setUsername] = useState("");
@@ -31,9 +30,10 @@ export function LoginPage() {
     setBusy(true);
     try {
       if (mode === "register") {
-        await authApi.register(username, password);
+        await registerAndLogin(username, password);
+      } else {
+        await login(username, password);
       }
-      await login(username, password);
       nav("/words", { replace: true });
     } catch (caughtError: unknown) {
       setError(caughtError instanceof ApiError ? caughtError : new ApiError(0, "Unexpected error"));
@@ -76,7 +76,7 @@ export function LoginPage() {
           </Text>
         )}
 
-        <form onSubmit={(event) => void onSubmit(event)} className="vstack gap-3">
+        <form onSubmit={(event) => void onSubmit(event)} style={styles.form}>
           <RnwTextField
             label="Username"
             value={username}
@@ -168,5 +168,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#6c757d",
     paddingInline: 4,
+  },
+  form: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 12,
   },
 });

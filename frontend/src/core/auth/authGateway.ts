@@ -9,6 +9,7 @@ export type AuthStatus = {
 
 export interface AuthGateway {
   login(username: string, password: string): Promise<void>;
+  register(username: string, password: string): Promise<void>;
   logout(): Promise<void>;
   me(): Promise<MeResponse | null>;
   status(): Promise<AuthStatus>;

@@ -5,6 +5,7 @@ import type { AuthGateway } from "../../core/auth/authGateway";
 function createGatewayMock(): AuthGateway {
   return {
     login: vi.fn(),
+    register: vi.fn(),
     logout: vi.fn(),
     me: vi.fn(),
     status: vi.fn(),

@@ -9,6 +9,7 @@ export type AuthState =
 export type AuthCtx = {
   state: AuthState;
   login: (username: string, password: string) => Promise<void>;
+  registerAndLogin: (username: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
 };

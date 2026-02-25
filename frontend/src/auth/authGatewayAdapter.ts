@@ -5,6 +5,9 @@ export const authGatewayAdapter: AuthGateway = {
   async login(username: string, password: string): Promise<void> {
     await authApi.login(username, password);
   },
+  async register(username: string, password: string): Promise<void> {
+    await authApi.register(username, password);
+  },
   async logout(): Promise<void> {
     await authApi.logout();
   },

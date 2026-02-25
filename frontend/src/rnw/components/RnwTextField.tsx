@@ -49,17 +49,19 @@ const styles = StyleSheet.create({
   container: {
     display: "flex",
     gap: 6,
+    width: "100%",
   },
   label: {
     fontSize: 14,
     fontWeight: "400",
     color: "#212529",
-    lineHeight: "1.5",
+    lineHeight: 21,
   },
   inputGroup: {
     display: "flex",
     flexDirection: "row",
     alignItems: "stretch",
+    width: "100%",
   },
   iconSlot: {
     minWidth: 46,
@@ -70,13 +72,11 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 6,
     backgroundColor: "#e9ecef",
     color: "#495057",
-    display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: 16,
   },
   input: {
-    width: "100%",
+    flex: 1,
     minHeight: 40,
     borderColor: "#ced4da",
     borderWidth: 1,

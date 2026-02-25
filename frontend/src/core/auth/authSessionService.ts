@@ -37,6 +37,12 @@ export class AuthSessionService {
     return this.refreshUserState();
   }
 
+
+  async registerAndLogin(username: string, password: string): Promise<AuthStateSnapshot> {
+    await this.authGateway.register(username, password);
+    return this.login(username, password);
+  }
+
   async logout(): Promise<AuthStateSnapshot> {
     await this.authGateway.logout();
     return { status: "guest" };

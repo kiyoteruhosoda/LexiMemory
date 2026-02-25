@@ -78,6 +78,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [applyAuthState]
   );
 
+  const registerAndLogin = useCallback(
+    async (username: string, password: string) => {
+      try {
+        const snapshot = await authSessionService.registerAndLogin(username, password);
+        applyAuthState(snapshot);
+        logger.info("User registered and logged in successfully", { username });
+      } catch (error) {
+        logger.error("Register and login failed", { username, error });
+        throw error;
+      }
+    },
+    [applyAuthState]
+  );
+
   const logout = useCallback(async () => {
     try {
       const snapshot = await authSessionService.logout();
@@ -93,6 +107,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     void initialize();
   }, [initialize]);
 
-  const value = useMemo(() => ({ state, login, logout, refresh }), [state, login, logout, refresh]);
+  const value = useMemo(() => ({ state, login, registerAndLogin, logout, refresh }), [state, login, registerAndLogin, logout, refresh]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
