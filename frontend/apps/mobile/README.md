@@ -50,5 +50,6 @@ Architecture notes:
 
 ## Next production steps
 
-- Add mobile E2E-like regression scenario (`create -> study -> sync`) and CI split job.
+- Stabilize production auth token provisioning for device/runtime environments.
+- Add offline replay/telemetry around sync retry and conflict recovery.
 - See `../docs/mobile-production-hardening.md` for details.
