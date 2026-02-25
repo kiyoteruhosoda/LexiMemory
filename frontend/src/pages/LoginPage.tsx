@@ -1,8 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../auth/useAuth";
 import { ApiError } from "../api/client";
 import { authApi } from "../api/auth";
+import { useAuth } from "../auth/useAuth";
+import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
+import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
+import { RnwPrimaryButton } from "../rnw/components/RnwPrimaryButton";
+import { RnwTextField } from "../rnw/components/RnwTextField";
+import { Text, View } from "../rnw/react-native";
+import { StyleSheet } from "../rnw/stylesheet";
 
 export function LoginPage() {
   const { state, login } = useAuth();
@@ -11,15 +17,16 @@ export function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [mode, setMode] = useState<"login" | "register">("login");
-  const [error, setError] = useState<ApiError | null>(null); // ★変更
+  const [error, setError] = useState<ApiError | null>(null);
   const [busy, setBusy] = useState(false);
 
-  if (state.status === "authed") {
-    nav("/words", { replace: true });
-  }
+  useEffect(() => {
+    if (state.status === "authed") {
+      nav("/words", { replace: true });
+    }
+  }, [state.status, nav]);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function submit(): Promise<void> {
     setError(null);
     setBusy(true);
     try {
@@ -28,115 +35,127 @@ export function LoginPage() {
       }
       await login(username, password);
       nav("/words", { replace: true });
-    } catch (e) {
-      setError(e instanceof ApiError ? e : new ApiError(0, "Unexpected error"));
+    } catch (caughtError: unknown) {
+      setError(caughtError instanceof ApiError ? caughtError : new ApiError(0, "Unexpected error"));
     } finally {
       setBusy(false);
     }
   }
 
+  async function onSubmit(event: React.FormEvent): Promise<void> {
+    event.preventDefault();
+    await submit();
+  }
+
+  const title = mode === "login" ? "Login" : "Create account";
+  const subtitle =
+    mode === "login" ? "Sign in to continue." : "Register once, then you can sign in.";
+
   return (
-    <div className="row justify-content-center">
-      <div className="col-12 col-md-7 col-lg-5">
-        <div className="card shadow-sm">
-          <div className="card-body p-4">
-            <h4 className="card-title mb-1">
-              <i className="fa-solid fa-lock me-2 text-primary" />
-              {mode === "login" ? "Login" : "Create account"}
-            </h4>
-            <p className="text-secondary small mb-4">
-              {mode === "login"
-                ? "Sign in to continue."
-                : "Register once, then you can sign in."}
-            </p>
+    <View style={styles.pageWrap}>
+      <View style={styles.card} testID="rnw-login-card">
+        <View style={styles.headingWrap}>
+          <h1 style={styles.heading}>{title}</h1>
+          <Text style={styles.subtitle}>{subtitle}</Text>
+        </View>
 
-            {error ? (
-              <div className="alert alert-danger" role="alert">
-                <div className="d-flex align-items-start">
-                  <i className="fa-solid fa-triangle-exclamation me-2 mt-1" />
-                  <div className="flex-grow-1">
-                    <div>{error.message}</div>
+        {error ? (
+          <RnwInlineNotice
+            tone="error"
+            message={error.message}
+            icon={<i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />}
+          />
+        ) : null}
 
-                    {/* ★運用向け：request_id / error_code を表示 */}
-                    {(error.requestId || error.errorCode) ? (
-                      <div className="small text-muted mt-1">
-                        {error.errorCode ? (
-                          <span className="me-2">code: <span className="mono">{error.errorCode}</span></span>
-                        ) : null}
-                        {error.requestId ? (
-                          <span>request_id: <span className="mono">{error.requestId}</span></span>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            ) : null}
+        {(error?.requestId || error?.errorCode) && (
+          <Text style={styles.errorMeta}>
+            {error.errorCode ? `code: ${error.errorCode} ` : ""}
+            {error.requestId ? `request_id: ${error.requestId}` : ""}
+          </Text>
+        )}
 
-            <form onSubmit={onSubmit} className="vstack gap-3">
-              <div>
-                <label className="form-label">Username</label>
-                <div className="input-group">
-                  <span className="input-group-text">
-                    <i className="fa-solid fa-user" />
-                  </span>
-                  <input
-                    className="form-control"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    autoComplete="username"
-                    required
-                  />
-                </div>
-              </div>
+        <form onSubmit={(event) => void onSubmit(event)} className="vstack gap-3">
+          <RnwTextField
+            label="Username"
+            value={username}
+            onChange={setUsername}
+            autoComplete="username"
+            placeholder="Input your username"
+            icon={<i className="fa-solid fa-user" aria-hidden="true" />}
+            testID="rnw-login-username"
+          />
 
-              <div>
-                <label className="form-label">Password</label>
-                <div className="input-group">
-                  <span className="input-group-text">
-                    <i className="fa-solid fa-key" />
-                  </span>
-                  <input
-                    className="form-control"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete={mode === "login" ? "current-password" : "new-password"}
-                    required
-                  />
-                </div>
-              </div>
+          <RnwTextField
+            label="Password"
+            value={password}
+            onChange={setPassword}
+            secureTextEntry
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
+            placeholder="Input your password"
+            icon={<i className="fa-solid fa-key" aria-hidden="true" />}
+            testID="rnw-login-password"
+          />
 
-              <button className="btn btn-primary" disabled={busy} type="submit">
-                {busy ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" />
-                    Processing...
-                  </>
-                ) : mode === "login" ? (
-                  <>
-                    <i className="fa-solid fa-right-to-bracket me-2" />
-                    Login
-                  </>
-                ) : (
-                  <>
-                    <i className="fa-solid fa-user-plus me-2" />
-                    Register & Login
-                  </>
-                )}
-              </button>
+          <RnwPrimaryButton
+            label={busy ? "Processing..." : mode === "login" ? "Login" : "Register & Login"}
+            onPress={() => void submit()}
+            disabled={busy || !username.trim() || !password.trim()}
+            icon={
+              mode === "login" ? (
+                <i className="fa-solid fa-right-to-bracket" aria-hidden="true" />
+              ) : (
+                <i className="fa-solid fa-user-plus" aria-hidden="true" />
+              )
+            }
+            testID="rnw-login-submit"
+          />
 
-              <button
-                className="btn btn-outline-secondary"
-                type="button"
-                onClick={() => setMode(mode === "login" ? "register" : "login")}
-              >
-                {mode === "login" ? "Switch to Register" : "Switch to Login"}
-              </button>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+          <RnwOutlineButton
+            label={mode === "login" ? "Switch to Register" : "Switch to Login"}
+            onPress={() => setMode(mode === "login" ? "register" : "login")}
+            testID="rnw-login-toggle-mode"
+          />
+        </form>
+      </View>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  pageWrap: {
+    display: "flex",
+    justifyContent: "center",
+    paddingInline: 8,
+  },
+  card: {
+    width: "100%",
+    maxWidth: 520,
+    borderColor: "#dee2e6",
+    borderWidth: 1,
+    borderRadius: 12,
+    backgroundColor: "#ffffff",
+    padding: 24,
+    marginInline: "auto",
+    boxShadow: "0 0.125rem 0.25rem rgba(0, 0, 0, 0.075)",
+    display: "flex",
+    gap: 12,
+  },
+  headingWrap: {
+    display: "flex",
+    gap: 4,
+  },
+  heading: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#212529",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#6c757d",
+  },
+  errorMeta: {
+    fontSize: 12,
+    color: "#6c757d",
+    paddingInline: 4,
+  },
+});

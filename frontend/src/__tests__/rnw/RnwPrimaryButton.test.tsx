@@ -15,4 +15,16 @@ describe("RnwPrimaryButton", () => {
     expect(screen.getByText("Add")).toBeInTheDocument();
     expect(onPress).toHaveBeenCalledTimes(1);
   });
+
+  it("does not trigger onPress when disabled", async () => {
+    const onPress = vi.fn();
+    const user = userEvent.setup();
+
+    render(<RnwPrimaryButton label="Add" onPress={onPress} disabled testID="rnw-add-disabled" />);
+
+    await user.click(screen.getByTestId("rnw-add-disabled"));
+
+    expect(onPress).not.toHaveBeenCalled();
+  });
+
 });

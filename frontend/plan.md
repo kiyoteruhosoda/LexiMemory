@@ -40,7 +40,7 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 - [~] `/study` を RNW component に統一（CTA/Tag filter toolbarは置換済み）
 - [ ] `/examples` を RNW component に統一
 - [ ] `/words/create` と `/words/:id` を RNW component に統一
-- [ ] `/login` 画面を RNW component に統一
+- [x] `/login` 画面を RNW component に統一（入力/通知/CTAをRNW primitive化）
 
 ## 6. 完全RNW化の完了条件（Definition of Done）
 - [ ] 主要画面の UI 実装が `src/rnw` or `packages/ui` 経由のみ
@@ -61,4 +61,4 @@ Web / RN / RNW の実装差分を吸収するための実行管理表です。
 
 ---
 
-最終更新: 2026-02-24 (update-9)
+最終更新: 2026-02-24 (update-10)

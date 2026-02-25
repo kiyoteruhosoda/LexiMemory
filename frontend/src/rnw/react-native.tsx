@@ -27,6 +27,8 @@ type TextInputProps = {
   onChangeText: (text: string) => void;
   placeholder?: string;
   autoFocus?: boolean;
+  autoComplete?: string;
+  type?: string;
   style?: CSSProperties;
   testID?: string;
 };
@@ -66,13 +68,15 @@ export function Text({ children, style }: TextProps) {
   return <span style={style}>{children}</span>;
 }
 
-export function TextInput({ value, onChangeText, placeholder, autoFocus, style, testID }: TextInputProps) {
+export function TextInput({ value, onChangeText, placeholder, autoFocus, autoComplete, type, style, testID }: TextInputProps) {
   return (
     <input
       value={value}
       onChange={(event) => onChangeText(event.target.value)}
       placeholder={placeholder}
       autoFocus={autoFocus}
+      autoComplete={autoComplete}
+      type={type}
       style={style}
       data-testid={testID}
     />
