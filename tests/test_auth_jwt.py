@@ -5,6 +5,7 @@ Tests for JWT authentication with refresh token rotation.
 
 import pytest
 from datetime import datetime, timezone
+from app.domain.exceptions import AuthDomainError, RefreshTokenReusedError
 from app.infra.jwt_provider import JWTProvider
 from app.infra.token_store_json import JsonTokenStore, hash_refresh_token
 from app.service.auth_service import AuthService
@@ -149,10 +150,118 @@ class TestAuthService:
     
     async def test_login_success(self, auth_service):
         """Test successful login"""
-        # Note: This requires a test user to exist
-        # You may need to create a test fixture for user data
-        pass
+        async def fake_authenticate_user(username, password):
+            assert username == "alice"
+            assert password == "secret"
+            return {"userId": "user-alice", "username": "alice"}
+
+        auth_service.authenticate_user = fake_authenticate_user
+
+        result = await auth_service.login("alice", "secret")
+
+        assert result is not None
+        access_token, refresh_token, expires_at = result
+        assert isinstance(access_token, str)
+        assert isinstance(refresh_token, str)
+        assert expires_at.tzinfo is not None
+        assert await auth_service.has_active_refresh_token(refresh_token) is True
     
+    async def test_has_active_refresh_token(self, auth_service, token_store):
+        """Test active refresh token detection"""
+        from app.infra.token_store_json import generate_refresh_token
+
+        refresh_token = generate_refresh_token()
+        token_hash = hash_refresh_token(refresh_token, "test-salt")
+
+        await token_store.add_token(
+            token_id="tok_active",
+            user_id="test-user",
+            token_hash=token_hash,
+            family_id="fam_active",
+            prev_token_id=None,
+            ttl_days=30,
+        )
+
+        assert await auth_service.has_active_refresh_token(refresh_token) is True
+
+    async def test_has_active_refresh_token_returns_false_for_revoked(self, auth_service, token_store):
+        """Test revoked refresh token is not considered active"""
+        from app.infra.token_store_json import generate_refresh_token
+
+        refresh_token = generate_refresh_token()
+        token_hash = hash_refresh_token(refresh_token, "test-salt")
+
+        await token_store.add_token(
+            token_id="tok_revoked",
+            user_id="test-user",
+            token_hash=token_hash,
+            family_id="fam_revoked",
+            prev_token_id=None,
+            ttl_days=30,
+        )
+        await token_store.revoke_token("tok_revoked")
+
+        assert await auth_service.has_active_refresh_token(refresh_token) is False
+
+    async def test_has_active_refresh_token_returns_false_for_expired(self, auth_service, token_store):
+        """Test expired refresh token is not considered active"""
+        from app.infra.token_store_json import generate_refresh_token
+
+        refresh_token = generate_refresh_token()
+        token_hash = hash_refresh_token(refresh_token, "test-salt")
+
+        await token_store.add_token(
+            token_id="tok_expired",
+            user_id="test-user",
+            token_hash=token_hash,
+            family_id="fam_expired",
+            prev_token_id=None,
+            ttl_days=-1,
+        )
+
+        assert await auth_service.has_active_refresh_token(refresh_token) is False
+
+
+    async def test_evaluate_auth_status_with_valid_access_and_refresh(self, auth_service):
+        """Test evaluate_auth_status returns authenticated and canRefresh."""
+        async def fake_has_active_refresh_token(_token):
+            return True
+
+        async def fake_verify_access_token(_token):
+            return "user-123"
+
+        auth_service.has_active_refresh_token = fake_has_active_refresh_token
+        auth_service.verify_access_token = fake_verify_access_token
+
+        authenticated, can_refresh, user_id = await auth_service.evaluate_auth_status(
+            access_token="valid-token",
+            refresh_token="valid-refresh",
+        )
+
+        assert authenticated is True
+        assert can_refresh is True
+        assert user_id == "user-123"
+
+    async def test_evaluate_auth_status_with_invalid_access_and_valid_refresh(self, auth_service):
+        """Test evaluate_auth_status preserves canRefresh on invalid access token."""
+        async def fake_has_active_refresh_token(_token):
+            return True
+
+        async def fake_verify_access_token(_token):
+            return None
+
+        auth_service.has_active_refresh_token = fake_has_active_refresh_token
+        auth_service.verify_access_token = fake_verify_access_token
+
+        authenticated, can_refresh, user_id = await auth_service.evaluate_auth_status(
+            access_token="invalid-token",
+            refresh_token="valid-refresh",
+        )
+
+        assert authenticated is False
+        assert can_refresh is True
+        assert user_id is None
+
     async def test_refresh_rotation(self, auth_service, token_store):
         """Test refresh token rotation"""
         # Manually create initial token
@@ -210,10 +319,11 @@ class TestAuthService:
         assert result1 is not None
         
         # Try to reuse old token (should detect replay)
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(RefreshTokenReusedError) as exc_info:
             await auth_service.refresh(refresh_token)
-        
+
         assert str(exc_info.value) == "REFRESH_REUSED"
+        assert isinstance(exc_info.value, AuthDomainError)
         
         # Verify entire family is revoked
         store = await token_store.load()

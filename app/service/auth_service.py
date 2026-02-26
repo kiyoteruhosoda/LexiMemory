@@ -7,9 +7,11 @@ Implements refresh token rotation and replay detection.
 import logging
 import secrets
 from datetime import datetime, timezone
-from typing import Optional, Dict
+from typing import Any, Optional
 
 from app import security, storage
+from app.domain.exceptions import RefreshTokenReusedError
+from app.domain.models.tokens import TokenRecord
 from app.infra.jwt_provider import JWTProvider
 from app.infra.token_store_json import (
     JsonTokenStore,
@@ -42,7 +44,7 @@ class AuthService:
         self.refresh_salt = refresh_salt
         self.refresh_ttl_days = refresh_ttl_days
     
-    async def authenticate_user(self, username: str, password: str) -> Optional[Dict]:
+    async def authenticate_user(self, username: str, password: str) -> Optional[dict[str, Any]]:
         """
         Authenticate user with username and password.
         
@@ -109,6 +111,32 @@ class AuthService:
         logger.info(f"User logged in", extra={"user_id": user_id, "token_id": token_id})
         return access_token, refresh_token, access_expires_at
     
+    @staticmethod
+    def _is_expired(expires_at_utc: str) -> bool:
+        """Return True when an ISO UTC timestamp is in the past."""
+        expires_at = datetime.fromisoformat(expires_at_utc.replace("Z", "+00:00"))
+        return expires_at < datetime.now(timezone.utc)
+
+    async def _find_token_record(self, refresh_token: str) -> Optional[tuple[str, TokenRecord]]:
+        """Lookup token record by raw refresh token."""
+        token_hash = hash_refresh_token(refresh_token, self.refresh_salt)
+        return await self.token_store.find_by_hash(token_hash)
+
+    def _is_token_record_active(self, record: TokenRecord) -> bool:
+        """Return True when token record is neither revoked nor expired."""
+        if record.revoked_at_utc:
+            return False
+        return not self._is_expired(record.expires_at_utc)
+
+    async def has_active_refresh_token(self, refresh_token: str) -> bool:
+        """Return True when refresh token exists and is active."""
+        result = await self._find_token_record(refresh_token)
+        if not result:
+            return False
+
+        _, record = result
+        return self._is_token_record_active(record)
+
     async def refresh(self, refresh_token: str) -> Optional[tuple[str, str, datetime]]:
         """
         Refresh access token using refresh token (with rotation).
@@ -120,10 +148,9 @@ class AuthService:
             Tuple of (new_access_token, new_refresh_token, access_expires_at) if success, None otherwise
             
         Raises:
-            Exception with error code on replay detection
+            RefreshTokenReusedError when replay attack is detected
         """
-        token_hash = hash_refresh_token(refresh_token, self.refresh_salt)
-        result = await self.token_store.find_by_hash(token_hash)
+        result = await self._find_token_record(refresh_token)
         
         if not result:
             logger.warning("Refresh token not found")
@@ -131,15 +158,11 @@ class AuthService:
         
         token_id, record = result
         
-        # Check if revoked
-        if record.revoked_at_utc:
-            logger.warning(f"Attempt to use revoked token", extra={"token_id": token_id})
-            return None
-        
-        # Check if expired
-        expires_at = datetime.fromisoformat(record.expires_at_utc.replace("Z", "+00:00"))
-        if expires_at < datetime.now(timezone.utc):
-            logger.warning(f"Attempt to use expired token", extra={"token_id": token_id})
+        if not self._is_token_record_active(record):
+            logger.warning(
+                "Attempt to use inactive token",
+                extra={"token_id": token_id, "revoked": bool(record.revoked_at_utc)},
+            )
             return None
         
         # Check for replay attack (token already replaced)
@@ -150,7 +173,7 @@ class AuthService:
             )
             # Revoke entire family
             await self.token_store.revoke_family(record.family_id)
-            raise Exception("REFRESH_REUSED")
+            raise RefreshTokenReusedError()
         
         # Token is valid - perform rotation
         user_id = record.user_id
@@ -199,8 +222,7 @@ class AuthService:
         if not refresh_token:
             return False
         
-        token_hash = hash_refresh_token(refresh_token, self.refresh_salt)
-        result = await self.token_store.find_by_hash(token_hash)
+        result = await self._find_token_record(refresh_token)
         
         if not result:
             return False
@@ -211,6 +233,25 @@ class AuthService:
         logger.info(f"User logged out", extra={"user_id": record.user_id, "token_id": token_id})
         return True
     
+    async def evaluate_auth_status(
+        self,
+        access_token: str | None,
+        refresh_token: str | None,
+    ) -> tuple[bool, bool, str | None]:
+        """Evaluate auth status from optional access/refresh tokens."""
+        can_refresh = False
+        if refresh_token:
+            can_refresh = await self.has_active_refresh_token(refresh_token)
+
+        if not access_token:
+            return False, can_refresh, None
+
+        user_id = await self.verify_access_token(access_token)
+        if not user_id:
+            return False, can_refresh, None
+
+        return True, can_refresh, user_id
+
     async def verify_access_token(self, token: str) -> Optional[str]:
         """
         Verify access token and return user_id.

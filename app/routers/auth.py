@@ -5,29 +5,44 @@ Authentication endpoints using JWT access + refresh token rotation.
 
 from __future__ import annotations
 import logging
+from datetime import datetime, timezone
 from typing import cast, Literal
 from fastapi import APIRouter, HTTPException, Response, status, Depends, Cookie, Request
 from ..models import RegisterRequest, LoginRequest, MeResponse
-from ..services import register_user, delete_user, find_user_by_id
+from ..services import register_user, delete_user, find_user_by_id, find_user_by_username
 from ..deps import require_auth, get_request_lang
 from ..i18n import get_message
+from ..domain.exceptions import RefreshTokenReusedError
+from ..service.auth_service_port import AuthServicePort
 from ..settings import settings
-from .. import storage
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 logger = logging.getLogger(__name__)
 audit_logger = logging.getLogger("app.audit")
 
 # Global auth service (set by main.py)
-_auth_service = None
+_auth_service: AuthServicePort | None = None
 
-def set_auth_service(auth_service):
+def set_auth_service(auth_service: AuthServicePort):
     """Set auth service for this router"""
     global _auth_service
     _auth_service = auth_service
 
 
+def _require_auth_service() -> AuthServicePort:
+    """Return initialized auth service or raise 500."""
+    if _auth_service is None:
+        raise HTTPException(status_code=500, detail="Auth service not initialized")
+    return _auth_service
+
+
 REFRESH_COOKIE_NAME = "refresh_token"
+
+
+def _calculate_expires_in_seconds(expires_at: datetime) -> int:
+    """Return remaining seconds until expiration in UTC."""
+    now_utc = datetime.now(timezone.utc)
+    return max(0, int((expires_at - now_utc).total_seconds()))
 
 
 @router.post(
@@ -125,10 +140,9 @@ async def login(req: LoginRequest, response: Response, request: Request):
     lang = get_request_lang(request)
     request_id = getattr(request.state, "request_id", None)
     
-    if not _auth_service:
-        raise HTTPException(status_code=500, detail="Auth service not initialized")
-    
-    result = await _auth_service.login(req.username, req.password)
+    auth_service = _require_auth_service()
+
+    result = await auth_service.login(req.username, req.password)
     if not result:
         # Audit log for failure
         audit_logger.warning(
@@ -156,7 +170,6 @@ async def login(req: LoginRequest, response: Response, request: Request):
     access_token, refresh_token, access_expires_at = result
     
     # Get user info for audit log
-    from ..services import find_user_by_username
     user = find_user_by_username(req.username)
     
     if user:
@@ -189,8 +202,7 @@ async def login(req: LoginRequest, response: Response, request: Request):
     )
     
     # Return access token in body
-    expires_in = int((access_expires_at.timestamp() - 
-                      __import__('datetime').datetime.now(__import__('datetime').timezone.utc).timestamp()))
+    expires_in = _calculate_expires_in_seconds(access_expires_at)
     
     return {
         "ok": True,
@@ -244,11 +256,10 @@ async def refresh(
             }
         )
     
-    if not _auth_service:
-        raise HTTPException(status_code=500, detail="Auth service not initialized")
-    
+    auth_service = _require_auth_service()
+
     try:
-        result = await _auth_service.refresh(refresh_token)
+        result = await auth_service.refresh(refresh_token)
         if not result:
             raise HTTPException(
                 status_code=401,
@@ -275,8 +286,7 @@ async def refresh(
         )
         
         # Return new access token
-        expires_in = int((access_expires_at.timestamp() - 
-                          __import__('datetime').datetime.now(__import__('datetime').timezone.utc).timestamp()))
+        expires_in = _calculate_expires_in_seconds(access_expires_at)
         
         return {
             "ok": True,
@@ -285,23 +295,20 @@ async def refresh(
             "expires_in": expires_in
         }
         
-    except Exception as e:
-        # Handle replay attack
-        if str(e) == "REFRESH_REUSED":
-            logger.error("Refresh token replay detected")
-            # Clear cookie
-            response.delete_cookie(REFRESH_COOKIE_NAME, path="/")
-            raise HTTPException(
-                status_code=401,
-                detail={
-                    "error": {
-                        "error_code": "REFRESH_REUSED",
-                        "message": get_message("auth.refresh_reused", lang),
-                        "message_key": "auth.refresh_reused"
-                    }
+    except RefreshTokenReusedError:
+        logger.error("Refresh token replay detected")
+        # Clear cookie
+        response.delete_cookie(REFRESH_COOKIE_NAME, path="/")
+        raise HTTPException(
+            status_code=401,
+            detail={
+                "error": {
+                    "error_code": "REFRESH_REUSED",
+                    "message": get_message("auth.refresh_reused", lang),
+                    "message_key": "auth.refresh_reused"
                 }
-            )
-        raise
+            }
+        )
 
 
 @router.post(
@@ -322,14 +329,13 @@ async def logout(
     """
     Logout by revoking refresh token and clearing cookie.
     """
-    if not _auth_service:
-        raise HTTPException(status_code=500, detail="Auth service not initialized")
-    
+    auth_service = _require_auth_service()
+
     request_id = getattr(request.state, "request_id", None)
-    
+
     # Revoke refresh token
     if refresh_token:
-        await _auth_service.logout(refresh_token)
+        await auth_service.logout(refresh_token)
     
     # Clear cookie
     response.delete_cookie(REFRESH_COOKIE_NAME, path="/")
@@ -411,82 +417,48 @@ async def auth_status(request: Request):
     - authenticated=false, canRefresh=false if no tokens exist
     Never returns 401.
     """
-    has_refresh_token = False
-    
+    auth_service = _auth_service
+
     # Check if refresh token exists (read directly from request.cookies)
     refresh_token = request.cookies.get(REFRESH_COOKIE_NAME)
-    logger.info(f"auth_status: cookies = {dict(request.cookies)}, refresh_token = {refresh_token[:20] if refresh_token else None}")
-    logger.info(f"auth_status: _auth_service = {_auth_service}")
-    
-    if refresh_token and _auth_service:
-        try:
-            # Verify refresh token is valid by checking if it exists in token store
-            from app.infra.token_store_json import hash_refresh_token
-            logger.info(f"auth_status: verifying refresh token...")
-            token_hash = hash_refresh_token(refresh_token, _auth_service.refresh_salt)
-            result = await _auth_service.token_store.find_by_hash(token_hash)
-            logger.info(f"auth_status: find_by_hash result = {bool(result)}")
-            if result:
-                _, record = result
-                # Check if not revoked and not expired
-                from datetime import datetime, timezone
-                expires_at = datetime.fromisoformat(record.expires_at_utc.replace("Z", "+00:00"))
-                is_expired = expires_at < datetime.now(timezone.utc)
-                logger.info(f"auth_status: revoked={bool(record.revoked_at_utc)}, expired={is_expired}")
-                if not record.revoked_at_utc and not is_expired:
-                    has_refresh_token = True
-        except Exception as e:
-            logger.error(f"auth_status: error verifying refresh token: {e}")
-            pass
-    else:
-        logger.info(f"auth_status: skipped verification - refresh_token={bool(refresh_token)}, _auth_service={bool(_auth_service)}")
-    
+    logger.debug(
+        "auth_status: start",
+        extra={
+            "has_refresh_cookie": bool(refresh_token),
+            "auth_service_ready": bool(auth_service),
+        },
+    )
+
+    # Try to get Authorization header
+    auth_header = request.headers.get("Authorization")
+    access_token = auth_header[7:] if auth_header and auth_header.startswith("Bearer ") else None
+
+    if not auth_service:
+        return {"ok": True, "authenticated": False, "canRefresh": False}
+
     try:
-        # Try to get Authorization header
-        auth_header = request.headers.get("Authorization")
-        logger.info(f"auth_status: auth_header = {auth_header[:30] if auth_header else None}...")
-        if not auth_header or not auth_header.startswith("Bearer "):
-            logger.info(f"auth_status: no bearer token, returning unauthenticated")
-            return {"ok": True, "authenticated": False, "canRefresh": has_refresh_token}
-        
-        token = auth_header[7:]  # Remove "Bearer " prefix
-        logger.info(f"auth_status: extracted token = {token[:20]}...")
-        
-        # Use the global auth service to verify the token
-        if not _auth_service:
-            logger.info(f"auth_status: no _auth_service")
-            return {"ok": True, "authenticated": False, "canRefresh": has_refresh_token}
-        
-        payload = _auth_service.jwt_provider.verify_access_token(token)
-        logger.info(f"auth_status: payload = {payload}")
-        if not payload:
-            logger.info(f"auth_status: payload is None")
-            return {"ok": True, "authenticated": False, "canRefresh": has_refresh_token}
-        
-        # Get user_id from JWT (stored as "sub")
-        user_id = payload.get("sub")
-        logger.info(f"auth_status: user_id = {user_id}")
-        if not user_id:
-            logger.info(f"auth_status: no user_id in payload")
-            return {"ok": True, "authenticated": False, "canRefresh": has_refresh_token}
-        
+        authenticated, can_refresh, user_id = await auth_service.evaluate_auth_status(
+            access_token=access_token,
+            refresh_token=refresh_token,
+        )
+        if not authenticated:
+            return {"ok": True, "authenticated": False, "canRefresh": can_refresh}
+
         # Get username from storage
-        from ..services import find_user_by_id
-        user = find_user_by_id(user_id)
+        user = find_user_by_id(user_id) if user_id else None
         username = user["username"] if user else None
-        logger.info(f"auth_status: username = {username}")
-        
+
         return {
             "ok": True,
             "authenticated": True,
-            "canRefresh": has_refresh_token,
+            "canRefresh": can_refresh,
             "userId": user_id,
             "username": username
         }
-    except Exception as e:
+    except Exception:
         # Any error means not authenticated
-        logger.error(f"auth_status: exception = {e}")
-        return {"ok": True, "authenticated": False, "canRefresh": has_refresh_token}
+        logger.exception("auth_status: status evaluation failed")
+        return {"ok": True, "authenticated": False, "canRefresh": False}
 
 
 @router.delete(
@@ -511,15 +483,14 @@ async def delete_me(
     """
     lang = get_request_lang(request)
     
-    if not _auth_service:
-        raise HTTPException(status_code=500, detail="Auth service not initialized")
-    
+    auth_service = _require_auth_service()
+
     user_id = user["userId"]
     request_id = getattr(request.state, "request_id", None)
     
     # Revoke refresh token
     if refresh_token:
-        await _auth_service.logout(refresh_token)
+        await auth_service.logout(refresh_token)
     
     # Clear cookie
     response.delete_cookie(REFRESH_COOKIE_NAME, path="/")
