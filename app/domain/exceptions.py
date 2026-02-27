@@ -1,3 +1,4 @@
+# app/domain/exceptions.py
 """Domain exceptions for authentication and security flows."""
 
 
