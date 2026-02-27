@@ -11,6 +11,8 @@ log "========================================"
 log "LinguisticNode FULL TEST SUITE START"
 log "Root: $ROOT_DIR"
 log "========================================"
+log "NOTE: This script intentionally validates test-related checks only."
+log "NOTE: Release build/deploy verification must be executed in a separate release step."
 
 ########################################
 # Backend (Python)
