@@ -382,9 +382,6 @@ async def test_auth_status_with_valid_token(client: AsyncClient, unique_username
     assert resp.status_code == 200
     data = resp.json()
     
-    print(f"DEBUG: status response = {data}")
-    print(f"DEBUG: access_token = {access_token[:20]}...")
-    
     assert data["ok"] is True
     assert data["authenticated"] is True
     assert data["canRefresh"] is True  # Should have refresh token from login
@@ -427,21 +424,84 @@ async def test_auth_status_with_refresh_token_only(client: AsyncClient, unique_u
     refresh_token = resp.cookies.get("refresh_token")
     assert refresh_token is not None, "Refresh token should be set in cookie"
     
-    print(f"DEBUG: refresh_token from login = {refresh_token[:20]}...")
-    print(f"DEBUG: client.cookies before set = {client.cookies}")
-    
     # Set cookie on client instance for subsequent requests
     client.cookies.set("refresh_token", refresh_token, domain="testserver")
-    
-    print(f"DEBUG: client.cookies after set = {client.cookies}")
     
     # Check status without access token header, but with refresh token cookie
     resp = await client.get("/api/auth/status")
     assert resp.status_code == 200
     data = resp.json()
     
-    print(f"DEBUG: status response = {data}")
-    
     assert data["ok"] is True
     assert data["authenticated"] is False  # No access token
     assert data["canRefresh"] is True  # But has refresh token
+
+
+@pytest.mark.asyncio
+async def test_auth_status_with_revoked_refresh_token(client: AsyncClient, unique_username):
+    """Test /auth/status returns canRefresh=false for revoked refresh token."""
+    username = unique_username()
+    password = "testpass123"
+
+    await client.post("/api/auth/register", json={
+        "username": username,
+        "password": password
+    })
+
+    login_resp = await client.post("/api/auth/login", json={
+        "username": username,
+        "password": password
+    })
+    assert login_resp.status_code == 200
+    access_token = login_resp.json()["access_token"]
+    refresh_token = login_resp.cookies.get("refresh_token")
+    assert refresh_token is not None
+
+    logout_resp = await client.post(
+        "/api/auth/logout",
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+    assert logout_resp.status_code == 200
+
+    # Set old (revoked) refresh token manually to verify service-side validation
+    client.cookies.set("refresh_token", refresh_token, domain="testserver")
+
+    status_resp = await client.get("/api/auth/status")
+    assert status_resp.status_code == 200
+    data = status_resp.json()
+    assert data["ok"] is True
+    assert data["authenticated"] is False
+    assert data["canRefresh"] is False
+
+
+@pytest.mark.asyncio
+async def test_auth_status_with_invalid_access_but_valid_refresh(client: AsyncClient, unique_username):
+    """Test /auth/status keeps canRefresh=true with invalid access token and valid refresh cookie."""
+    username = unique_username()
+    password = "testpass123"
+
+    await client.post("/api/auth/register", json={
+        "username": username,
+        "password": password
+    })
+
+    login_resp = await client.post("/api/auth/login", json={
+        "username": username,
+        "password": password
+    })
+    assert login_resp.status_code == 200
+
+    refresh_token = login_resp.cookies.get("refresh_token")
+    assert refresh_token is not None
+    client.cookies.set("refresh_token", refresh_token, domain="testserver")
+
+    status_resp = await client.get(
+        "/api/auth/status",
+        headers={"Authorization": "Bearer invalid_token_here"},
+    )
+    assert status_resp.status_code == 200
+
+    data = status_resp.json()
+    assert data["ok"] is True
+    assert data["authenticated"] is False
+    assert data["canRefresh"] is True
