@@ -46,6 +46,59 @@ requires_env_file() {
   esac
 }
 
+read_env_value() {
+  local env_file="$1"
+  local key="$2"
+
+  if [ ! -f "$env_file" ]; then
+    return 0
+  fi
+
+  awk -F= -v k="$key" '
+    /^[[:space:]]*#/ { next }
+    /^[[:space:]]*$/ { next }
+    {
+      line=$0
+      sub(/^[[:space:]]+/, "", line)
+      sub(/[[:space:]]+$/, "", line)
+      if (index(line, "export ") == 1) {
+        line=substr(line, 8)
+      }
+      split(line, parts, "=")
+      if (parts[1] != k) {
+        next
+      }
+      value=substr(line, length(k) + 2)
+      gsub(/^[[:space:]]+|[[:space:]]+$/, "", value)
+      gsub(/^"|"$/, "", value)
+      gsub(/^'\''|'\''$/, "", value)
+      print value
+      exit
+    }
+  ' "$env_file"
+}
+
+ensure_stg_data_dir() {
+  local env_file="$1"
+  local data_dir
+
+  data_dir="$(read_env_value "$env_file" "STG_HOST_DATA_DIR")"
+  if [ -z "$data_dir" ]; then
+    data_dir="./data-stg"
+  fi
+
+  if [[ "$data_dir" != /* ]]; then
+    data_dir="$ROOT_DIR/${data_dir#./}"
+  fi
+
+  if [ -d "$data_dir" ]; then
+    return 0
+  fi
+
+  echo "[INFO] Creating missing STG_HOST_DATA_DIR: $data_dir"
+  mkdir -p "$data_dir"
+}
+
 run_compose() {
   local env_kind="$1"
   shift
@@ -54,6 +107,10 @@ run_compose() {
 
   local env_file
   env_file="${ENV_FILE:-$(default_env_file_for "$env_kind")}"
+
+  if [ "$env_kind" = "stg" ] && [ "$1" = "up" -o "$1" = "build" ]; then
+    ensure_stg_data_dir "$env_file"
+  fi
 
   if requires_env_file "$env_kind"; then
     if [ ! -f "$env_file" ]; then

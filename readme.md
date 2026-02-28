@@ -143,6 +143,7 @@ cp .env.sample .env.stg
 
 - `PASSWORD_PEPPER` を安全な値へ変更
 - 必要に応じて `STG_API_PORT` / `STG_WEB_PORT` / `STG_HOST_DATA_DIR` を調整
+- `STG_HOST_DATA_DIR` が存在しない場合、`envctl.sh stg up/build` 実行時に自動作成されます
 
 3. 初回ビルド（任意: `up` に `--build` が含まれるため省略可能）
 
