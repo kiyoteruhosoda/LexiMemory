@@ -1,9 +1,8 @@
 import { Text, View } from "../react-native";
 import { StyleSheet } from "../stylesheet";
+import type { ReactNode } from "react";
 
 type NoticeTone = "info" | "error";
-
-import type { ReactNode } from "react";
 
 type RnwInlineNoticeProps = {
   tone: NoticeTone;
@@ -44,10 +43,12 @@ export function RnwInlineNotice({ tone, message, icon }: RnwInlineNoticeProps) {
 
 const styles = StyleSheet.create({
   base: {
+    borderStyle: "solid",
     borderWidth: 1,
     borderRadius: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
+
+    padding: "10px 12px",
+
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
@@ -60,6 +61,7 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 14,
-    fontWeight: "500",
+    fontWeight: 500,
+    lineHeight: "20px",
   },
 });

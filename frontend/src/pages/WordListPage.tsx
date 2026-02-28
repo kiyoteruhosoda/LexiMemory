@@ -1,3 +1,5 @@
+// frontend/src/pages/WordListPage.tsx
+
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { wordApplicationService } from "../word/wordApplication";
@@ -5,13 +7,10 @@ import type { WordEntry, MemoryState } from "../api/types";
 import { RnwImportDialog } from "../rnw/components/RnwImportDialog";
 import SyncButton from "../components/SyncButton";
 import { backupExportService } from "../io/backupExportApplication";
-import { RnwPrimaryButton } from "../rnw/components/RnwPrimaryButton";
-import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
-import { RnwIconButton } from "../rnw/components/RnwIconButton";
 import { RnwSearchPanel } from "../rnw/components/RnwSearchPanel";
 import { RnwWordListTable } from "../rnw/components/RnwWordListTable";
-import { RnwPlatformBadge } from "../rnw/components/RnwPlatformBadge";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
+import { RnwButton } from "../rnw/components/RnwButton";
 
 export function WordListPage() {
   const navigate = useNavigate();
@@ -64,49 +63,66 @@ export function WordListPage() {
     <div className="vstack gap-3" data-testid="word-list-page-ready">
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <div className="d-flex gap-2 align-items-center flex-wrap" data-testid="rnw-word-list-action-row">
+          {/*
           <RnwPlatformBadge />
-          <RnwPrimaryButton
+          */}
+          <RnwButton
             label="Add"
             onPress={() => navigate("/words/create")}
             icon={<i className="fa-solid fa-plus" aria-hidden="true" />}
             testID="rnw-add-button"
+            kind="solid"
+            tone="primary"
           />
 
-          <RnwOutlineButton
+          <RnwButton
             label="Study"
             onPress={() => navigate("/study")}
             icon={<i className="fa-solid fa-graduation-cap" aria-hidden="true" />}
             testID="rnw-study-button"
+            kind="outline"
+            tone="primary"
           />
 
-          <RnwOutlineButton
+          <RnwButton
             label="Examples"
             onPress={() => navigate("/examples")}
             icon={<i className="fa-solid fa-pen-to-square" aria-hidden="true" />}
             testID="rnw-examples-button"
+            kind="outline"
+            tone="primary"
           />
 
-          <RnwIconButton
+          <RnwButton
             onPress={() => setShowSearch(!showSearch)}
             icon={<i className="fa-solid fa-magnifying-glass" aria-hidden="true" />}
             title="Toggle search"
             testID="rnw-toggle-search-button"
+            kind="outline"
+            tone="secondary"
           />
 
           <div className="d-none d-md-flex gap-2">
-            <RnwOutlineButton
+            <RnwButton
               label="Export"
               onPress={() => void handleExport()}
               disabled={busy}
               icon={<i className="fa-solid fa-upload" aria-hidden="true" />}
               testID="rnw-export-button"
+              kind="outline"
+              tone="secondary"
+              size="sm"
             />
-            <RnwOutlineButton
+
+            <RnwButton
               label="Import"
               onPress={() => setShowImportModal(true)}
               disabled={busy}
               icon={<i className="fa-solid fa-download" aria-hidden="true" />}
               testID="rnw-import-button"
+              kind="outline"
+              tone="secondary"
+              size="sm"
             />
           </div>
         </div>

@@ -4,7 +4,7 @@ import { wordApplicationService } from "../word/wordApplication";
 import type { WordEntry } from "../api/types";
 import { RnwWordForm } from "../rnw/components/RnwWordForm";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
-import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
+import { RnwButton } from "../rnw/components/RnwButton";
 import { RnwPageHeader, RnwPanelCard } from "@leximemory/ui";
 
 export function WordCreatePage() {
@@ -28,11 +28,13 @@ export function WordCreatePage() {
         title="Add Word"
         icon={<i className="fa-solid fa-plus text-primary" aria-hidden="true" />}
         action={
-          <RnwOutlineButton
+          <RnwButton
             label="Back"
             onPress={() => navigate("/words")}
             icon={<i className="fa-solid fa-arrow-left" aria-hidden="true" />}
             testID="rnw-word-create-back"
+            kind="outline"
+            tone="primary"
           />
         }
         testID="rnw-word-create-header"

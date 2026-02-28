@@ -30,7 +30,6 @@ export function RnwPrimaryButton({
         ...(disabled ? styles.buttonDisabled : {}),
         ...(fullWidth ? styles.fullWidth : {}),
       })}
-      accessibilityRole="button"
     >
       {icon ? <Text style={styles.icon}>{icon}</Text> : null}
       <Text style={styles.text}>{label}</Text>

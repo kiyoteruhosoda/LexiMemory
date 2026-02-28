@@ -1,6 +1,11 @@
+// frontend/src/rnw/components/RnwOutlineButton.tsx
+
 import type { ReactNode } from "react";
 import { Pressable, Text } from "../react-native";
 import { StyleSheet } from "../stylesheet";
+
+type OutlineVariant = "primary" | "secondary";
+type ButtonSize = "md" | "sm";
 
 type RnwOutlineButtonProps = {
   label: string;
@@ -9,7 +14,33 @@ type RnwOutlineButtonProps = {
   testID?: string;
   disabled?: boolean;
   fullWidth?: boolean;
+  variant?: OutlineVariant;
+  size?: ButtonSize; // ★追加（これが抜けてた）
 };
+
+const OUTLINE = {
+  primary: {
+    main: "#0d6efd",
+    pressedText: "#fff",
+  },
+  secondary: {
+    main: "#6c757d",
+    pressedText: "#fff",
+  },
+} as const;
+
+const SIZE = {
+  md: {
+    height: 38,
+    paddingInline: 12,
+    fontSize: 14,
+  },
+  sm: {
+    height: 30,
+    paddingInline: 10,
+    fontSize: 13,
+  },
+} as const;
 
 export function RnwOutlineButton({
   label,
@@ -18,59 +49,74 @@ export function RnwOutlineButton({
   testID,
   disabled = false,
   fullWidth,
+  variant = "primary",
+  size = "md",
 }: RnwOutlineButtonProps) {
+  const v = OUTLINE[variant];
+  const s = SIZE[size];
+
   return (
     <Pressable
       onPress={disabled ? undefined : onPress}
       testID={testID}
       style={({ pressed }) => ({
-        ...styles.button,
-        ...(pressed ? styles.buttonPressed : {}),
-        ...(disabled ? styles.buttonDisabled : {}),
+        ...styles.buttonBase,
         ...(fullWidth ? styles.fullWidth : {}),
+
+        // size
+        height: s.height,
+        paddingInline: s.paddingInline,
+
+        // variant
+        borderColor: v.main,
+        color: v.main,
+
+        ...(pressed && !disabled
+          ? {
+              backgroundColor: v.main,
+              color: v.pressedText,
+            }
+          : {}),
+
+        ...(disabled ? styles.buttonDisabled : {}),
       })}
-      accessibilityRole="button"
     >
       {icon ? <Text style={styles.icon}>{icon}</Text> : null}
-      <Text style={styles.text}>{label}</Text>
+      <Text style={{ ...styles.text, fontSize: s.fontSize }}>{label}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
+  buttonBase: {
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    height: 38,
     borderRadius: 6,
     backgroundColor: "transparent",
-    borderColor: "#6c757d",
     borderWidth: 1,
-    paddingInline: 12,
     gap: 6,
     cursor: "pointer",
   },
+
   fullWidth: {
     width: "100%",
   },
-  buttonPressed: {
-    backgroundColor: "#f8f9fa",
-  },
+
   buttonDisabled: {
     opacity: 0.5,
     cursor: "not-allowed",
   },
+
+  // colorは親から継承
   icon: {
-    color: "#6c757d",
     lineHeight: "20px",
     display: "inline-flex",
     alignItems: "center",
   },
+
   text: {
-    color: "#6c757d",
-    fontSize: 14,
     fontWeight: 500,
     lineHeight: "20px",
   },

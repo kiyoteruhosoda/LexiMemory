@@ -1,11 +1,12 @@
+// frontend/src/pages/LoginPage.tsx
+
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/useAuth";
 import type { AuthCommand, AuthIntent } from "../core/auth/authSessionService";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
-import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
-import { RnwPrimaryButton } from "../rnw/components/RnwPrimaryButton";
+import { RnwButton } from "../rnw/components/RnwButton";
 import { RnwTextField } from "../rnw/components/RnwTextField";
 import { RnwSurfaceCard } from "@leximemory/ui";
 import { Text, View } from "../rnw/react-native";
@@ -90,7 +91,7 @@ export function LoginPage() {
         <View style={styles.headingWrap}>
           <h1 style={styles.heading}>
             <i className="fa-solid fa-lock" aria-hidden="true" style={styles.headingIcon} />
-            <span>{viewModel.title}</span>
+            {viewModel.title}
           </h1>
           <Text style={styles.subtitle}>{viewModel.subtitle}</Text>
         </View>
@@ -130,20 +131,24 @@ export function LoginPage() {
             testID="rnw-login-password"
           />
 
-          <RnwPrimaryButton
+          <RnwButton
             label={busy ? "Processing..." : viewModel.submitLabel}
             onPress={() => void submit()}
             disabled={busy || !username.trim() || !password.trim()}
             fullWidth
             icon={<i className={viewModel.submitIconClass} aria-hidden="true" />}
             testID="rnw-login-submit"
+            kind="solid"
+            tone="primary"
           />
 
-          <RnwOutlineButton
+          <RnwButton
             label={mode === "login" ? "Switch to Register" : "Switch to Login"}
             onPress={() => setMode(mode === "login" ? "register" : "login")}
             fullWidth
             testID="rnw-login-toggle-mode"
+            kind="outline"
+            tone="secondary"
           />
         </form>
       </RnwSurfaceCard>
@@ -161,23 +166,32 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "column",
     alignItems: "flex-start",
-    gap: 6,
+    gap: "0.375rem",
   },
+
+  // ★ここを row にする
   heading: {
     margin: 0,
     display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-start",
-    gap: 6,
+    flexDirection: "row",      // column → row
+    alignItems: "center",      // 同列で中央揃え
+    gap: 8,                    // 6でも良いが少し広めが自然
     fontSize: 24,
     fontWeight: 500,
     color: "#212529",
     lineHeight: 1.2,
   },
+
+  // ★アイコンも安定させる
   headingIcon: {
+    display: "inline-flex",    // i 要素の縦ズレ対策
+    alignItems: "center",
+    justifyContent: "center",
     color: "#0d6efd",
     fontSize: 22,
+    lineHeight: 1,             // 余計な上下を消す
   },
+
   subtitle: {
     fontSize: 14,
     color: "#6c757d",
@@ -190,6 +204,6 @@ const styles = StyleSheet.create({
   form: {
     display: "flex",
     flexDirection: "column",
-    gap: 12,
+    gap: "0.75rem",
   },
 });

@@ -1,14 +1,17 @@
+// frontend/src/rnw/react-native.tsx
+
 import { useState, type CSSProperties, type ReactNode } from "react";
 
 type PressableStyle = CSSProperties | ((state: { pressed: boolean }) => CSSProperties);
 
-type PressableProps = {
+export type PressableProps = {
   children: ReactNode;
   onPress?: () => void;
   style?: PressableStyle;
   testID?: string;
   disabled?: boolean;
-  accessibilityRole?: "button";
+  type?: "button" | "submit" | "reset";
+  ariaLabel?: string;
 };
 
 type ViewProps = {
@@ -31,25 +34,35 @@ type TextInputProps = {
   type?: string;
   style?: CSSProperties;
   testID?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
 };
 
-export function Pressable({ children, onPress, style, testID, disabled, accessibilityRole }: PressableProps) {
+export function Pressable({
+  children,
+  onPress,
+  style,
+  testID,
+  disabled,
+  type = "button",
+  ariaLabel,
+}: PressableProps) {
   const [pressed, setPressed] = useState(false);
   const resolvedStyle = typeof style === "function" ? style({ pressed }) : style;
 
   return (
     <button
-      type="button"
-      onClick={onPress}
+      type={type}
+      onClick={disabled ? undefined : onPress}
       onMouseDown={() => setPressed(true)}
       onMouseUp={() => setPressed(false)}
       onMouseLeave={() => setPressed(false)}
       onTouchStart={() => setPressed(true)}
       onTouchEnd={() => setPressed(false)}
       data-testid={testID}
-      role={accessibilityRole}
       style={resolvedStyle}
       disabled={disabled}
+      aria-label={ariaLabel}
     >
       {children}
     </button>
@@ -65,10 +78,20 @@ export function View({ children, style, testID }: ViewProps) {
 }
 
 export function Text({ children, style }: TextProps) {
-  return <span style={style}>{children}</span>;
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        lineHeight: "inherit",
+        ...style,
+      }}
+    >
+      {children}
+    </span>
+  );
 }
 
-export function TextInput({ value, onChangeText, placeholder, autoFocus, autoComplete, type, style, testID }: TextInputProps) {
+export function TextInput({ value, onChangeText, placeholder, autoFocus, autoComplete, type, style, testID, onFocus, onBlur }: TextInputProps) {
   return (
     <input
       value={value}
@@ -79,6 +102,8 @@ export function TextInput({ value, onChangeText, placeholder, autoFocus, autoCom
       type={type}
       style={style}
       data-testid={testID}
+      onFocus={onFocus} // ← 追加
+      onBlur={onBlur}   // ← 追加
     />
   );
 }
