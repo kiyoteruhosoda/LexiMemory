@@ -125,6 +125,114 @@ The `/healthz` endpoint returns API status, app version, and git commit hash.
 - **Comprehensive Tests**: Unit and integration tests with pytest
 - **Docker Support**: Containerized deployment with docker-compose
 
+
+
+## Staging Environment (pre-production)
+
+本番前検証向けに `docker-compose.stg.yml` と運用スクリプトを追加しています。
+
+### 一回だけやる事前準備
+
+1. stg 用 env を作成
+
+```sh
+cp .env.sample .env.stg
+```
+
+2. `.env.stg` を編集（必須）
+
+- `PASSWORD_PEPPER` を安全な値へ変更
+- 必要に応じて `STG_API_PORT` / `STG_WEB_PORT` / `STG_HOST_DATA_DIR` を調整
+
+3. 初回ビルド（任意: `up` に `--build` が含まれるため省略可能）
+
+```sh
+./scripts/envctl.sh stg build ./.env.stg
+```
+
+### 毎回やるデプロイ手順（stg）
+
+```sh
+# 1) Deploy (build + up)
+./scripts/envctl.sh stg up ./.env.stg
+
+# 2) Health / Status
+./scripts/envctl.sh stg ps ./.env.stg
+
+# 3) Logs
+./scripts/envctl.sh stg logs ./.env.stg
+```
+
+### 毎回やる停止手順（stg）
+
+```sh
+./scripts/envctl.sh stg down ./.env.stg
+```
+
+### 本番デプロイ手順（既存運用）
+
+本番はこれまでどおり `prod` を指定して運用できます。
+
+```sh
+# build
+./scripts/envctl.sh prod build
+
+# deploy
+./scripts/envctl.sh prod up
+
+# logs
+./scripts/envctl.sh prod logs
+```
+
+### 同一イメージ昇格（推奨）
+
+本番品質を高める観点では、**stg で検証した同一イメージを prod へ昇格**する運用が推奨です。
+
+```sh
+./scripts/promote_same_image.sh <api_image> <web_image> <from_tag> <to_tag>
+```
+
+例: `stg-20260227` を `prod-20260227` へタグ昇格。
+
+### 補足
+
+- 既定ポート（stg）
+  - API: `http://localhost:18000`
+  - Web: `http://localhost:18080`
+- `docker-compose.stg.yml` では stg 用 API コンテナに `linguisticnode-api` エイリアスを付与し、既存 `nginx.conf` の upstream 設定を再利用しています。
+- 既存の `stg_up.sh / stg_logs.sh / stg_down.sh / build_env.sh` は互換ラッパーとして利用可能です。
+
+## VSCode Remote Debug
+
+このリポジトリには `.vscode/launch.json` と `.vscode/tasks.json` を追加済みです。
+
+- `Backend: FastAPI (uvicorn)` : FastAPI を VSCode から直接デバッグ実行
+- `Backend: Attach (debugpy :5678)` : すでに `debugpy` で起動したリモート Python プロセスへアタッチ
+- `Frontend: Chrome` : Vite を起動して Chrome デバッグ
+- `Fullstack: Backend + Frontend` : バックエンドとフロントエンドを同時デバッグ
+
+### Attach モード利用例（リモートプロセス）
+
+```sh
+python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+上記コマンドで待受後、VSCode の `Backend: Attach (debugpy :5678)` を選択してください。
+
+### Docker でのリモートデバッグ
+
+`docker-compose.debug.yml` を追加し、API(debugpy:5678) と Frontend(Vite:5173) の開発向けコンテナを分離しました。
+
+```sh
+# Debug containers up
+docker compose -f docker-compose.debug.yml up --build
+
+# Debug containers down
+docker compose -f docker-compose.debug.yml down
+```
+
+VSCode では `Docker: Attach FastAPI (debugpy)` を使うと、上記 compose を preLaunch/postDebug task で自動起動・停止できます。
+
 ## Development
 
 ### Running Locally (without Docker)

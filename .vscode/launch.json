@@ -1,0 +1,86 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend: FastAPI (uvicorn)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "cwd": "${workspaceFolder}",
+      "args": [
+        "app.main:app",
+        "--reload",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ],
+      "envFile": "${workspaceFolder}/.env",
+      "jinja": true,
+      "justMyCode": true,
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Backend: Attach (debugpy :5678)",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "127.0.0.1",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "/workspace/LexiMemory"
+        }
+      ],
+      "justMyCode": true
+    },
+    {
+      "name": "Frontend: Chrome",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/frontend",
+      "preLaunchTask": "frontend: dev (vite)",
+      "sourceMaps": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "Docker: Attach FastAPI (debugpy)",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "host": "127.0.0.1",
+        "port": 5678
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "/workspace/LexiMemory"
+        }
+      ],
+      "preLaunchTask": "docker: debug up",
+      "postDebugTask": "docker: debug down",
+      "justMyCode": true
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Fullstack: Backend + Frontend",
+      "configurations": [
+        "Backend: FastAPI (uvicorn)",
+        "Frontend: Chrome"
+      ]
+    },
+    {
+      "name": "Docker Fullstack: API Attach + Frontend Chrome",
+      "configurations": [
+        "Docker: Attach FastAPI (debugpy)",
+        "Frontend: Chrome"
+      ]
+    }
+  ]
+}
