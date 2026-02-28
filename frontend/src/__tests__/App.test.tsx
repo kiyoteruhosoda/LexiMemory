@@ -19,6 +19,8 @@ vi.mock('../api/client', () => ({
 
 vi.mock('../db/localRepository', () => ({
   ensureInitialized: vi.fn(() => Promise.resolve()),
+  getAllTags: vi.fn(() => Promise.resolve([])),
+  getWords: vi.fn(() => Promise.resolve({ words: [], memoryMap: {}, total: 0 })),
 }));
 
 describe('App component', () => {

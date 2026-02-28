@@ -78,7 +78,7 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
     e.preventDefault();
     setBusy(true);
     try {
-      await onSave(buildWordSaveDraft({ headword, pos, meaningJa, memo, examples }, initial));
+      await onSave(buildWordSaveDraft({ headword, pos, meaningJa, tagsInput: (initial?.tags ?? []).join(","), memo, examples }, initial));
       if (!initial) {
         setHeadword("");
         setMeaningJa("");

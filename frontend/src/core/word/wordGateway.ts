@@ -5,6 +5,7 @@ export type WordDraft = Omit<WordEntry, "id" | "createdAt" | "updatedAt">;
 export type WordListQuery = {
   q?: string;
   pos?: string;
+  tags?: string[];
 };
 
 export type WordListResult = {
@@ -21,4 +22,5 @@ export interface WordGateway {
   delete(wordId: string): Promise<void>;
   resetMemory(wordId: string): Promise<void>;
   exportWords(): Promise<AppData>;
+  getTags(): Promise<string[]>;
 }

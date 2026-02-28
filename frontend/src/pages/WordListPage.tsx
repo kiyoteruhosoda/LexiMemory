@@ -1,6 +1,6 @@
 // frontend/src/pages/WordListPage.tsx
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { wordApplicationService } from "../word/wordApplication";
 import type { WordEntry, MemoryState } from "../api/types";
@@ -11,6 +11,9 @@ import { RnwSearchPanel } from "../rnw/components/RnwSearchPanel";
 import { RnwWordListTable } from "../rnw/components/RnwWordListTable";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
 import { RnwButton } from "../rnw/components/RnwButton";
+import { useTagFilterState } from "../hooks/useTagFilterState";
+import { RnwTagFilterButton } from "../rnw/components/RnwTagFilterButton";
+import { RnwTagFilterPanel } from "../rnw/components/RnwTagFilterPanel";
 
 export function WordListPage() {
   const navigate = useNavigate();
@@ -21,13 +24,32 @@ export function WordListPage() {
   const [busy, setBusy] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [allTags, setAllTags] = useState<string[]>([]);
 
+  const {
+    selectedTags,
+    appliedTags,
+    isFilterExpanded,
+    setFilterExpanded,
+    handleToggleTagSelection,
+    applyFilter,
+    clearFilter,
+  } = useTagFilterState("words");
 
-  async function reload() {
+  const loadTags = useCallback(async () => {
+    try {
+      const tags = await wordApplicationService.getAllTags();
+      setAllTags(tags);
+    } catch (e) {
+      console.error("Failed to load tags:", e);
+    }
+  }, []);
+
+  const reload = useCallback(async () => {
     setError(null);
     setBusy(true);
     try {
-      const result = await wordApplicationService.listWords({ q });
+      const result = await wordApplicationService.listWords({ q, tags: appliedTags });
       setItems(result.items);
       setMemoryMap(result.memoryMap);
     } catch (e: unknown) {
@@ -35,11 +57,16 @@ export function WordListPage() {
     } finally {
       setBusy(false);
     }
-  }
+  }, [appliedTags, q]);
 
-  useEffect(() => { void reload(); 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useEffect(() => {
+    void loadTags();
+    void reload();
+  }, [loadTags, reload]);
+
+  useEffect(() => {
+    void reload();
+  }, [appliedTags, reload]);
 
   async function handleExport() {
     setError(null);
@@ -55,17 +82,14 @@ export function WordListPage() {
   }
 
   function handleImportSuccess() {
+    void loadTags();
     void reload();
   }
-
 
   return (
     <div className="vstack gap-3" data-testid="word-list-page-ready">
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <div className="d-flex gap-2 align-items-center flex-wrap" data-testid="rnw-word-list-action-row">
-          {/*
-          <RnwPlatformBadge />
-          */}
           <RnwButton
             label="Add"
             onPress={() => navigate("/words/create")}
@@ -92,6 +116,14 @@ export function WordListPage() {
             kind="outline"
             tone="primary"
           />
+
+          {allTags.length > 0 && (
+            <RnwTagFilterButton
+              activeCount={appliedTags?.length ?? 0}
+              onPress={() => setFilterExpanded(!isFilterExpanded)}
+              testID="rnw-word-list-tags"
+            />
+          )}
 
           <RnwButton
             onPress={() => setShowSearch(!showSearch)}
@@ -127,8 +159,19 @@ export function WordListPage() {
           </div>
         </div>
 
-        <SyncButton onSyncSuccess={reload} />
+        <SyncButton onSyncSuccess={() => { void loadTags(); void reload(); }} />
       </div>
+
+      {isFilterExpanded && allTags.length > 0 && (
+        <RnwTagFilterPanel
+          allTags={allTags}
+          selectedTags={selectedTags}
+          onToggleTag={handleToggleTagSelection}
+          onClose={() => setFilterExpanded(false)}
+          onClear={clearFilter}
+          onApply={applyFilter}
+        />
+      )}
 
       {showSearch && (
         <RnwSearchPanel

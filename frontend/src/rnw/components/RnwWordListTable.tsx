@@ -1,7 +1,6 @@
 // frontend/src/rnw/components/RnwWordListTable.tsx
 
 import type { MemoryState, WordEntry } from "../../api/types";
-import { resolveMemoryLevelTone } from "../../core/word/memoryLevelTonePolicy";
 import { Pressable, Text, View } from "../react-native";
 import { StyleSheet } from "../stylesheet";
 import { RnwBadge } from "./RnwBadge";
@@ -26,8 +25,6 @@ export function RnwWordListTable({ items, memoryMap, onSelectWord }: RnwWordList
 
       {items.map((word) => {
         const memoryLevel = memoryMap[word.id]?.memoryLevel ?? 0;
-        const tone = resolveMemoryLevelTone(memoryLevel);
-
         return (
           <Pressable
             key={word.id}
@@ -134,23 +131,5 @@ const styles = StyleSheet.create({
     // textOverflow: "ellipsis",
   },
 
-  levelBadge: {
-    borderRadius: 999,
-    paddingInline: 8,
-    paddingBlock: 2,
-    fontSize: 12,
-    color: "#ffffff",
-  },
-
-  levelNeutral: { backgroundColor: "#6c757d" },
-  levelWarning: { backgroundColor: "#ffc107", color: "#212529" },
-  levelPrimary: { backgroundColor: "#0d6efd" },
-  levelSuccess: { backgroundColor: "#198754" },
 });
 
-const toneStyleMap = {
-  neutral: styles.levelNeutral,
-  warning: styles.levelWarning,
-  primary: styles.levelPrimary,
-  success: styles.levelSuccess,
-} as const;

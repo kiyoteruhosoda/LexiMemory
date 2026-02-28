@@ -5,6 +5,7 @@ import {
   createEmptyExample,
   normalizeExampleField,
   sanitizeExamples,
+  parseTagsInput,
 } from "../../core/word/wordDraftPolicy";
 
 describe("wordDraftPolicy", () => {
@@ -17,6 +18,11 @@ describe("wordDraftPolicy", () => {
     expect(normalizeExampleField("  source  ")).toBe("source");
     expect(normalizeExampleField("   ")).toBeNull();
     expect(normalizeExampleField(null)).toBeNull();
+  });
+
+  it("parses tags input with deduplication", () => {
+    expect(parseTagsInput(" travel, business ,travel,  ")).toEqual(["travel", "business"]);
+    expect(parseTagsInput(" ")).toEqual([]);
   });
 
   it("sanitizes examples and removes empty english rows", () => {
@@ -36,6 +42,7 @@ describe("wordDraftPolicy", () => {
         headword: "  reach ",
         pos: "verb",
         meaningJa: " 到達する ",
+        tagsInput: "verb, basic",
         memo: "  ",
         examples: [{ id: "1", en: " Reach here. ", ja: " ここに到達 ", source: " note " }],
       },
@@ -47,7 +54,7 @@ describe("wordDraftPolicy", () => {
       pos: "verb",
       meaningJa: "到達する",
       pronunciation: null,
-      tags: [],
+      tags: ["verb", "basic"],
       examples: [{ id: "1", en: "Reach here.", ja: "ここに到達", source: "note" }],
       memo: null,
     });
@@ -72,6 +79,7 @@ describe("wordDraftPolicy", () => {
         headword: "reaches",
         pos: "verb",
         meaningJa: "到達する",
+        tagsInput: "updated, travel",
         memo: "memo",
         examples: [],
       },
@@ -79,7 +87,7 @@ describe("wordDraftPolicy", () => {
     );
 
     expect(draft.pronunciation).toBe("riːtʃ");
-    expect(draft.tags).toEqual(["travel"]);
+    expect(draft.tags).toEqual(["updated", "travel"]);
     expect(draft.memo).toBe("memo");
   });
 });

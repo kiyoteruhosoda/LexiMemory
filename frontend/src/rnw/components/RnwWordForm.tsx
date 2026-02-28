@@ -34,6 +34,7 @@ export function RnwWordForm({ initial, onSave, onCancel }: RnwWordFormProps) {
   const [headword, setHeadword] = useState(initial?.headword ?? "");
   const [pos, setPos] = useState<Pos>(initial?.pos ?? "noun");
   const [meaningJa, setMeaningJa] = useState(initial?.meaningJa ?? "");
+  const [tagsInput, setTagsInput] = useState((initial?.tags ?? []).join(", "));
   const [memo, setMemo] = useState(initial?.memo ?? "");
   const [examples, setExamples] = useState<ExampleSentence[]>(
     initial?.examples && initial.examples.length > 0 ? initial.examples : [createEmptyExample(idGenerator)],
@@ -47,6 +48,7 @@ export function RnwWordForm({ initial, onSave, onCancel }: RnwWordFormProps) {
     setHeadword(initial.headword);
     setPos(initial.pos);
     setMeaningJa(initial.meaningJa);
+    setTagsInput((initial.tags ?? []).join(", "));
     setMemo(initial.memo ?? "");
     setExamples(initial.examples && initial.examples.length > 0 ? initial.examples : [createEmptyExample(idGenerator)]);
   }, [idGenerator, initial]);
@@ -72,11 +74,12 @@ export function RnwWordForm({ initial, onSave, onCancel }: RnwWordFormProps) {
     event.preventDefault();
     setBusy(true);
     try {
-      await onSave(buildWordSaveDraft({ headword, pos, meaningJa, memo, examples }, initial));
+      await onSave(buildWordSaveDraft({ headword, pos, meaningJa, tagsInput, memo, examples }, initial));
       if (!initial) {
         setHeadword("");
         setPos("noun");
         setMeaningJa("");
+        setTagsInput("");
         setMemo("");
         setExamples([createEmptyExample(idGenerator)]);
       }
@@ -87,79 +90,70 @@ export function RnwWordForm({ initial, onSave, onCancel }: RnwWordFormProps) {
 
   return (
     <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 16 }} data-testid="rnw-word-form">
-<section style={sectionStyle}>
-  <h5 style={{ margin: 0 }}>{initial ? "Edit word" : "Add a new word"}</h5>
+      <section style={sectionStyle}>
+        <h5 style={{ margin: 0 }}>{initial ? "Edit word" : "Add a new word"}</h5>
 
-  {/* ここだけ style tag を追加（最小でOK） */}
-  <style>
-    {`
-      .rnw-word-grid {
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
-        gap: 10px;
-        align-items: end;
-      }
-      @media (max-width: 720px) {
-        .rnw-word-grid {
-          grid-template-columns: 1fr;
-        }
-      }
-    `}
-  </style>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <span>Word</span>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center" }}>
+              <input
+                value={headword}
+                onChange={(event) => setHeadword(event.target.value)}
+                required
+                style={textInputStyle}
+                data-testid="rnw-word-form-headword"
+              />
+              <RnwButton
+                title="Speak"
+                onPress={() => speak(headword)}
+                disabled={!canSpeak || !headword.trim()}
+                icon={<i className="fa-solid fa-volume-high" aria-hidden="true" />}
+                kind="outline"
+                tone="secondary"
+              />
+            </div>
+          </label>
 
-  <div className="rnw-word-grid">
-    <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <span>Word</span>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <span>POS</span>
+            <select
+              value={pos}
+              onChange={(event) => setPos(event.target.value as Pos)}
+              style={{ ...textInputStyle, minWidth: 110 }}
+            >
+              {POS.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </label>
 
-      {/* flex → grid に変更。入力が常に伸びて、ボタンは auto 幅 */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center" }}>
-        <input
-          value={headword}
-          onChange={(event) => setHeadword(event.target.value)}
-          required
-          style={textInputStyle}
-          data-testid="rnw-word-form-headword"
-        />
-        <RnwButton
-          title="Speak"
-          onPress={() => speak(headword)}
-          disabled={!canSpeak || !headword.trim()}
-          icon={<i className="fa-solid fa-volume-high" aria-hidden="true" />}
-          kind="outline"
-          tone="secondary"
-        />
-      </div>
-    </label>
+          <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <span>Meaning (JA)</span>
+            <input
+              value={meaningJa}
+              onChange={(event) => setMeaningJa(event.target.value)}
+              required
+              style={textInputStyle}
+              data-testid="rnw-word-form-meaning"
+            />
+          </label>
+        </div>
 
-    <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <span>POS</span>
+        <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <span>Tags (comma separated)</span>
+          <input
+            value={tagsInput}
+            onChange={(event) => setTagsInput(event.target.value)}
+            placeholder="e.g. business, travel"
+            style={textInputStyle}
+            data-testid="rnw-word-form-tags"
+          />
+        </label>
+      </section>
 
-      {/* POS は小さめに（ただし小さすぎ防止） */}
-      <select
-        value={pos}
-        onChange={(event) => setPos(event.target.value as Pos)}
-        style={{ ...textInputStyle, minWidth: 110 }}
-      >
-        {POS.map((item) => (
-          <option key={item} value={item}>
-            {item}
-          </option>
-        ))}
-      </select>
-    </label>
-
-    <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      <span>Meaning (JA)</span>
-      <input
-        value={meaningJa}
-        onChange={(event) => setMeaningJa(event.target.value)}
-        required
-        style={textInputStyle}
-        data-testid="rnw-word-form-meaning"
-      />
-    </label>
-  </div>
-</section>
       <section style={sectionStyle}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           <strong>Example Sentences</strong>
@@ -214,8 +208,7 @@ export function RnwWordForm({ initial, onSave, onCancel }: RnwWordFormProps) {
                   testID="rnw-remove-button"
                   kind="outline"
                   tone="danger"
-                >
-                </RnwButton>
+                />
               </div>
             </div>
           ))}
@@ -236,21 +229,24 @@ export function RnwWordForm({ initial, onSave, onCancel }: RnwWordFormProps) {
 
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
         <RnwButton
-          label={busy ? "Saving..." : initial ? "Add" : "Create Word"}
+          label={busy ? "Saving..." : initial ? "Update" : "Create Word"}
           type="submit"
           disabled={busy}
-          data-testid="rnw-word-form-submit"
-          icon={<i className="fa-solid fa-plus" aria-hidden="true" />}
+          icon={<i className={initial ? "fa-solid fa-pen" : "fa-solid fa-plus"} aria-hidden="true" />}
           testID="rnw-submit-button"
           kind="solid"
           tone="primary"
-        >
-        </RnwButton>
-        {onCancel ? 
-          <RnwButton label="Cancel" onPress={onCancel} 
+        />
+        {onCancel ? (
+          <RnwButton
+            label="Cancel"
+            onPress={onCancel}
             icon={<i className="fa-solid fa-xmark" aria-hidden="true" />}
-            disabled={busy} kind="outline"
-            tone="secondary" /> : null}
+            disabled={busy}
+            kind="outline"
+            tone="secondary"
+          />
+        ) : null}
       </div>
     </form>
   );

@@ -18,8 +18,8 @@ export const wordsApi = {
   /**
    * List words with optional filtering (offline)
    */
-  list: async (q?: string, pos?: string): Promise<WordsListResponse> => {
-    return await localRepo.getWords({ q, pos });
+  list: async (q?: string, pos?: string, tags?: string[]): Promise<WordsListResponse> => {
+    return await localRepo.getWords({ q, pos, tags });
   },
 
   /**
@@ -54,5 +54,13 @@ export const wordsApi = {
   delete: async (id: string): Promise<{ ok: boolean }> => {
     await localRepo.deleteWord(id);
     return { ok: true };
+  },
+
+  getTags: async (): Promise<{ ok: boolean; tags: string[] }> => {
+    const tags = await localRepo.getAllTags();
+    return {
+      ok: true,
+      tags,
+    };
   },
 };

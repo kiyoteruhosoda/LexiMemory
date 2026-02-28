@@ -155,7 +155,7 @@ describe('Layout', () => {
     // Wait for async initialization
     await screen.findByText('Guest');
     
-    expect(screen.getByText('v1.0.0')).toBeInTheDocument();
+    expect(screen.getByText('1.0.0')).toBeInTheDocument();
   });
 
   it('should have hamburger menu button for mobile', async () => {

@@ -27,7 +27,6 @@ export function RnwIconButton({
     <Pressable
       onPress={disabled ? undefined : onPress}
       testID={testID}
-      accessibilityRole="button"
       style={({ pressed }) => ({
         ...styles.button,
         ...tone,

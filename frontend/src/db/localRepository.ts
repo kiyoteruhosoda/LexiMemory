@@ -54,6 +54,7 @@ function touchFile(file: VocabFile): VocabFile {
 export interface GetWordsOptions {
   q?: string;
   pos?: string;
+  tags?: string[];
   limit?: number;
   offset?: number;
   sortBy?: "headword" | "createdAt" | "updatedAt";
@@ -86,6 +87,12 @@ export async function getWords(
 
     if (options?.pos) {
       words = words.filter((w) => w.pos === options.pos);
+    }
+
+
+    if (options?.tags && options.tags.length > 0) {
+      const tags = new Set(options.tags);
+      words = words.filter((w) => w.tags.some((tag) => tags.has(tag)));
     }
 
     const total = words.length;

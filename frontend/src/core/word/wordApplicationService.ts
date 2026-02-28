@@ -44,4 +44,8 @@ export class WordApplicationService {
   async exportSnapshot(): Promise<AppData> {
     return this.gateway.exportWords();
   }
+
+  async getAllTags(): Promise<string[]> {
+    return this.gateway.getTags();
+  }
 }

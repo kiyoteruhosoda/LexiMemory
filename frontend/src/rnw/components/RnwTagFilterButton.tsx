@@ -19,7 +19,6 @@ export function RnwTagFilterButton({ activeCount = 0, onPress, testID }: RnwTagF
         ...(isActive ? styles.buttonActive : styles.buttonInactive),
         ...(pressed ? styles.buttonPressed : {}),
       })}
-      accessibilityRole="button"
     >
       <Text style={{ ...styles.icon, ...(isActive ? styles.iconActive : styles.iconInactive) }}>
         <i className="fa-solid fa-tag" aria-hidden="true" />
