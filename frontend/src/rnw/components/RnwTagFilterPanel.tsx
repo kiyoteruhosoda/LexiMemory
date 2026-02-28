@@ -1,8 +1,6 @@
 import { Text, View } from "../react-native";
 import { StyleSheet } from "../stylesheet";
-import { RnwIconButton } from "./RnwIconButton";
-import { RnwOutlineButton } from "./RnwOutlineButton";
-import { RnwPrimaryButton } from "./RnwPrimaryButton";
+import { RnwButton } from "./RnwButton";
 
 type RnwTagFilterPanelProps = {
   allTags: string[];
@@ -18,29 +16,33 @@ export function RnwTagFilterPanel({ allTags, selectedTags, onToggleTag, onClose,
     <View style={styles.container} testID="rnw-study-tag-panel">
       <View style={styles.headerRow}>
         <Text style={styles.title}>Filter by Tags</Text>
-        <RnwIconButton
+        <RnwButton
           icon={<i className="fa-solid fa-times" aria-hidden="true" />}
           onPress={onClose}
           title="close"
           testID="rnw-study-tag-close"
+          tone="secondary"
+          kind="outline"
         />
       </View>
 
       <View style={styles.tagList}>
         {allTags.map((tag) => (
-          <RnwOutlineButton
+          <RnwButton
             key={tag}
             label={selectedTags.includes(tag) ? `✓ ${tag}` : tag}
             onPress={() => onToggleTag(tag)}
             testID={`rnw-tag-chip-${tag}`}
             disabled={false}
+            tone="primary"
+            kind="outline"
           />
         ))}
       </View>
 
       <View style={styles.actionRow}>
-        <RnwOutlineButton label="Clear" onPress={onClear} testID="rnw-study-tag-clear" />
-        <RnwPrimaryButton label="Apply" onPress={onApply} testID="rnw-study-tag-apply" />
+        <RnwButton label="Clear" onPress={onClear} testID="rnw-study-tag-clear" tone="primary" kind="outline" />
+        <RnwButton label="Apply" onPress={onApply} testID="rnw-study-tag-apply" tone="primary" kind="solid" />
       </View>
     </View>
   );

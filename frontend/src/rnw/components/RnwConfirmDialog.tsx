@@ -1,5 +1,4 @@
-import { RnwOutlineButton } from "./RnwOutlineButton";
-import { RnwPrimaryButton } from "./RnwPrimaryButton";
+import { RnwButton } from "./RnwButton";
 
 type Tone = "danger" | "warning" | "primary";
 
@@ -56,13 +55,15 @@ export function RnwConfirmDialog({
             {message}
           </div>
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 12 }}>
-            <RnwOutlineButton label={cancelText} onPress={onClose} />
-            <RnwPrimaryButton
+            <RnwButton label={cancelText} onPress={onClose} tone="primary" kind="outline" />
+            <RnwButton
               label={confirmText}
               onPress={() => {
                 onConfirm();
                 onClose();
               }}
+              tone="primary"
+              kind="solid"
             />
           </div>
         </div>
