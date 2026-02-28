@@ -2,100 +2,31 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "backend: dev (uvicorn)",
+      "label": "compose: up (dev)",
       "type": "shell",
-      "command": "python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "isBackground": true,
-      "problemMatcher": {
-        "owner": "custom",
-        "pattern": [
-          {
-            "regexp": ".",
-            "file": 1,
-            "location": 2,
-            "message": 3
-          }
-        ],
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "Uvicorn running on",
-          "endsPattern": "Application startup complete"
-        }
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      }
+      "command": "docker compose up --build -d",
+      "problemMatcher": []
     },
     {
-      "label": "frontend: dev (vite)",
+      "label": "vite: dev",
       "type": "shell",
       "command": "npm run dev -- --host 0.0.0.0 --port 5173",
       "options": {
         "cwd": "${workspaceFolder}/frontend"
       },
       "isBackground": true,
-      "problemMatcher": {
-        "owner": "custom",
-        "pattern": [
-          {
-            "regexp": ".",
-            "file": 1,
-            "location": 2,
-            "message": 3
+      "problemMatcher": [
+        {
+          "pattern": [
+            { "regexp": ".*" }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".*",
+            "endsPattern": "Local:\\s+http://localhost:5173/|ready in"
           }
-        ],
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "VITE",
-          "endsPattern": "Local:"
         }
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      }
-    },
-    {
-      "label": "docker: debug up",
-      "type": "shell",
-      "command": "docker compose -f docker-compose.debug.yml up --build",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "isBackground": true,
-      "problemMatcher": {
-        "owner": "custom",
-        "pattern": [
-          {
-            "regexp": "."
-          }
-        ],
-        "background": {
-          "activeOnStart": true,
-          "beginsPattern": "Attaching to",
-          "endsPattern": "Uvicorn running on"
-        }
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      }
-    },
-    {
-      "label": "docker: debug down",
-      "type": "shell",
-      "command": "docker compose -f docker-compose.debug.yml down",
-      "options": {
-        "cwd": "${workspaceFolder}"
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated"
-      }
+      ]
     }
   ]
 }
