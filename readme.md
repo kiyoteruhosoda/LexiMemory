@@ -172,6 +172,16 @@ cp .env.sample .env.stg
 ./scripts/envctl.sh stg probe ./.env.stg nolumia.com
 # or compatibility wrapper
 ./scripts/stg_probe.sh ./.env.stg nolumia.com
+
+# 6) Nginx logs only (web container)
+./scripts/envctl.sh stg nginx-logs ./.env.stg
+# or compatibility wrapper
+./scripts/stg_nginx_logs.sh ./.env.stg
+
+# 7) Show resolved ports and source of values
+./scripts/envctl.sh stg ports ./.env.stg
+# or generic helper (stg/prod/debug)
+./scripts/show_ports.sh stg ./.env.stg
 ```
 
 ### 毎回やる停止手順（stg）
@@ -215,6 +225,25 @@ cp .env.sample .env.stg
 - `docker-compose.stg.yml` では stg 用 API コンテナに `linguisticnode-api` エイリアスを付与し、既存 `nginx.conf` の upstream 設定を再利用しています。
 - 既存の `stg_up.sh / stg_logs.sh / stg_down.sh / build_env.sh` は互換ラッパーとして利用可能です。
 - `Database Initialization Error: crypto.randomUUID is not a function` が出る場合、ブラウザ実行環境が `randomUUID` 非対応でも、アプリ側でフォールバック UUID 生成へ自動切替されます。
+
+
+### ポート解決の考え方（どこを見るか）
+
+`envctl.sh <env> ports` は次の順で値を解決します。
+
+1. `docker-compose*.yml` のポートマッピング定義（例: `"${STG_WEB_PORT:-18080}:80"`）
+2. 環境ファイル（`stg` は `.env.stg`、`prod/debug` は `.env`）
+3. compose 側のデフォルト値（`:-18080` のような fallback）
+
+つまり、**「.env/.env.stg と docker-compose の両方を見る」**のが正解です。
+
+確認コマンド例:
+
+```sh
+./scripts/envctl.sh stg ports ./.env.stg
+./scripts/envctl.sh prod ports ./.env
+./scripts/envctl.sh debug ports ./.env
+```
 
 ## VSCode Remote Debug
 
