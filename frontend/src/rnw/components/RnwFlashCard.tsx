@@ -6,6 +6,7 @@ import { speechApplicationService } from "../../speech/speechApplication";
 import { RnwButton } from "./RnwButton";
 import { RnwBadge } from "./RnwBadge";
 import type { RnwButtonKind, RnwButtonTone } from "../theme/tokens";
+import { RnwLevelBadge } from "./RnwLevelBadge";
 
 export type RnwFlashCardProps = {
   word: WordEntry;
@@ -79,10 +80,7 @@ export function RnwFlashCard({ word, memory, onRate }: RnwFlashCardProps) {
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <i className="fa-solid fa-layer-group" aria-hidden="true" style={{ color: "#0d6efd" }} />
           <strong>Flash Card</strong>
-            <RnwBadge
-              tone="light">
-              Lv {memory.memoryLevel}
-            </RnwBadge>
+          <RnwLevelBadge level={memory.memoryLevel} />
         </div>
 
         <RnwButton
@@ -101,7 +99,7 @@ export function RnwFlashCard({ word, memory, onRate }: RnwFlashCardProps) {
           <div style={{ fontSize: 36, fontWeight: 700 }}>{word.headword}</div>
           <div style={{ marginBottom: 4 }}>
             <RnwBadge
-              tone="secondary">
+              tone="secondary" variant="pill">
               {word.pos}
             </RnwBadge>
           </div>

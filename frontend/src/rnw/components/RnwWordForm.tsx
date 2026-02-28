@@ -1,3 +1,5 @@
+// frontend/src/rnw/components/RnwWordForm.tsx
+
 import { useEffect, useMemo, useState } from "react";
 import type { ExampleSentence, Pos, WordEntry } from "../../api/types";
 import { buildWordSaveDraft, createEmptyExample } from "../../core/word/wordDraftPolicy";

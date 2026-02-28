@@ -115,7 +115,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </div>
       
       <footer className="text-center mt-4">
-        LinguisticNode <RnwBadge tone="secondary">v{appVersion}</RnwBadge>
+        LinguisticNode <RnwBadge tone="secondary" variant="pill">{appVersion}</RnwBadge>
       </footer>
       
       {/* Sync Details Modal */}
