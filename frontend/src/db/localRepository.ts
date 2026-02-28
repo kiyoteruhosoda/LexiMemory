@@ -14,6 +14,7 @@ import {
   saveSyncMetadata,
   initializeDB,
 } from "./indexeddb";
+import { generateUuid } from "../core/identity/uuid";
 
 /**
  * Ensure database is initialized
@@ -181,13 +182,13 @@ export async function createWord(
     const now = new Date().toISOString();
     const newWord: WordEntry = {
       ...data,
-      id: crypto.randomUUID(),
+      id: generateUuid(),
       createdAt: now,
       updatedAt: now,
       // Ensure examples have IDs
       examples: data.examples.map((ex) => ({
         ...ex,
-        id: ex.id || crypto.randomUUID(),
+        id: ex.id || generateUuid(),
       })),
     };
 
@@ -231,7 +232,7 @@ export async function updateWord(
       // Ensure examples have IDs
       examples: data.examples.map((ex) => ({
         ...ex,
-        id: ex.id || crypto.randomUUID(),
+        id: ex.id || generateUuid(),
       })),
     };
 

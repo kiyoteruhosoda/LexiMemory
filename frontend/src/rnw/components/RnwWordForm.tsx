@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ExampleSentence, Pos, WordEntry } from "../../api/types";
 import { buildWordSaveDraft, createEmptyExample } from "../../core/word/wordDraftPolicy";
+import { createUuidGenerator } from "../../core/identity/uuid";
 import { speechApplicationService } from "../../speech/speechApplication";
 import { RnwOutlineButton } from "./RnwOutlineButton";
 
@@ -26,7 +27,7 @@ const textInputStyle = {
 };
 
 export function RnwWordForm({ initial, onSave, onCancel }: RnwWordFormProps) {
-  const idGenerator = useMemo(() => ({ nextId: () => crypto.randomUUID() }), []);
+  const idGenerator = useMemo(() => createUuidGenerator(), []);
 
   const [headword, setHeadword] = useState(initial?.headword ?? "");
   const [pos, setPos] = useState<Pos>(initial?.pos ?? "noun");

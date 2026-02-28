@@ -7,6 +7,7 @@
  */
 
 import type { VocabFile, SyncMetadata } from "./types";
+import { generateUuid } from "../core/identity/uuid";
 
 const DB_NAME = "LinguisticNodeDB";
 const DB_VERSION = 1;
@@ -265,7 +266,7 @@ export async function initializeDB(): Promise<void> {
 
   if (!metadata) {
     const initialMetadata: SyncMetadata = {
-      clientId: crypto.randomUUID(),
+      clientId: generateUuid(),
       serverRev: 0,
       dirty: false,
       lastSyncAt: null,

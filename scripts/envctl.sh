@@ -7,6 +7,7 @@ set -euo pipefail
 #   ./scripts/envctl.sh stg up ./.env.stg
 #   ./scripts/envctl.sh stg build ./.env.stg
 #   ./scripts/envctl.sh stg logs ./.env.stg linguisticnode-api-stg
+#   ./scripts/envctl.sh stg errors ./.env.stg linguisticnode-api-stg
 #   ./scripts/envctl.sh prod build
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -129,7 +130,7 @@ run_compose() {
 }
 
 if [ -z "$ENV_KIND" ]; then
-  echo "[ERROR] Usage: ./scripts/envctl.sh <prod|stg|debug> [up|down|build|logs|ps|restart] [env_file] [service]"
+  echo "[ERROR] Usage: ./scripts/envctl.sh <prod|stg|debug> [up|down|build|logs|errors|ps|restart] [env_file] [service]"
   exit 1
 fi
 
@@ -151,6 +152,13 @@ case "$ACTION" in
       run_compose "$ENV_KIND" logs -f
     fi
     ;;
+  errors)
+    if [ -n "$SERVICE" ]; then
+      run_compose "$ENV_KIND" logs --since 30m "$SERVICE" | rg -i "error|exception|traceback|failed|fatal|panic|crypto\.randomUUID"
+    else
+      run_compose "$ENV_KIND" logs --since 30m | rg -i "error|exception|traceback|failed|fatal|panic|crypto\.randomUUID"
+    fi
+    ;;
   ps)
     run_compose "$ENV_KIND" ps
     ;;
@@ -159,7 +167,7 @@ case "$ACTION" in
     run_compose "$ENV_KIND" ps
     ;;
   *)
-    echo "[ERROR] unsupported action: $ACTION (up|down|build|logs|ps|restart)"
+    echo "[ERROR] unsupported action: $ACTION (up|down|build|logs|errors|ps|restart)"
     exit 1
     ;;
 esac

@@ -162,6 +162,11 @@ cp .env.sample .env.stg
 
 # 3) Logs
 ./scripts/envctl.sh stg logs ./.env.stg
+
+# 4) Error-only logs (last 30 minutes, regex filtered)
+./scripts/envctl.sh stg errors ./.env.stg
+# or compatibility wrapper
+./scripts/stg_errors.sh ./.env.stg
 ```
 
 ### 毎回やる停止手順（stg）
@@ -202,6 +207,7 @@ cp .env.sample .env.stg
   - Web: `http://localhost:18080`
 - `docker-compose.stg.yml` では stg 用 API コンテナに `linguisticnode-api` エイリアスを付与し、既存 `nginx.conf` の upstream 設定を再利用しています。
 - 既存の `stg_up.sh / stg_logs.sh / stg_down.sh / build_env.sh` は互換ラッパーとして利用可能です。
+- `Database Initialization Error: crypto.randomUUID is not a function` が出る場合、ブラウザ実行環境が `randomUUID` 非対応でも、アプリ側でフォールバック UUID 生成へ自動切替されます。
 
 ## VSCode Remote Debug
 
