@@ -167,6 +167,11 @@ cp .env.sample .env.stg
 ./scripts/envctl.sh stg errors ./.env.stg
 # or compatibility wrapper
 ./scripts/stg_errors.sh ./.env.stg
+
+# 5) Endpoint probe (HTTP/HTTPS headers + /api redirect check)
+./scripts/envctl.sh stg probe ./.env.stg nolumia.com
+# or compatibility wrapper
+./scripts/stg_probe.sh ./.env.stg nolumia.com
 ```
 
 ### 毎回やる停止手順（stg）
@@ -205,6 +210,8 @@ cp .env.sample .env.stg
 - 既定ポート（stg）
   - API: `http://localhost:18000`
   - Web: `http://localhost:18080`
+- stg Web コンテナは `18080` で **HTTP待受** です。`https://<host>:18080` は TLS ハンドシェイク不一致で `ERR_SSL_PROTOCOL_ERROR` になります。
+- `/api` へのアクセスで `307/308` が返る場合は、上流アプリのスラッシュ正規化によるリダイレクトです（`/api/` を利用してください）。
 - `docker-compose.stg.yml` では stg 用 API コンテナに `linguisticnode-api` エイリアスを付与し、既存 `nginx.conf` の upstream 設定を再利用しています。
 - 既存の `stg_up.sh / stg_logs.sh / stg_down.sh / build_env.sh` は互換ラッパーとして利用可能です。
 - `Database Initialization Error: crypto.randomUUID is not a function` が出る場合、ブラウザ実行環境が `randomUUID` 非対応でも、アプリ側でフォールバック UUID 生成へ自動切替されます。

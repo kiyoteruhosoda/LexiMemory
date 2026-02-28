@@ -8,6 +8,7 @@ set -euo pipefail
 #   ./scripts/envctl.sh stg build ./.env.stg
 #   ./scripts/envctl.sh stg logs ./.env.stg linguisticnode-api-stg
 #   ./scripts/envctl.sh stg errors ./.env.stg linguisticnode-api-stg
+#   ./scripts/envctl.sh stg probe ./.env.stg nolumia.com
 #   ./scripts/envctl.sh prod build
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -100,6 +101,59 @@ ensure_stg_data_dir() {
   mkdir -p "$data_dir"
 }
 
+
+resolve_web_port() {
+  local env_kind="$1"
+  local env_file="$2"
+
+  case "$env_kind" in
+    stg)
+      local port
+      port="$(read_env_value "$env_file" "STG_WEB_PORT")"
+      echo "${port:-18080}"
+      ;;
+    prod)
+      local port
+      port="$(read_env_value "$env_file" "WEB_PORT")"
+      echo "${port:-8080}"
+      ;;
+    debug)
+      local port
+      port="$(read_env_value "$env_file" "WEB_PORT")"
+      echo "${port:-8080}"
+      ;;
+  esac
+}
+
+probe_web_endpoint() {
+  local env_kind="$1"
+  local env_file="$2"
+  local host="${3:-localhost}"
+
+  local web_port
+  web_port="$(resolve_web_port "$env_kind" "$env_file")"
+
+  local http_url="http://$host:$web_port"
+  local https_url="https://$host:$web_port"
+
+  echo "[INFO] Probing HTTP endpoint: $http_url"
+  if ! curl -sS -I --max-time 10 "$http_url" | sed -n '1,10p'; then
+    echo "[WARN] HTTP probe failed (service may be down or blocked)."
+  fi
+
+  echo
+  echo "[INFO] Probing HTTPS endpoint: $https_url"
+  if ! curl -k -sS -I --max-time 10 "$https_url" | sed -n '1,10p'; then
+    echo "[WARN] HTTPS probe failed. This endpoint may be HTTP-only."
+  fi
+
+  echo
+  echo "[INFO] Checking redirect response for /api (expect possible 307/308 depending upstream route policy)"
+  if ! curl -sS -I --max-time 10 "$http_url/api" | sed -n '1,10p'; then
+    echo "[WARN] /api probe failed (service may be down or blocked)."
+  fi
+}
+
 run_compose() {
   local env_kind="$1"
   shift
@@ -130,7 +184,7 @@ run_compose() {
 }
 
 if [ -z "$ENV_KIND" ]; then
-  echo "[ERROR] Usage: ./scripts/envctl.sh <prod|stg|debug> [up|down|build|logs|errors|ps|restart] [env_file] [service]"
+  echo "[ERROR] Usage: ./scripts/envctl.sh <prod|stg|debug> [up|down|build|logs|errors|probe|ps|restart] [env_file] [service]"
   exit 1
 fi
 
@@ -159,6 +213,9 @@ case "$ACTION" in
       run_compose "$ENV_KIND" logs --since 30m | rg -i "error|exception|traceback|failed|fatal|panic|crypto\.randomUUID"
     fi
     ;;
+  probe)
+    probe_web_endpoint "$ENV_KIND" "${ENV_FILE:-$(default_env_file_for "$ENV_KIND")}" "$SERVICE"
+    ;;
   ps)
     run_compose "$ENV_KIND" ps
     ;;
@@ -167,7 +224,7 @@ case "$ACTION" in
     run_compose "$ENV_KIND" ps
     ;;
   *)
-    echo "[ERROR] unsupported action: $ACTION (up|down|build|logs|errors|ps|restart)"
+    echo "[ERROR] unsupported action: $ACTION (up|down|build|logs|errors|probe|ps|restart)"
     exit 1
     ;;
 esac
