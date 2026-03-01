@@ -17,6 +17,11 @@ export interface GradeResponse {
   memory: MemoryState;
 }
 
+export interface CardByWordIdResponse {
+  ok: boolean;
+  card: null | { word: WordEntry; memory: MemoryState };
+}
+
 /**
  * Simple FSRS-inspired calculation (simplified for offline use)
  * This should match the server-side logic
@@ -92,6 +97,30 @@ export const studyApi = {
     return {
       ok: true,
       card,
+    };
+  },
+
+  cardByWordId: async (wordId: string): Promise<CardByWordIdResponse> => {
+    const word = await localRepo.getWordById(wordId);
+    if (!word) {
+      return { ok: true, card: null };
+    }
+
+    const memory = await localRepo.getMemoryState(wordId) || {
+      wordId,
+      memoryLevel: 0,
+      ease: 2.5,
+      intervalDays: 0,
+      dueAt: new Date().toISOString(),
+      lastRating: null,
+      lastReviewedAt: null,
+      lapseCount: 0,
+      reviewCount: 0,
+    };
+
+    return {
+      ok: true,
+      card: { word, memory },
     };
   },
 

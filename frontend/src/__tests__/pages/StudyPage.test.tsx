@@ -11,6 +11,7 @@ vi.mock('../../api/study.offline', () => ({
     next: vi.fn(),
     grade: vi.fn(),
     getTags: vi.fn(),
+    cardByWordId: vi.fn(),
   },
 }));
 
@@ -100,6 +101,7 @@ describe('StudyPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('vocabulary')).toBeInTheDocument();
+      expect(screen.getByTestId('rnw-study-open-examples')).toBeInTheDocument();
     });
   });
 
@@ -117,6 +119,48 @@ describe('StudyPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Network error/i)).toBeInTheDocument();
+    });
+  });
+
+  it('supports opening a specific word via query parameter', async () => {
+    const mockCard = {
+      word: {
+        id: 'w2',
+        headword: 'focus',
+        pos: 'verb' as const,
+        meaningJa: '集中する',
+        examples: [],
+        tags: [],
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z',
+      },
+      memory: {
+        wordId: 'w2',
+        dueAt: '2024-01-01T00:00:00Z',
+        memoryLevel: 1,
+        ease: 2.5,
+        intervalDays: 1,
+        reviewCount: 0,
+        lapseCount: 0,
+        lastRating: null,
+        lastReviewedAt: null,
+      },
+    };
+
+    vi.mocked(studyOffline.studyApi.getTags).mockResolvedValue({ ok: true, tags: [] });
+    vi.mocked(studyOffline.studyApi.cardByWordId).mockResolvedValue({ ok: true, card: mockCard });
+
+    render(
+      <MemoryRouter initialEntries={["/study?wordId=w2"]}>
+        <AuthProvider>
+          <StudyPage />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(studyOffline.studyApi.cardByWordId).toHaveBeenCalledWith('w2');
+      expect(screen.getByText('focus')).toBeInTheDocument();
     });
   });
 });

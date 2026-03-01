@@ -10,4 +10,8 @@ export const examplesGatewayAdapter: ExamplesGateway = {
     const response = await examplesApi.next(tags, lastExampleId);
     return response.example;
   },
+  async byWordId(wordId, lastExampleId) {
+    const response = await examplesApi.byWordId(wordId, lastExampleId);
+    return response.example;
+  },
 };

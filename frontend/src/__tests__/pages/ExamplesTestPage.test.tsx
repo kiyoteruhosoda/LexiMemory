@@ -9,6 +9,7 @@ import * as examplesOffline from "../../api/examples.offline";
 vi.mock("../../api/examples.offline", () => ({
   examplesApi: {
     next: vi.fn(),
+    byWordId: vi.fn(),
     getTags: vi.fn(),
   },
 }));
@@ -44,6 +45,7 @@ describe("ExamplesTestPage", () => {
     vi.clearAllMocks();
     vi.mocked(examplesOffline.examplesApi.getTags).mockResolvedValue({ tags: ["travel", "work"] });
     vi.mocked(examplesOffline.examplesApi.next).mockResolvedValue({ example: null });
+    vi.mocked(examplesOffline.examplesApi.byWordId).mockResolvedValue({ example: null });
   });
 
   it("renders RNW boundary navigation buttons", async () => {
@@ -78,5 +80,20 @@ describe("ExamplesTestPage", () => {
 
     expect(screen.getByTestId("rnw-study-tag-panel")).toBeInTheDocument();
     expect(screen.getByText("Filter by Tags")).toBeInTheDocument();
+  });
+
+  it("loads word-specific example when wordId query exists", async () => {
+    render(
+      <MemoryRouter initialEntries={["/examples?wordId=w1"]}>
+        <AuthProvider>
+          <ExamplesTestPage />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+
+    await waitFor(() => {
+      expect(examplesOffline.examplesApi.byWordId).toHaveBeenCalledWith("w1", null);
+      expect(examplesOffline.examplesApi.byWordId).toHaveBeenCalledTimes(1);
+    });
   });
 });

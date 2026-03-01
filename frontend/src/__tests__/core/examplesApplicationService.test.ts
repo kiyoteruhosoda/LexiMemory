@@ -6,6 +6,7 @@ function createExamplesGatewayMock(): ExamplesGateway {
   return {
     getTags: vi.fn(),
     next: vi.fn(),
+    byWordId: vi.fn(),
   };
 }
 
@@ -42,3 +43,28 @@ describe("ExamplesApplicationService", () => {
     expect(result?.id).toBe("ex1");
   });
 });
+
+
+  it("fetches a word-scoped example", async () => {
+    const gateway = createExamplesGatewayMock();
+    const service = new ExamplesApplicationService(gateway);
+
+    vi.mocked(gateway.byWordId).mockResolvedValue({
+      id: "ex2",
+      en: "We focus on details.",
+      ja: "私たちは細部に集中する。",
+      source: null,
+      word: {
+        id: "w2",
+        headword: "focus",
+        pos: "verb",
+        meaningJa: "集中する",
+        tags: ["daily"],
+      },
+    });
+
+    const result = await service.fetchExampleByWordId("w2", "ex1");
+
+    expect(gateway.byWordId).toHaveBeenCalledWith("w2", "ex1");
+    expect(result?.word.id).toBe("w2");
+  });

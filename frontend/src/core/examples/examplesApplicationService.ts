@@ -15,4 +15,8 @@ export class ExamplesApplicationService {
   async fetchNextExample(tags?: string[], lastExampleId?: string | null): Promise<ExampleTestItem | null> {
     return this.examplesGateway.next(tags, lastExampleId);
   }
+
+  async fetchExampleByWordId(wordId: string, lastExampleId?: string | null): Promise<ExampleTestItem | null> {
+    return this.examplesGateway.byWordId(wordId, lastExampleId);
+  }
 }

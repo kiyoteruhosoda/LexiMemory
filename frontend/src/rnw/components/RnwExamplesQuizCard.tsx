@@ -17,6 +17,8 @@ export interface RnwExamplesQuizCardProps {
   onShowWordInfo: () => void;
   onToggleTranslation: () => void;
   onSpeakSentence: () => void;
+  onSpeakAnswer: () => void;
+  onGoToStudy: () => void;
   onInputChange: (value: string) => void;
   onSubmitAnswer: () => void;
   onNext: () => void;
@@ -71,6 +73,8 @@ export function RnwExamplesQuizCard({
   onShowWordInfo,
   onToggleTranslation,
   onSpeakSentence,
+  onSpeakAnswer,
+  onGoToStudy,
   onInputChange,
   onSubmitAnswer,
   onNext,
@@ -172,7 +176,32 @@ export function RnwExamplesQuizCard({
           </div>
 
           <div style={answerBoxStyle}>
-            <div style={{ fontWeight: 600, marginBottom: 8 }}>Correct Answer:</div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
+              <div style={{ fontWeight: 600 }}>Correct Answer:</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <RnwButton
+                  type="button"
+                  kind="outline"
+                  tone="secondary"
+                  size="sm"
+                  onPress={onSpeakAnswer}
+                  icon={<i className="fa-solid fa-volume-high" aria-hidden="true" />}
+                  title="Speak answer"
+                  disabled={!canSpeak}
+                  testID="rnw-examples-speak-answer"
+                />
+                <RnwButton
+                  type="button"
+                  kind="outline"
+                  tone="primary"
+                  size="sm"
+                  onPress={onGoToStudy}
+                  icon={<i className="fa-solid fa-graduation-cap" aria-hidden="true" />}
+                  label="Study"
+                  testID="rnw-examples-go-study"
+                />
+              </div>
+            </div>
             <div style={{ fontSize: 20 }}>
               <strong>{actualWordInSentence || example.word.headword}</strong>
             </div>

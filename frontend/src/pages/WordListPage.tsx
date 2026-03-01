@@ -95,16 +95,6 @@ export function WordListPage() {
             <FeatureActionGroup
               currentPage="words"
               onNavigate={(path) => navigate(path)}
-              prepend={(
-                <RnwButton
-                  label="Add"
-                  onPress={() => navigate("/words/create")}
-                  icon={<i className="fa-solid fa-plus" aria-hidden="true" />}
-                  testID="rnw-add-button"
-                  kind="solid"
-                  tone="primary"
-                />
-              )}
               testIDs={{ study: "rnw-study-button", examples: "rnw-examples-button" }}
               tagFilter={{
                 visible: allTags.length > 0,
@@ -112,6 +102,17 @@ export function WordListPage() {
                 onToggle: () => setFilterExpanded(!isFilterExpanded),
                 testID: "rnw-word-list-tags",
               }}
+            />
+
+            <div className="w-100" aria-hidden="true" />
+
+            <RnwButton
+              label="Add"
+              onPress={() => navigate("/words/create")}
+              icon={<i className="fa-solid fa-plus" aria-hidden="true" />}
+              testID="rnw-add-button"
+              kind="solid"
+              tone="primary"
             />
 
             <RnwButton
