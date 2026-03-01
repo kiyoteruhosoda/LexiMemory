@@ -6,12 +6,11 @@ import { useTagFilterState } from "../hooks/useTagFilterState";
 import type { ExampleTestItem } from "../api/types";
 import SyncButton from "../components/SyncButton";
 import { speechApplicationService } from "../speech/speechApplication";
-import { RnwButton } from "../rnw/components/RnwButton";
-import { RnwTagFilterButton } from "../rnw/components/RnwTagFilterButton";
 import { RnwTagFilterPanel } from "../rnw/components/RnwTagFilterPanel";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
 import { RnwExamplesQuizCard } from "../rnw/components/RnwExamplesQuizCard";
 import { RnwActionBar } from "@leximemory/ui";
+import { FeatureActionGroup } from "../components/FeatureActionGroup";
 
 export function ExamplesTestPage() {
   const navigate = useNavigate();
@@ -112,33 +111,19 @@ export function ExamplesTestPage() {
   return (
     <div className="vstack gap-3" data-testid="examples-page-ready">
       <RnwActionBar
-        leading={<>
-          <RnwButton
-            label="Words"
-            onPress={() => navigate("/words")}
-            icon={<i className="fa-solid fa-book" aria-hidden="true" />}
-            testID="rnw-examples-words"
-            kind="outline"
-            tone="primary"
+        leading={(
+          <FeatureActionGroup
+            currentPage="examples"
+            onNavigate={(path) => navigate(path)}
+            testIDs={{ words: "rnw-examples-words", study: "rnw-examples-study" }}
+            tagFilter={{
+              visible: allTags.length > 0,
+              activeCount: appliedTags?.length ?? 0,
+              onToggle: () => setFilterExpanded(!isFilterExpanded),
+              testID: "rnw-examples-tags",
+            }}
           />
-
-          <RnwButton
-            label="Study"
-            onPress={() => navigate("/study")}
-            icon={<i className="fa-solid fa-graduation-cap" aria-hidden="true" />}
-            testID="rnw-examples-study"
-            kind="outline"
-            tone="primary"
-          />
-
-          {allTags.length > 0 && (
-            <RnwTagFilterButton
-              activeCount={appliedTags?.length ?? 0}
-              onPress={() => setFilterExpanded(!isFilterExpanded)}
-              testID="rnw-examples-tags"
-            />
-          )}
-        </>}
+        )}
         trailing={<SyncButton onSyncSuccess={() => { void loadTags(); void loadNext(); }} />}
         testID="rnw-examples-action-bar"
       />
