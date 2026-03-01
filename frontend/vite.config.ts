@@ -37,6 +37,11 @@ export default defineConfig(({ mode }) => {
           target: apiBase,
           changeOrigin: true,
           rewrite: (p) => p.replace(/^\/api/, "")
+        },
+        // health check は /api プレフィックスなしで叩くため個別にプロキシする
+        "/healthz": {
+          target: apiBase,
+          changeOrigin: true,
         }
       }
     },
