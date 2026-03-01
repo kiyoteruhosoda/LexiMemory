@@ -16,6 +16,10 @@ export class StudyApplicationService {
     return this.studyGateway.next(tags);
   }
 
+  async fetchCardByWordId(wordId: string): Promise<StudyCard | null> {
+    return this.studyGateway.byWordId(wordId);
+  }
+
   async gradeCard(wordId: string, rating: Rating): Promise<MemoryState> {
     return this.studyGateway.grade(wordId, rating);
   }

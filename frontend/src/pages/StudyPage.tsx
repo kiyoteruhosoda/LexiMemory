@@ -1,7 +1,7 @@
 // frontend/src/pages/StudyPage.tsx
 
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { studyApplicationService } from "../study/studyApplication";
 import type { WordEntry, MemoryState, Rating } from "../api/types";
 import { RnwFlashCard } from "../rnw/components/RnwFlashCard";
@@ -14,6 +14,9 @@ import { FeatureActionGroup } from "../components/FeatureActionGroup";
 
 export function StudyPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const wordId = searchParams.get("wordId");
+
   const [word, setWord] = useState<WordEntry | null>(null);
   const [memory, setMemory] = useState<MemoryState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +44,9 @@ export function StudyPage() {
   const loadNext = useCallback(async () => {
     setError(null);
     try {
-      const card = await studyApplicationService.fetchNextCard(appliedTags);
+      const card = wordId
+        ? await studyApplicationService.fetchCardByWordId(wordId)
+        : await studyApplicationService.fetchNextCard(appliedTags);
       if (!card) {
         setWord(null);
         setMemory(null);
@@ -52,15 +57,17 @@ export function StudyPage() {
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to load");
     }
-  }, [appliedTags]);
+  }, [appliedTags, wordId]);
 
   useEffect(() => { 
     void loadTags();
     void loadNext(); 
   }, [loadTags, loadNext]);
+
   useEffect(() => {
+    if (wordId) return;
     void loadNext();
-  }, [appliedTags, loadNext]);
+  }, [appliedTags, loadNext, wordId]);
 
   async function rate(rating: Rating) {
     if (!word) return;
@@ -116,7 +123,12 @@ export function StudyPage() {
           icon={<i className="fa-solid fa-circle-check" aria-hidden="true" />}
         />
       ) : (
-        <RnwFlashCard word={word} memory={memory} onRate={rate} />
+        <RnwFlashCard
+          word={word}
+          memory={memory}
+          onRate={rate}
+          onOpenExamples={() => navigate(`/examples?wordId=${encodeURIComponent(word.id)}`)}
+        />
       )}
     </div>
   );

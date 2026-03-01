@@ -6,6 +6,7 @@ function createStudyGatewayMock(): StudyGateway {
   return {
     getTags: vi.fn(),
     next: vi.fn(),
+    byWordId: vi.fn(),
     grade: vi.fn(),
   };
 }
@@ -44,3 +45,14 @@ describe("StudyApplicationService", () => {
     expect(gateway.grade).toHaveBeenCalledWith("w1", "good");
   });
 });
+
+
+  it("fetches a card by word id", async () => {
+    const gateway = createStudyGatewayMock();
+    const service = new StudyApplicationService(gateway);
+
+    vi.mocked(gateway.byWordId).mockResolvedValue(null);
+
+    await expect(service.fetchCardByWordId("w1")).resolves.toBeNull();
+    expect(gateway.byWordId).toHaveBeenCalledWith("w1");
+  });

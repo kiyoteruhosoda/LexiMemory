@@ -12,6 +12,7 @@ export type RnwFlashCardProps = {
   word: WordEntry;
   memory: MemoryState;
   onRate: (rating: Rating) => Promise<void>;
+  onOpenExamples?: () => void;
 };
 
 const cardStyle = {
@@ -55,7 +56,7 @@ const ratingPalette: Record<
   easy: { tone: "success", label: "Easy", iconClass: "fa-solid fa-face-smile", kind: "outline" },
 };
 
-export function RnwFlashCard({ word, memory, onRate }: RnwFlashCardProps) {
+export function RnwFlashCard({ word, memory, onRate, onOpenExamples }: RnwFlashCardProps) {
   const [showAnswer, setShowAnswer] = useState(false);
   const canSpeak = useMemo(() => speechApplicationService.canSpeak(), []);
 
@@ -83,15 +84,28 @@ export function RnwFlashCard({ word, memory, onRate }: RnwFlashCardProps) {
           <RnwLevelBadge level={memory.memoryLevel} />
         </div>
 
-        <RnwButton
-          title="Speak"
-          onPress={speakWord}
-          disabled={!canSpeak}
-          icon={<i className="fa-solid fa-volume-high" aria-hidden="true" />}
-          testID="rnw-study-speak-word"
-          kind="outline"
-          tone="secondary"
-        />
+        <div style={{ display: "flex", gap: 8 }}>
+          {onOpenExamples ? (
+            <RnwButton
+              label="Examples"
+              onPress={onOpenExamples}
+              icon={<i className="fa-solid fa-pen-to-square" aria-hidden="true" />}
+              testID="rnw-study-open-examples"
+              kind="outline"
+              tone="primary"
+              size="sm"
+            />
+          ) : null}
+          <RnwButton
+            title="Speak"
+            onPress={speakWord}
+            disabled={!canSpeak}
+            icon={<i className="fa-solid fa-volume-high" aria-hidden="true" />}
+            testID="rnw-study-speak-word"
+            kind="outline"
+            tone="secondary"
+          />
+        </div>
       </header>
 
       <div style={bodyStyle}>

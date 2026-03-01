@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { examplesApplicationService } from "../examples/examplesApplication";
 import { checkAnswer, createBlankedSentence } from "../core/examples/exampleSentencePolicy";
 import { useTagFilterState } from "../hooks/useTagFilterState";
@@ -14,10 +14,13 @@ import { FeatureActionGroup } from "../components/FeatureActionGroup";
 
 export function ExamplesTestPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const wordId = searchParams.get("wordId");
+
   const [example, setExample] = useState<ExampleTestItem | null>(null);
   const [blankedSentence, setBlankedSentence] = useState<string>("");
   const [actualWordInSentence, setActualWordInSentence] = useState<string | null>(null);
-  const [lastExampleId, setLastExampleId] = useState<string | null>(null);
+  const lastExampleIdRef = useRef<string | null>(null);
   const [userInput, setUserInput] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -53,7 +56,10 @@ export function ExamplesTestPage() {
     setShowAnswer(false);
 
     try {
-      const nextExample = await examplesApplicationService.fetchNextExample(appliedTags, lastExampleId);
+      const nextExample = wordId
+        ? await examplesApplicationService.fetchExampleByWordId(wordId, lastExampleIdRef.current)
+        : await examplesApplicationService.fetchNextExample(appliedTags, lastExampleIdRef.current);
+
       if (!nextExample) {
         setExample(null);
         setBlankedSentence("");
@@ -66,21 +72,21 @@ export function ExamplesTestPage() {
         }
         setBlankedSentence(blanked);
         setActualWordInSentence(actualWord);
-        setLastExampleId(nextExample.id);
+        lastExampleIdRef.current = nextExample.id;
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to load");
     }
-  }, [appliedTags, lastExampleId]);
+  }, [appliedTags, wordId]);
 
   useEffect(() => {
     void loadTags();
-    void loadNext();
-  }, [loadTags, loadNext]);
+  }, [loadTags]);
 
   useEffect(() => {
+    lastExampleIdRef.current = null;
     void loadNext();
-  }, [appliedTags, loadNext]);
+  }, [loadNext, appliedTags, wordId]);
 
   function handleSubmitAnswer() {
     if (!example) return;
@@ -106,6 +112,18 @@ export function ExamplesTestPage() {
   function speakSentence() {
     if (!canSpeak || !example?.en) return;
     speechApplicationService.speakEnglish(example.en);
+  }
+
+  function speakAnswer() {
+    if (!canSpeak || !example) return;
+    const answerWord = (actualWordInSentence || example.word.headword).trim();
+    if (!answerWord) return;
+    speechApplicationService.speakEnglish(answerWord);
+  }
+
+  function goToStudy() {
+    if (!example?.word.id) return;
+    navigate(`/study?wordId=${encodeURIComponent(example.word.id)}`);
   }
 
   return (
@@ -167,6 +185,8 @@ export function ExamplesTestPage() {
           onShowWordInfo={() => setShowWordInfo(true)}
           onToggleTranslation={() => setShowTranslation(true)}
           onSpeakSentence={speakSentence}
+          onSpeakAnswer={speakAnswer}
+          onGoToStudy={goToStudy}
           onInputChange={setUserInput}
           onSubmitAnswer={handleSubmitAnswer}
           onNext={handleNext}

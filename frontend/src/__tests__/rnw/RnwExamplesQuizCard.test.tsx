@@ -36,6 +36,8 @@ describe("RnwExamplesQuizCard", () => {
         onShowWordInfo={vi.fn()}
         onToggleTranslation={vi.fn()}
         onSpeakSentence={vi.fn()}
+        onSpeakAnswer={vi.fn()}
+        onGoToStudy={vi.fn()}
         onInputChange={vi.fn()}
         onSubmitAnswer={onSubmitAnswer}
         onNext={vi.fn()}
@@ -45,5 +47,39 @@ describe("RnwExamplesQuizCard", () => {
     expect(screen.getByTestId("rnw-examples-quiz-card")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /check/i }));
     expect(onSubmitAnswer).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows speak-answer and study actions after revealing answer", async () => {
+    const user = userEvent.setup();
+    const onSpeakAnswer = vi.fn();
+    const onGoToStudy = vi.fn();
+
+    render(
+      <RnwExamplesQuizCard
+        example={example}
+        blankedSentence="I _______ to work by train."
+        actualWordInSentence="travel"
+        userInput="travel"
+        feedback="correct"
+        showAnswer={true}
+        showWordInfo={false}
+        showTranslation={false}
+        canSpeak={true}
+        onShowWordInfo={vi.fn()}
+        onToggleTranslation={vi.fn()}
+        onSpeakSentence={vi.fn()}
+        onSpeakAnswer={onSpeakAnswer}
+        onGoToStudy={onGoToStudy}
+        onInputChange={vi.fn()}
+        onSubmitAnswer={vi.fn()}
+        onNext={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByTestId("rnw-examples-speak-answer"));
+    await user.click(screen.getByTestId("rnw-examples-go-study"));
+
+    expect(onSpeakAnswer).toHaveBeenCalledTimes(1);
+    expect(onGoToStudy).toHaveBeenCalledTimes(1);
   });
 });
