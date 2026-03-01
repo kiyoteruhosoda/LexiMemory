@@ -12,8 +12,8 @@ import { RnwWordListTable } from "../rnw/components/RnwWordListTable";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
 import { RnwButton } from "../rnw/components/RnwButton";
 import { useTagFilterState } from "../hooks/useTagFilterState";
-import { RnwTagFilterButton } from "../rnw/components/RnwTagFilterButton";
 import { RnwTagFilterPanel } from "../rnw/components/RnwTagFilterPanel";
+import { CrossFeatureActionBar } from "../components/CrossFeatureActionBar";
 
 export function WordListPage() {
   const navigate = useNavigate();
@@ -88,79 +88,63 @@ export function WordListPage() {
 
   return (
     <div className="vstack gap-3" data-testid="word-list-page-ready">
-      <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
-        <div className="d-flex gap-2 align-items-center flex-wrap" data-testid="rnw-word-list-action-row">
-          <RnwButton
-            label="Add"
-            onPress={() => navigate("/words/create")}
-            icon={<i className="fa-solid fa-plus" aria-hidden="true" />}
-            testID="rnw-add-button"
-            kind="solid"
-            tone="primary"
-          />
-
-          <RnwButton
-            label="Study"
-            onPress={() => navigate("/study")}
-            icon={<i className="fa-solid fa-graduation-cap" aria-hidden="true" />}
-            testID="rnw-study-button"
-            kind="outline"
-            tone="primary"
-          />
-
-          <RnwButton
-            label="Examples"
-            onPress={() => navigate("/examples")}
-            icon={<i className="fa-solid fa-pen-to-square" aria-hidden="true" />}
-            testID="rnw-examples-button"
-            kind="outline"
-            tone="primary"
-          />
-
-          {allTags.length > 0 && (
-            <RnwTagFilterButton
-              activeCount={appliedTags?.length ?? 0}
-              onPress={() => setFilterExpanded(!isFilterExpanded)}
-              testID="rnw-word-list-tags"
-            />
-          )}
-
-          <RnwButton
-            onPress={() => setShowSearch(!showSearch)}
-            icon={<i className="fa-solid fa-magnifying-glass" aria-hidden="true" />}
-            title="Toggle search"
-            testID="rnw-toggle-search-button"
-            kind="outline"
-            tone="secondary"
-          />
-
-          <div className="d-none d-md-flex gap-2">
+      <CrossFeatureActionBar
+        current="words"
+        onNavigate={(target) => navigate(`/${target}`)}
+        tagFilter={{
+          allTagCount: allTags.length,
+          activeCount: appliedTags?.length ?? 0,
+          onToggle: () => setFilterExpanded(!isFilterExpanded),
+          testID: "rnw-word-list-tags",
+        }}
+        extraLeading={
+          <>
             <RnwButton
-              label="Export"
-              onPress={() => void handleExport()}
-              disabled={busy}
-              icon={<i className="fa-solid fa-upload" aria-hidden="true" />}
-              testID="rnw-export-button"
-              kind="outline"
-              tone="secondary"
-              size="sm"
+              label="Add"
+              onPress={() => navigate("/words/create")}
+              icon={<i className="fa-solid fa-plus" aria-hidden="true" />}
+              testID="rnw-add-button"
+              kind="solid"
+              tone="primary"
             />
 
             <RnwButton
-              label="Import"
-              onPress={() => setShowImportModal(true)}
-              disabled={busy}
-              icon={<i className="fa-solid fa-download" aria-hidden="true" />}
-              testID="rnw-import-button"
+              onPress={() => setShowSearch(!showSearch)}
+              icon={<i className="fa-solid fa-magnifying-glass" aria-hidden="true" />}
+              title="Toggle search"
+              testID="rnw-toggle-search-button"
               kind="outline"
               tone="secondary"
-              size="sm"
             />
-          </div>
-        </div>
 
-        <SyncButton onSyncSuccess={() => { void loadTags(); void reload(); }} />
-      </div>
+            <div className="d-none d-md-flex gap-2">
+              <RnwButton
+                label="Export"
+                onPress={() => void handleExport()}
+                disabled={busy}
+                icon={<i className="fa-solid fa-upload" aria-hidden="true" />}
+                testID="rnw-export-button"
+                kind="outline"
+                tone="secondary"
+                size="sm"
+              />
+
+              <RnwButton
+                label="Import"
+                onPress={() => setShowImportModal(true)}
+                disabled={busy}
+                icon={<i className="fa-solid fa-download" aria-hidden="true" />}
+                testID="rnw-import-button"
+                kind="outline"
+                tone="secondary"
+                size="sm"
+              />
+            </div>
+          </>
+        }
+        trailing={<SyncButton onSyncSuccess={() => { void loadTags(); void reload(); }} />}
+        testID="rnw-word-list-action-row"
+      />
 
       {isFilterExpanded && allTags.length > 0 && (
         <RnwTagFilterPanel

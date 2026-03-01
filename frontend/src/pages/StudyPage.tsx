@@ -7,11 +7,9 @@ import type { WordEntry, MemoryState, Rating } from "../api/types";
 import { RnwFlashCard } from "../rnw/components/RnwFlashCard";
 import SyncButton from "../components/SyncButton";
 import { useTagFilterState } from "../hooks/useTagFilterState";
-import { RnwTagFilterButton } from "../rnw/components/RnwTagFilterButton";
 import { RnwTagFilterPanel } from "../rnw/components/RnwTagFilterPanel";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
-import { RnwActionBar } from "@leximemory/ui";
-import { RnwButton } from "../rnw/components/RnwButton";
+import { CrossFeatureActionBar } from "../components/CrossFeatureActionBar";
 
 export function StudyPage() {
   const navigate = useNavigate();
@@ -72,35 +70,15 @@ export function StudyPage() {
 
   return (
     <div className="vstack gap-3" data-testid="study-page-ready">
-      <RnwActionBar
-        leading={<>
-
-          <RnwButton
-            label="Words"
-            onPress={() => navigate("/words")}
-            icon={<i className="fa-solid fa-book" aria-hidden="true" />}
-            testID="rnw-study-words"
-            kind="outline"
-            tone="primary"
-          />
-
-          <RnwButton
-            label="Examples"
-            onPress={() => navigate("/examples")}
-            icon={<i className="fa-solid fa-pen-to-square" aria-hidden="true" />}
-            testID="rnw-study-examples"
-            kind="outline"
-            tone="primary"
-          />
-
-          {allTags.length > 0 && (
-            <RnwTagFilterButton
-              activeCount={appliedTags?.length ?? 0}
-              onPress={() => setFilterExpanded(!isFilterExpanded)}
-              testID="rnw-study-tags"
-            />
-          )}
-        </>}
+      <CrossFeatureActionBar
+        current="study"
+        onNavigate={(target) => navigate(`/${target}`)}
+        tagFilter={{
+          allTagCount: allTags.length,
+          activeCount: appliedTags?.length ?? 0,
+          onToggle: () => setFilterExpanded(!isFilterExpanded),
+          testID: "rnw-study-tags",
+        }}
         trailing={<SyncButton onSyncSuccess={() => { void loadTags(); void loadNext(); }} />}
         testID="rnw-study-action-bar"
       />
