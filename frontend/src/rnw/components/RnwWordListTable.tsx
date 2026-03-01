@@ -1,7 +1,10 @@
+// frontend/src/rnw/components/RnwWordListTable.tsx
+
 import type { MemoryState, WordEntry } from "../../api/types";
-import { resolveMemoryLevelTone } from "../../core/word/memoryLevelTonePolicy";
 import { Pressable, Text, View } from "../react-native";
 import { StyleSheet } from "../stylesheet";
+import { RnwBadge } from "./RnwBadge";
+import { RnwLevelBadge } from "./RnwLevelBadge";
 
 type RnwWordListTableProps = {
   items: WordEntry[];
@@ -22,8 +25,6 @@ export function RnwWordListTable({ items, memoryMap, onSelectWord }: RnwWordList
 
       {items.map((word) => {
         const memoryLevel = memoryMap[word.id]?.memoryLevel ?? 0;
-        const tone = resolveMemoryLevelTone(memoryLevel);
-
         return (
           <Pressable
             key={word.id}
@@ -36,12 +37,12 @@ export function RnwWordListTable({ items, memoryMap, onSelectWord }: RnwWordList
           >
             <Text style={{ ...styles.cell, ...styles.wordCell, ...styles.wordText }}>{word.headword}</Text>
             <Text style={{ ...styles.cell, ...styles.posCell }}>
-              <Text style={styles.posBadge}>{word.pos}</Text>
+              <RnwBadge tone="secondary" variant="pill">{word.pos}</RnwBadge>
             </Text>
             <Text style={{ ...styles.cell, ...styles.meaningCell }}>{word.meaningJa}</Text>
             <Text style={{ ...styles.cell, ...styles.examplesCell }}>{word.examples?.length ?? 0}</Text>
             <Text style={{ ...styles.cell, ...styles.levelCell }}>
-              <Text style={{ ...styles.levelBadge, ...toneStyleMap[tone] }}>Lv {memoryLevel}</Text>
+              <RnwLevelBadge level={memoryLevel} />
             </Text>
           </Pressable>
         );
@@ -57,13 +58,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
   },
+
   headerRow: {
     display: "flex",
     flexDirection: "row",
     backgroundColor: "#f8f9fa",
     borderBottomColor: "#dee2e6",
     borderBottomWidth: 1,
+    // 行の高さ計算を安定させる
+    alignItems: "stretch",
   },
+
   row: {
     display: "flex",
     flexDirection: "row",
@@ -71,17 +76,33 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     backgroundColor: "#ffffff",
     cursor: "pointer",
+    alignItems: "stretch",
+
+    // ✅ Pressable(button) のデフォルトを潰す（重要）
+    borderWidth: 0,
+    padding: 0,
+    margin: 0,
+    width: "100%",
+    textAlign: "left",
+    // RNW で効く場合がある
+    outlineStyle: "none",
   },
+
   rowPressed: {
     backgroundColor: "#f8f9fa",
   },
+
   headerCell: {
     paddingInline: 12,
     paddingBlock: 10,
     fontSize: 13,
     fontWeight: "600",
     color: "#495057",
+
+    // ✅ flex列で文字がはみ出さないように
+    minWidth: 0,
   },
+
   cell: {
     paddingInline: 12,
     paddingBlock: 12,
@@ -89,58 +110,26 @@ const styles = StyleSheet.create({
     color: "#212529",
     display: "flex",
     alignItems: "center",
+
+    // ✅ flex子要素がはみ出して列幅を壊さない
+    minWidth: 0,
   },
-  wordCell: {
-    width: "20%",
-  },
-  posCell: {
-    width: "10%",
-  },
-  meaningCell: {
-    width: "30%",
-  },
-  examplesCell: {
-    width: "15%",
-  },
-  levelCell: {
-    width: "15%",
-  },
+
+  // ✅ %幅をやめて比率で管理（合計のズレが起きない）
+  // 例：Word:2 / POS:1 / Meaning:4 / Examples:1 / Level:1
+  wordCell: { flexGrow: 2, flexShrink: 1, flexBasis: 0 },
+  posCell: { flexGrow: 1, flexShrink: 0, flexBasis: 0 },
+  meaningCell: { flexGrow: 4, flexShrink: 1, flexBasis: 0 },
+  examplesCell: { flexGrow: 1, flexShrink: 0, flexBasis: 0 },
+  levelCell: { flexGrow: 1, flexShrink: 0, flexBasis: 0 },
+
   wordText: {
     fontWeight: "600",
+    // 任意：1行で省略したいなら
+    // whiteSpace: "nowrap",
+    // overflow: "hidden",
+    // textOverflow: "ellipsis",
   },
-  posBadge: {
-    backgroundColor: "#6c757d",
-    color: "#ffffff",
-    borderRadius: 999,
-    paddingInline: 8,
-    paddingBlock: 2,
-    fontSize: 12,
-  },
-  levelBadge: {
-    borderRadius: 999,
-    paddingInline: 8,
-    paddingBlock: 2,
-    fontSize: 12,
-    color: "#ffffff",
-  },
-  levelNeutral: {
-    backgroundColor: "#6c757d",
-  },
-  levelWarning: {
-    backgroundColor: "#ffc107",
-    color: "#212529",
-  },
-  levelPrimary: {
-    backgroundColor: "#0d6efd",
-  },
-  levelSuccess: {
-    backgroundColor: "#198754",
-  },
+
 });
 
-const toneStyleMap = {
-  neutral: styles.levelNeutral,
-  warning: styles.levelWarning,
-  primary: styles.levelPrimary,
-  success: styles.levelSuccess,
-} as const;

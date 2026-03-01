@@ -29,7 +29,6 @@ export function RnwSearchPanel({ value, busy, onChange, onSubmit, onClear }: Rnw
             ...(pressed ? styles.actionButtonPressed : {}),
             ...(busy ? styles.disabled : {}),
           })}
-          accessibilityRole="button"
           testID="rnw-search-apply-button"
         >
           <Text style={styles.actionButtonText}>{busy ? "..." : "Filter"}</Text>
@@ -40,7 +39,6 @@ export function RnwSearchPanel({ value, busy, onChange, onSubmit, onClear }: Rnw
             ...styles.clearButton,
             ...(pressed ? styles.actionButtonPressed : {}),
           })}
-          accessibilityRole="button"
           testID="rnw-search-clear-button"
         >
           <Text style={styles.clearButtonText}>Clear</Text>

@@ -1,26 +1,11 @@
-import { Text, View } from "../react-native";
-import { StyleSheet } from "../stylesheet";
+import { RnwBadge } from "./RnwBadge";
 
 export function RnwPlatformBadge() {
   return (
-    <View style={styles.badge} testID="rnw-platform-badge">
-      <Text style={styles.text}>RNW PoC</Text>
-    </View>
+    <span data-testid="rnw-platform-badge">
+      <RnwBadge tone="primary" variant="pill">
+        RNW PoC
+      </RnwBadge>
+    </span>
   );
 }
-
-const styles = StyleSheet.create({
-  badge: {
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#adb5bd",
-    backgroundColor: "#f8f9fa",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  text: {
-    color: "#495057",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-});

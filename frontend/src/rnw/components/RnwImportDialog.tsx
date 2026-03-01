@@ -2,8 +2,7 @@ import { useState } from "react";
 import { ioApi } from "../../api/io.offline";
 import type { AppDataForImport } from "../../api/types";
 import { RnwInlineNotice } from "./RnwInlineNotice";
-import { RnwOutlineButton } from "./RnwOutlineButton";
-import { RnwPrimaryButton } from "./RnwPrimaryButton";
+import { RnwButton } from "./RnwButton";
 
 type ImportMode = "merge" | "overwrite";
 
@@ -85,8 +84,8 @@ export function RnwImportDialog({ show, onClose, onSuccess }: RnwImportDialogPro
           {error ? <RnwInlineNotice tone="error" message={error} icon={<i className="fa-solid fa-triangle-exclamation" aria-hidden="true" />} /> : null}
 
           <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-            <RnwOutlineButton label="Cancel" onPress={handleClose} disabled={busy} />
-            <RnwPrimaryButton label={busy ? "Importing..." : "Import"} onPress={() => void handleImport()} disabled={busy || !file} icon={<i className="fa-solid fa-download" aria-hidden="true" />} />
+            <RnwButton label="Cancel" onPress={handleClose} disabled={busy} tone="primary" kind="outline" />
+            <RnwButton label={busy ? "Importing..." : "Import"} onPress={() => void handleImport()} disabled={busy || !file} icon={<i className="fa-solid fa-download" aria-hidden="true" />} tone="primary" kind="solid" />
           </div>
         </div>
       </section>

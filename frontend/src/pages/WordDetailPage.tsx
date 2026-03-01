@@ -1,3 +1,5 @@
+// frontend/src/pages/WordDetailPage.tsx
+
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { wordApplicationService } from "../word/wordApplication";
@@ -5,8 +7,8 @@ import type { WordEntry } from "../api/types";
 import { RnwWordForm } from "../rnw/components/RnwWordForm";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
 import { RnwConfirmDialog } from "../rnw/components/RnwConfirmDialog";
-import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
-import { RnwActionGroup, RnwDangerButton, RnwPageHeader, RnwPanelCard, RnwWarningButton } from "@leximemory/ui";
+import { RnwButton } from "../rnw/components/RnwButton";
+import { RnwActionGroup, RnwPageHeader, RnwPanelCard } from "@leximemory/ui";
 
 export function WordDetailPage() {
   const navigate = useNavigate();
@@ -97,11 +99,12 @@ export function WordDetailPage() {
   if (error && !word) {
     return (
       <div className="vstack gap-3" data-testid="word-detail-page-ready">
-        <RnwOutlineButton
+        <RnwButton
           label="Back"
           onPress={() => navigate("/words")}
           icon={<i className="fa-solid fa-arrow-left" aria-hidden="true" />}
           testID="rnw-word-detail-back"
+          kind="outline"
         />
         <RnwInlineNotice
           tone="error"
@@ -120,11 +123,12 @@ export function WordDetailPage() {
         title="Edit Word"
         icon={<i className="fa-solid fa-edit text-primary" aria-hidden="true" />}
         action={
-          <RnwOutlineButton
+          <RnwButton
             label="Back"
             onPress={() => navigate("/words")}
             icon={<i className="fa-solid fa-arrow-left" aria-hidden="true" />}
             testID="rnw-word-detail-back"
+            kind="outline"
           />
         }
         testID="rnw-word-detail-header"
@@ -155,17 +159,21 @@ export function WordDetailPage() {
       </RnwPanelCard>
 
       <RnwActionGroup testID="rnw-word-detail-action-group">
-        <RnwWarningButton
+        <RnwButton
           label="Reset Memory Level"
           onPress={() => setShowResetModal(true)}
           icon={<i className="fa-solid fa-rotate-left" aria-hidden="true" />}
           testID="rnw-word-detail-reset"
+          kind="solid"
+          tone="warning"
         />
-        <RnwDangerButton
+        <RnwButton
           label="Delete"
           onPress={() => setShowDeleteModal(true)}
           icon={<i className="fa-solid fa-trash" aria-hidden="true" />}
           testID="rnw-word-detail-delete"
+          kind="solid"
+          tone="danger"
         />
       </RnwActionGroup>
 

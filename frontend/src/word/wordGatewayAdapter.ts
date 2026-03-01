@@ -5,7 +5,7 @@ import type { WordGateway } from "../core/word/wordGateway";
 
 export const wordGatewayAdapter: WordGateway = {
   async list(query) {
-    return wordsApi.list(query.q, query.pos);
+    return wordsApi.list(query.q, query.pos, query.tags);
   },
   async get(wordId) {
     return wordsApi.get(wordId);
@@ -24,5 +24,9 @@ export const wordGatewayAdapter: WordGateway = {
   },
   async exportWords() {
     return ioApi.export();
+  },
+  async getTags() {
+    const response = await wordsApi.getTags();
+    return response.tags;
   },
 };

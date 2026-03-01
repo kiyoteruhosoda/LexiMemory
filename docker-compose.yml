@@ -19,6 +19,8 @@ services:
       - VOCAB_LOG_BACKUP_COUNT=${LOG_BACKUP_COUNT:-10}
     volumes:
       - ${HOST_DATA_DIR}:/data
+    ports:
+      - "8000:8000"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz').read(); print('ok')\""]

@@ -4,6 +4,8 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../auth/useAuth";
 import { SyncDetailsModal } from "./SyncDetailsModal";
+import { RnwBadge } from "../rnw/components/RnwBadge";
+
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { state, logout } = useAuth();
@@ -113,7 +115,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </div>
       
       <footer className="text-center mt-4">
-        LinguisticNode <span className="ms-2 badge text-bg-secondary">v{appVersion}</span>
+        LinguisticNode <RnwBadge tone="secondary" variant="pill">{appVersion}</RnwBadge>
       </footer>
       
       {/* Sync Details Modal */}

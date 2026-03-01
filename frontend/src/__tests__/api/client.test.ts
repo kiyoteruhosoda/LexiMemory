@@ -67,6 +67,31 @@ describe('API Client', () => {
         expect((error as ApiError).errorCode).toBe('NOT_FOUND');
       }
     });
+
+    it('should parse nested detail.error envelope from backend', async () => {
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        statusText: 'Bad Request',
+        json: async () => ({
+          detail: {
+            error: {
+              error_code: 'USER_EXISTS',
+              message: '既に登録済みのユーザー名です',
+              request_id: 'req-register-1',
+            },
+          },
+        }),
+      });
+
+      await expect(api.postAuth('/auth/register', { username: 'existing', password: 'x' })).rejects.toMatchObject({
+        status: 400,
+        errorCode: 'USER_EXISTS',
+        requestId: 'req-register-1',
+        message: '既に登録済みのユーザー名です',
+      });
+    });
+
   });
 
   describe('POST requests', () => {

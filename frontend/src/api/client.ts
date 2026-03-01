@@ -16,14 +16,16 @@ export class ApiError extends Error {
 
 type HttpMethod = "GET" | "POST" | "PUT" | "DELETE";
 
+type ApiErrorBody = {
+  error_code?: string;
+  message?: string;
+  request_id?: string;
+  details?: unknown;
+};
+
 type ApiErrorEnvelope = {
-  error?: {
-    error_code?: string;
-    message?: string;
-    request_id?: string;
-    details?: unknown;
-  };
-  detail?: string;
+  error?: ApiErrorBody;
+  detail?: string | { error?: ApiErrorBody; message?: string };
 };
 
 // JWT token storage (in-memory)
@@ -51,12 +53,16 @@ async function parseError(res: Response): Promise<ApiError> {
   try {
     const data = (await res.json()) as ApiErrorEnvelope;
 
-    if (data?.error) {
-      if (typeof data.error.message === "string") msg = data.error.message;
-      if (typeof data.error.error_code === "string") errorCode = data.error.error_code;
-      if (typeof data.error.request_id === "string") requestId = data.error.request_id;
+    const errorBody = data?.error ?? (typeof data?.detail === "object" ? data.detail?.error : undefined);
+
+    if (errorBody) {
+      if (typeof errorBody.message === "string") msg = errorBody.message;
+      if (typeof errorBody.error_code === "string") errorCode = errorBody.error_code;
+      if (typeof errorBody.request_id === "string") requestId = errorBody.request_id;
     } else if (typeof data?.detail === "string") {
       msg = data.detail;
+    } else if (typeof data?.detail === "object" && typeof data.detail?.message === "string") {
+      msg = data.detail.message;
     }
   } catch {
     // ignore

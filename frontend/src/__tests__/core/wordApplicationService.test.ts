@@ -12,6 +12,7 @@ function createGatewayMock(): WordGateway {
     delete: vi.fn(),
     resetMemory: vi.fn(),
     exportWords: vi.fn(),
+    getTags: vi.fn(),
   };
 }
 
@@ -58,6 +59,15 @@ describe("WordApplicationService", () => {
     expect(gateway.list).toHaveBeenCalledWith({ q: "app" });
     expect(result.items).toEqual(words);
     expect(result.memoryMap.w1.wordId).toBe("w1");
+  });
+
+  it("returns tags through gateway", async () => {
+    const gateway = createGatewayMock();
+    const service = new WordApplicationService(gateway);
+
+    vi.mocked(gateway.getTags).mockResolvedValue(["travel", "basic"]);
+
+    await expect(service.getAllTags()).resolves.toEqual(["travel", "basic"]);
   });
 
   it("delegates create/update/delete/reset/export operations", async () => {

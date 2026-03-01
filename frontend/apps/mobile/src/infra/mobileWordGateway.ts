@@ -31,5 +31,9 @@ export function createMobileWordGateway(repository: MobileLearningRepositoryPort
         memory: Object.values(listed.memoryMap),
       };
     },
+    async getTags() {
+      const listed = repository.listWords({});
+      return Array.from(new Set(listed.words.flatMap((word) => word.tags))).sort();
+    },
   };
 }

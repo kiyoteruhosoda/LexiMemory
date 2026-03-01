@@ -6,6 +6,7 @@ import {
   buildWordSaveDraft,
   createEmptyExample,
 } from "../core/word/wordDraftPolicy";
+import { createUuidGenerator } from "../core/identity/uuid";
 import { speechApplicationService } from "../speech/speechApplication";
 
 const POS: Pos[] = ["noun","verb","adj","adv","prep","conj","pron","det","interj","other"];
@@ -17,9 +18,7 @@ type Props = {
 };
 
 export function WordForm({ initial, onSave, onCancel }: Props) {
-  const idGenerator = useMemo(() => ({
-    nextId: () => crypto.randomUUID(),
-  }), []);
+  const idGenerator = useMemo(() => createUuidGenerator(), []);
 
   const [headword, setHeadword] = useState(initial?.headword ?? "");
   const [pos, setPos] = useState<Pos>(initial?.pos ?? "noun");
@@ -79,7 +78,7 @@ export function WordForm({ initial, onSave, onCancel }: Props) {
     e.preventDefault();
     setBusy(true);
     try {
-      await onSave(buildWordSaveDraft({ headword, pos, meaningJa, memo, examples }, initial));
+      await onSave(buildWordSaveDraft({ headword, pos, meaningJa, tagsInput: (initial?.tags ?? []).join(","), memo, examples }, initial));
       if (!initial) {
         setHeadword("");
         setMeaningJa("");

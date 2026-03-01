@@ -1,8 +1,12 @@
+// frontend/src/rnw/components/RnwFlashCard.tsx
+
 import { useMemo, useState } from "react";
 import type { MemoryState, Rating, WordEntry } from "../../api/types";
 import { speechApplicationService } from "../../speech/speechApplication";
-import { RnwOutlineButton } from "./RnwOutlineButton";
-import { RnwPrimaryButton } from "./RnwPrimaryButton";
+import { RnwButton } from "./RnwButton";
+import { RnwBadge } from "./RnwBadge";
+import type { RnwButtonKind, RnwButtonTone } from "../theme/tokens";
+import { RnwLevelBadge } from "./RnwLevelBadge";
 
 export type RnwFlashCardProps = {
   word: WordEntry;
@@ -41,11 +45,14 @@ const answerPanelStyle = {
   padding: 12,
 };
 
-const ratingPalette: Record<Rating, { border: string; color: string; label: string; iconClass: string }> = {
-  again: { border: "#dc3545", color: "#dc3545", label: "Again", iconClass: "fa-solid fa-rotate-left" },
-  hard: { border: "#fd7e14", color: "#fd7e14", label: "Hard", iconClass: "fa-solid fa-hand" },
-  good: { border: "#0d6efd", color: "#0d6efd", label: "Good", iconClass: "fa-solid fa-thumbs-up" },
-  easy: { border: "#198754", color: "#198754", label: "Easy", iconClass: "fa-solid fa-face-smile" },
+const ratingPalette: Record<
+  Rating,
+  { tone: RnwButtonTone; label: string; iconClass: string; kind?: RnwButtonKind }
+> = {
+  again: { tone: "danger", label: "Again", iconClass: "fa-solid fa-rotate-left", kind: "outline" },
+  hard: { tone: "warning", label: "Hard", iconClass: "fa-solid fa-hand", kind: "outline" },
+  good: { tone: "primary", label: "Good", iconClass: "fa-solid fa-thumbs-up", kind: "outline" },
+  easy: { tone: "success", label: "Easy", iconClass: "fa-solid fa-face-smile", kind: "outline" },
 };
 
 export function RnwFlashCard({ word, memory, onRate }: RnwFlashCardProps) {
@@ -73,17 +80,17 @@ export function RnwFlashCard({ word, memory, onRate }: RnwFlashCardProps) {
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           <i className="fa-solid fa-layer-group" aria-hidden="true" style={{ color: "#0d6efd" }} />
           <strong>Flash Card</strong>
-          <span style={{ background: "#f8f9fa", borderRadius: 999, padding: "2px 8px", fontSize: 12 }}>
-            Lv {memory.memoryLevel}
-          </span>
+          <RnwLevelBadge level={memory.memoryLevel} />
         </div>
 
-        <RnwOutlineButton
-          label="Speak"
+        <RnwButton
+          title="Speak"
           onPress={speakWord}
           disabled={!canSpeak}
           icon={<i className="fa-solid fa-volume-high" aria-hidden="true" />}
           testID="rnw-study-speak-word"
+          kind="outline"
+          tone="secondary"
         />
       </header>
 
@@ -91,21 +98,27 @@ export function RnwFlashCard({ word, memory, onRate }: RnwFlashCardProps) {
         <div style={{ textAlign: "center" }}>
           <div style={{ fontSize: 36, fontWeight: 700 }}>{word.headword}</div>
           <div style={{ marginBottom: 4 }}>
-            <span style={{ background: "#6c757d", color: "#fff", borderRadius: 999, padding: "2px 8px", fontSize: 12 }}>
+            <RnwBadge
+              tone="secondary" variant="pill">
               {word.pos}
-            </span>
+            </RnwBadge>
           </div>
-          <div style={{ color: "#6c757d", fontSize: 13 }}>
-            due: {new Date(memory.dueAt).toLocaleString()}
+          <div style={{ color: "#6c757d", fontSize: 14 }}>
+            due: {new Date(memory.dueAt).toLocaleString("en-US", {
+              timeZone: "Asia/Tokyo",
+              hour12: false,
+            })}
           </div>
         </div>
 
         {!showAnswer ? (
-          <RnwPrimaryButton
+          <RnwButton
             label="Show Answer"
             onPress={() => setShowAnswer(true)}
             fullWidth
             testID="rnw-study-show-answer"
+            kind="solid"
+            tone="primary"
           />
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -122,11 +135,13 @@ export function RnwFlashCard({ word, memory, onRate }: RnwFlashCardProps) {
                     <div key={example.id} style={{ borderLeft: "3px solid #0d6efd", paddingLeft: 10 }}>
                       <div style={{ display: "flex", gap: 8, justifyContent: "space-between" }}>
                         <div style={{ flex: 1 }}>{example.en}</div>
-                        <RnwOutlineButton
-                          label="Speak"
+                        <RnwButton
+                          title="Speak"
                           onPress={() => speakExample(example.en)}
                           disabled={!canSpeak}
                           icon={<i className="fa-solid fa-volume-high" aria-hidden="true" />}
+                          kind="outline"
+                          tone="secondary"
                         />
                       </div>
                       {example.ja ? <div style={{ color: "#6c757d", fontSize: 13 }}>{example.ja}</div> : null}
@@ -140,20 +155,16 @@ export function RnwFlashCard({ word, memory, onRate }: RnwFlashCardProps) {
               {(Object.keys(ratingPalette) as Rating[]).map((rating) => {
                 const spec = ratingPalette[rating];
                 return (
-                  <button
+                  <RnwButton
                     key={rating}
-                    type="button"
-                    onClick={() => void handleRate(rating)}
-                    style={{
-                      border: `1px solid ${spec.border}`,
-                      color: spec.color,
-                      borderRadius: 6,
-                      backgroundColor: "transparent",
-                      padding: "8px 10px",
-                    }}
-                  >
-                    <i className={spec.iconClass} aria-hidden="true" /> {spec.label}
-                  </button>
+                    label={spec.label}
+                    onPress={() => void handleRate(rating)}
+                    kind={spec.kind ?? "outline"}
+                    tone={spec.tone}
+                    fullWidth
+                    icon={<i className={spec.iconClass} aria-hidden="true" />}
+                    testID={`rnw-study-rate-${rating}`}
+                  />
                 );
               })}
             </div>

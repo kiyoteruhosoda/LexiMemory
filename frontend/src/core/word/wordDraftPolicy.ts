@@ -8,6 +8,7 @@ type WordDraftFormState = {
   headword: string;
   pos: Pos;
   meaningJa: string;
+  tagsInput: string;
   memo: string;
   examples: ExampleSentence[];
 };
@@ -24,6 +25,17 @@ export function createEmptyExample(idGenerator: ExampleIdGenerator): ExampleSent
 export function normalizeExampleField(value: string | null | undefined): string | null {
   const normalized = value?.trim() ?? "";
   return normalized.length > 0 ? normalized : null;
+}
+
+
+
+export function parseTagsInput(tagsInput?: string): string[] {
+  const normalized = (tagsInput ?? "")
+    .split(",")
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0);
+
+  return Array.from(new Set(normalized));
 }
 
 export function sanitizeExamples(examples: ExampleSentence[]): ExampleSentence[] {
@@ -46,7 +58,7 @@ export function buildWordSaveDraft(
     pos: formState.pos,
     meaningJa: formState.meaningJa.trim(),
     pronunciation: initial?.pronunciation ?? null,
-    tags: initial?.tags ?? [],
+    tags: parseTagsInput(formState.tagsInput),
     examples: sanitizeExamples(formState.examples),
     memo: normalizeExampleField(formState.memo),
   };

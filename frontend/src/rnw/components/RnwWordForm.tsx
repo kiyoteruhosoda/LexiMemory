@@ -1,8 +1,11 @@
+// frontend/src/rnw/components/RnwWordForm.tsx
+
 import { useEffect, useMemo, useState } from "react";
 import type { ExampleSentence, Pos, WordEntry } from "../../api/types";
 import { buildWordSaveDraft, createEmptyExample } from "../../core/word/wordDraftPolicy";
+import { createUuidGenerator } from "../../core/identity/uuid";
 import { speechApplicationService } from "../../speech/speechApplication";
-import { RnwOutlineButton } from "./RnwOutlineButton";
+import { RnwButton } from "./RnwButton";
 
 const POS: Pos[] = ["noun", "verb", "adj", "adv", "prep", "conj", "pron", "det", "interj", "other"];
 
@@ -26,11 +29,12 @@ const textInputStyle = {
 };
 
 export function RnwWordForm({ initial, onSave, onCancel }: RnwWordFormProps) {
-  const idGenerator = useMemo(() => ({ nextId: () => crypto.randomUUID() }), []);
+  const idGenerator = useMemo(() => createUuidGenerator(), []);
 
   const [headword, setHeadword] = useState(initial?.headword ?? "");
   const [pos, setPos] = useState<Pos>(initial?.pos ?? "noun");
   const [meaningJa, setMeaningJa] = useState(initial?.meaningJa ?? "");
+  const [tagsInput, setTagsInput] = useState((initial?.tags ?? []).join(", "));
   const [memo, setMemo] = useState(initial?.memo ?? "");
   const [examples, setExamples] = useState<ExampleSentence[]>(
     initial?.examples && initial.examples.length > 0 ? initial.examples : [createEmptyExample(idGenerator)],
@@ -44,6 +48,7 @@ export function RnwWordForm({ initial, onSave, onCancel }: RnwWordFormProps) {
     setHeadword(initial.headword);
     setPos(initial.pos);
     setMeaningJa(initial.meaningJa);
+    setTagsInput((initial.tags ?? []).join(", "));
     setMemo(initial.memo ?? "");
     setExamples(initial.examples && initial.examples.length > 0 ? initial.examples : [createEmptyExample(idGenerator)]);
   }, [idGenerator, initial]);
@@ -69,11 +74,12 @@ export function RnwWordForm({ initial, onSave, onCancel }: RnwWordFormProps) {
     event.preventDefault();
     setBusy(true);
     try {
-      await onSave(buildWordSaveDraft({ headword, pos, meaningJa, memo, examples }, initial));
+      await onSave(buildWordSaveDraft({ headword, pos, meaningJa, tagsInput, memo, examples }, initial));
       if (!initial) {
         setHeadword("");
         setPos("noun");
         setMeaningJa("");
+        setTagsInput("");
         setMemo("");
         setExamples([createEmptyExample(idGenerator)]);
       }
@@ -87,31 +93,39 @@ export function RnwWordForm({ initial, onSave, onCancel }: RnwWordFormProps) {
       <section style={sectionStyle}>
         <h5 style={{ margin: 0 }}>{initial ? "Edit word" : "Add a new word"}</h5>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
           <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <span>Word</span>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center" }}>
               <input
                 value={headword}
                 onChange={(event) => setHeadword(event.target.value)}
                 required
-                style={{ ...textInputStyle, flex: 1 }}
+                style={textInputStyle}
                 data-testid="rnw-word-form-headword"
               />
-              <RnwOutlineButton
-                label="Speak"
+              <RnwButton
+                title="Speak"
                 onPress={() => speak(headword)}
                 disabled={!canSpeak || !headword.trim()}
                 icon={<i className="fa-solid fa-volume-high" aria-hidden="true" />}
+                kind="outline"
+                tone="secondary"
               />
             </div>
           </label>
 
           <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             <span>POS</span>
-            <select value={pos} onChange={(event) => setPos(event.target.value as Pos)} style={textInputStyle}>
+            <select
+              value={pos}
+              onChange={(event) => setPos(event.target.value as Pos)}
+              style={{ ...textInputStyle, minWidth: 110 }}
+            >
               {POS.map((item) => (
-                <option key={item} value={item}>{item}</option>
+                <option key={item} value={item}>
+                  {item}
+                </option>
               ))}
             </select>
           </label>
@@ -127,16 +141,29 @@ export function RnwWordForm({ initial, onSave, onCancel }: RnwWordFormProps) {
             />
           </label>
         </div>
+
+        <label style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+          <span>Tags (comma separated)</span>
+          <input
+            value={tagsInput}
+            onChange={(event) => setTagsInput(event.target.value)}
+            placeholder="e.g. business, travel"
+            style={textInputStyle}
+            data-testid="rnw-word-form-tags"
+          />
+        </label>
       </section>
 
       <section style={sectionStyle}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           <strong>Example Sentences</strong>
-          <RnwOutlineButton
+          <RnwButton
             label="Add Example"
             onPress={addExample}
             icon={<i className="fa-solid fa-plus" aria-hidden="true" />}
             testID="rnw-word-form-add-example"
+            kind="outline"
+            tone="primary"
           />
         </div>
 
@@ -153,11 +180,13 @@ export function RnwWordForm({ initial, onSave, onCancel }: RnwWordFormProps) {
                     style={textInputStyle}
                   />
                 </label>
-                <RnwOutlineButton
-                  label="Speak"
+                <RnwButton
+                  title="Speak"
                   onPress={() => speak(example.en || "")}
                   disabled={!canSpeak || !example.en?.trim()}
                   icon={<i className="fa-solid fa-volume-high" aria-hidden="true" />}
+                  kind="outline"
+                  tone="secondary"
                 />
               </div>
 
@@ -172,13 +201,14 @@ export function RnwWordForm({ initial, onSave, onCancel }: RnwWordFormProps) {
               </label>
 
               <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => removeExample(example.id)}
-                  style={{ border: "1px solid #dc3545", backgroundColor: "transparent", color: "#dc3545", borderRadius: 6, padding: "6px 10px" }}
-                >
-                  <i className="fa-solid fa-trash" aria-hidden="true" /> Remove
-                </button>
+                <RnwButton
+                  label="Remove"
+                  onPress={() => removeExample(example.id)}
+                  icon={<i className="fa-solid fa-trash" aria-hidden="true" />}
+                  testID="rnw-remove-button"
+                  kind="outline"
+                  tone="danger"
+                />
               </div>
             </div>
           ))}
@@ -198,22 +228,25 @@ export function RnwWordForm({ initial, onSave, onCancel }: RnwWordFormProps) {
       </section>
 
       <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, flexWrap: "wrap" }}>
-        {onCancel ? <RnwOutlineButton label="Cancel" onPress={onCancel} disabled={busy} /> : null}
-        <button
+        <RnwButton
+          label={busy ? "Saving..." : initial ? "Update" : "Create Word"}
           type="submit"
           disabled={busy}
-          data-testid="rnw-word-form-submit"
-          style={{
-            border: "1px solid #0d6efd",
-            backgroundColor: "#0d6efd",
-            color: "#fff",
-            borderRadius: 6,
-            padding: "8px 12px",
-            opacity: busy ? 0.7 : 1,
-          }}
-        >
-          <i className="fa-solid fa-floppy-disk" aria-hidden="true" /> {busy ? "Saving..." : initial ? "Save Changes" : "Create Word"}
-        </button>
+          icon={<i className={initial ? "fa-solid fa-pen" : "fa-solid fa-plus"} aria-hidden="true" />}
+          testID="rnw-submit-button"
+          kind="solid"
+          tone="primary"
+        />
+        {onCancel ? (
+          <RnwButton
+            label="Cancel"
+            onPress={onCancel}
+            icon={<i className="fa-solid fa-xmark" aria-hidden="true" />}
+            disabled={busy}
+            kind="outline"
+            tone="secondary"
+          />
+        ) : null}
       </div>
     </form>
   );

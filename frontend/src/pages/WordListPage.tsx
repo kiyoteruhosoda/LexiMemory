@@ -1,17 +1,19 @@
-import { useEffect, useState } from "react";
+// frontend/src/pages/WordListPage.tsx
+
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { wordApplicationService } from "../word/wordApplication";
 import type { WordEntry, MemoryState } from "../api/types";
 import { RnwImportDialog } from "../rnw/components/RnwImportDialog";
 import SyncButton from "../components/SyncButton";
 import { backupExportService } from "../io/backupExportApplication";
-import { RnwPrimaryButton } from "../rnw/components/RnwPrimaryButton";
-import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
-import { RnwIconButton } from "../rnw/components/RnwIconButton";
 import { RnwSearchPanel } from "../rnw/components/RnwSearchPanel";
 import { RnwWordListTable } from "../rnw/components/RnwWordListTable";
-import { RnwPlatformBadge } from "../rnw/components/RnwPlatformBadge";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
+import { RnwButton } from "../rnw/components/RnwButton";
+import { useTagFilterState } from "../hooks/useTagFilterState";
+import { RnwTagFilterButton } from "../rnw/components/RnwTagFilterButton";
+import { RnwTagFilterPanel } from "../rnw/components/RnwTagFilterPanel";
 
 export function WordListPage() {
   const navigate = useNavigate();
@@ -22,13 +24,32 @@ export function WordListPage() {
   const [busy, setBusy] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [allTags, setAllTags] = useState<string[]>([]);
 
+  const {
+    selectedTags,
+    appliedTags,
+    isFilterExpanded,
+    setFilterExpanded,
+    handleToggleTagSelection,
+    applyFilter,
+    clearFilter,
+  } = useTagFilterState("words");
 
-  async function reload() {
+  const loadTags = useCallback(async () => {
+    try {
+      const tags = await wordApplicationService.getAllTags();
+      setAllTags(tags);
+    } catch (e) {
+      console.error("Failed to load tags:", e);
+    }
+  }, []);
+
+  const reload = useCallback(async () => {
     setError(null);
     setBusy(true);
     try {
-      const result = await wordApplicationService.listWords({ q });
+      const result = await wordApplicationService.listWords({ q, tags: appliedTags });
       setItems(result.items);
       setMemoryMap(result.memoryMap);
     } catch (e: unknown) {
@@ -36,11 +57,16 @@ export function WordListPage() {
     } finally {
       setBusy(false);
     }
-  }
+  }, [appliedTags, q]);
 
-  useEffect(() => { void reload(); 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useEffect(() => {
+    void loadTags();
+    void reload();
+  }, [loadTags, reload]);
+
+  useEffect(() => {
+    void reload();
+  }, [appliedTags, reload]);
 
   async function handleExport() {
     setError(null);
@@ -56,63 +82,96 @@ export function WordListPage() {
   }
 
   function handleImportSuccess() {
+    void loadTags();
     void reload();
   }
-
 
   return (
     <div className="vstack gap-3" data-testid="word-list-page-ready">
       <div className="d-flex align-items-center justify-content-between flex-wrap gap-2">
         <div className="d-flex gap-2 align-items-center flex-wrap" data-testid="rnw-word-list-action-row">
-          <RnwPlatformBadge />
-          <RnwPrimaryButton
+          <RnwButton
             label="Add"
             onPress={() => navigate("/words/create")}
             icon={<i className="fa-solid fa-plus" aria-hidden="true" />}
             testID="rnw-add-button"
+            kind="solid"
+            tone="primary"
           />
 
-          <RnwOutlineButton
+          <RnwButton
             label="Study"
             onPress={() => navigate("/study")}
             icon={<i className="fa-solid fa-graduation-cap" aria-hidden="true" />}
             testID="rnw-study-button"
+            kind="outline"
+            tone="primary"
           />
 
-          <RnwOutlineButton
+          <RnwButton
             label="Examples"
             onPress={() => navigate("/examples")}
             icon={<i className="fa-solid fa-pen-to-square" aria-hidden="true" />}
             testID="rnw-examples-button"
+            kind="outline"
+            tone="primary"
           />
 
-          <RnwIconButton
+          {allTags.length > 0 && (
+            <RnwTagFilterButton
+              activeCount={appliedTags?.length ?? 0}
+              onPress={() => setFilterExpanded(!isFilterExpanded)}
+              testID="rnw-word-list-tags"
+            />
+          )}
+
+          <RnwButton
             onPress={() => setShowSearch(!showSearch)}
             icon={<i className="fa-solid fa-magnifying-glass" aria-hidden="true" />}
             title="Toggle search"
             testID="rnw-toggle-search-button"
+            kind="outline"
+            tone="secondary"
           />
 
           <div className="d-none d-md-flex gap-2">
-            <RnwOutlineButton
+            <RnwButton
               label="Export"
               onPress={() => void handleExport()}
               disabled={busy}
               icon={<i className="fa-solid fa-upload" aria-hidden="true" />}
               testID="rnw-export-button"
+              kind="outline"
+              tone="secondary"
+              size="sm"
             />
-            <RnwOutlineButton
+
+            <RnwButton
               label="Import"
               onPress={() => setShowImportModal(true)}
               disabled={busy}
               icon={<i className="fa-solid fa-download" aria-hidden="true" />}
               testID="rnw-import-button"
+              kind="outline"
+              tone="secondary"
+              size="sm"
             />
           </div>
         </div>
 
-        <SyncButton onSyncSuccess={reload} />
+        <SyncButton onSyncSuccess={() => { void loadTags(); void reload(); }} />
       </div>
+
+      {isFilterExpanded && allTags.length > 0 && (
+        <RnwTagFilterPanel
+          allTags={allTags}
+          selectedTags={selectedTags}
+          onToggleTag={handleToggleTagSelection}
+          onClose={() => setFilterExpanded(false)}
+          onClear={clearFilter}
+          onApply={applyFilter}
+        />
+      )}
 
       {showSearch && (
         <RnwSearchPanel

@@ -1,3 +1,5 @@
+// frontend/src/pages/StudyPage.tsx
+
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { studyApplicationService } from "../study/studyApplication";
@@ -5,11 +7,11 @@ import type { WordEntry, MemoryState, Rating } from "../api/types";
 import { RnwFlashCard } from "../rnw/components/RnwFlashCard";
 import SyncButton from "../components/SyncButton";
 import { useTagFilterState } from "../hooks/useTagFilterState";
-import { RnwOutlineButton } from "../rnw/components/RnwOutlineButton";
 import { RnwTagFilterButton } from "../rnw/components/RnwTagFilterButton";
 import { RnwTagFilterPanel } from "../rnw/components/RnwTagFilterPanel";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
 import { RnwActionBar } from "@leximemory/ui";
+import { RnwButton } from "../rnw/components/RnwButton";
 
 export function StudyPage() {
   const navigate = useNavigate();
@@ -72,18 +74,23 @@ export function StudyPage() {
     <div className="vstack gap-3" data-testid="study-page-ready">
       <RnwActionBar
         leading={<>
-          <RnwOutlineButton
+
+          <RnwButton
             label="Words"
             onPress={() => navigate("/words")}
             icon={<i className="fa-solid fa-book" aria-hidden="true" />}
             testID="rnw-study-words"
+            kind="outline"
+            tone="primary"
           />
 
-          <RnwOutlineButton
+          <RnwButton
             label="Examples"
             onPress={() => navigate("/examples")}
             icon={<i className="fa-solid fa-pen-to-square" aria-hidden="true" />}
             testID="rnw-study-examples"
+            kind="outline"
+            tone="primary"
           />
 
           {allTags.length > 0 && (

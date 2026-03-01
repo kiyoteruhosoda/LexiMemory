@@ -1,5 +1,6 @@
 import type { FormEvent } from "react";
 import type { ExampleTestItem } from "../../api/types";
+import { RnwButton } from "./RnwButton";
 
 type FeedbackState = "correct" | "incorrect" | null;
 
@@ -30,26 +31,6 @@ const containerStyle = {
   display: "flex",
   flexDirection: "column" as const,
   gap: 16,
-};
-
-const subtleButtonStyle = {
-  border: "1px solid #6c757d",
-  borderRadius: 6,
-  backgroundColor: "transparent",
-  color: "#495057",
-  padding: "6px 10px",
-  fontSize: 13,
-  cursor: "pointer",
-};
-
-const primaryButtonStyle = {
-  border: "1px solid #0d6efd",
-  borderRadius: 6,
-  backgroundColor: "#0d6efd",
-  color: "#fff",
-  padding: "8px 14px",
-  fontSize: 14,
-  cursor: "pointer",
 };
 
 const answerBoxStyle = {
@@ -105,9 +86,15 @@ export function RnwExamplesQuizCard({
     <section style={containerStyle} data-testid="rnw-examples-quiz-card">
       <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {!showWordInfo ? (
-          <button type="button" style={subtleButtonStyle} onClick={onShowWordInfo}>
-            <i className="fa-solid fa-circle-info" aria-hidden="true" /> Show Word Info
-          </button>
+          <RnwButton
+            type="button"
+            kind="outline"
+            tone="secondary"
+            size="sm"
+            onPress={onShowWordInfo}
+            icon={<i className="fa-solid fa-circle-info" aria-hidden="true" />}
+            label="Show Word Info"
+          />
         ) : (
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ background: "#6c757d", color: "#fff", borderRadius: 999, padding: "2px 8px", fontSize: 12 }}>
@@ -120,17 +107,30 @@ export function RnwExamplesQuizCard({
 
       <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
         <div style={{ fontSize: 20, fontWeight: 500, flex: 1 }}>{blankedSentence}</div>
-        <button type="button" style={subtleButtonStyle} onClick={onSpeakSentence} disabled={!canSpeak} title="Speak">
-          <i className="fa-solid fa-volume-high" aria-hidden="true" />
-        </button>
+        <RnwButton
+          type="button"
+          kind="outline"
+          tone="secondary"
+          size="sm"
+          onPress={onSpeakSentence}
+          icon={<i className="fa-solid fa-volume-high" aria-hidden="true" />}
+          title="Speak"
+          disabled={!canSpeak}
+        />
       </div>
 
       {example.ja ? (
         <div>
           {!showTranslation ? (
-            <button type="button" style={subtleButtonStyle} onClick={onToggleTranslation}>
-              <i className="fa-solid fa-language" aria-hidden="true" /> Show Translation
-            </button>
+            <RnwButton
+              type="button"
+              kind="outline"
+              tone="secondary"
+              size="sm"
+              onPress={onToggleTranslation}
+              icon={<i className="fa-solid fa-language" aria-hidden="true" />}
+              label="Show Translation"
+            />
           ) : (
             <div style={{ color: "#6c757d", fontSize: 13 }}>
               <i className="fa-solid fa-language" aria-hidden="true" /> {example.ja}
@@ -150,9 +150,13 @@ export function RnwExamplesQuizCard({
               autoFocus
               style={{ flex: 1, border: "1px solid #ced4da", borderRadius: 6, padding: "8px 10px" }}
             />
-            <button type="submit" style={primaryButtonStyle}>
-              <i className="fa-solid fa-check" aria-hidden="true" /> Check
-            </button>
+            <RnwButton
+              type="submit"
+              kind="solid"
+              tone="primary"
+              icon={<i className="fa-solid fa-check" aria-hidden="true" />}
+              label="Check"
+            />
           </div>
           <div style={{ color: "#6c757d", fontSize: 12 }}>Press Enter to check or skip if you don&apos;t know</div>
         </form>
@@ -178,9 +182,15 @@ export function RnwExamplesQuizCard({
             <div style={{ color: "#6c757d", fontSize: 13, marginTop: 8 }}>Complete sentence: {example.en}</div>
           </div>
 
-          <button type="button" style={{ ...primaryButtonStyle, width: "100%" }} onClick={onNext}>
-            <i className="fa-solid fa-arrow-right" aria-hidden="true" /> Next Example
-          </button>
+          <RnwButton
+            type="button"
+            kind="solid"
+            tone="primary"
+            onPress={onNext}
+            icon={<i className="fa-solid fa-arrow-right" aria-hidden="true" />}
+            label="Next Example"
+            fullWidth
+          />
         </div>
       )}
     </section>
