@@ -9,7 +9,7 @@ This directory is the React Native / Expo application entrypoint.
   - SQLite adapter: `src/storage/mobileSqliteStorageAdapter.ts`
 - Runnable Expo scaffold:
   - `App.tsx`
-  - `app.json`
+  - `app.config.ts`
 
 The mobile app currently connects shared modules from:
 - `packages/core` (Storage Port)
@@ -21,6 +21,9 @@ The mobile app currently connects shared modules from:
 - `npm run android --workspace @leximemory/apps-mobile`
 - `npm run ios --workspace @leximemory/apps-mobile`
 - `npm run web --workspace @leximemory/apps-mobile`
+- `npm run android:prebuild --workspace @leximemory/apps-mobile`
+- `npm run android:bundle --workspace @leximemory/apps-mobile`
+- `npm run android:submit --workspace @leximemory/apps-mobile`
 - `npm run test:mobile:regression`
 
 ## Runtime env
@@ -29,6 +32,32 @@ The mobile app currently connects shared modules from:
 - `EXPO_PUBLIC_API_BASE_URL=http://localhost:8000`
 - `EXPO_PUBLIC_ACCESS_TOKEN=<jwt access token>`
 - `EXPO_PUBLIC_CLIENT_ID=<optional mobile client id>`
+
+## Android store distribution readiness
+
+The project is now configured for Google Play release workflow with EAS Build.
+
+### Required setup
+
+1. Login: `npx eas login`
+2. Link project once: `npx eas init`
+3. Set project id to env: `EXPO_PUBLIC_EAS_PROJECT_ID=<project-id>`
+4. Set Android package name when needed: `EXPO_PUBLIC_ANDROID_APPLICATION_ID=com.yourcompany.leximemory`
+
+### Build and submit
+
+1. Build Play Store bundle (AAB):
+   - `npm run android:bundle --workspace @leximemory/apps-mobile`
+2. Submit to Google Play internal track:
+   - `npm run android:submit --workspace @leximemory/apps-mobile`
+
+EAS manages signing credentials and automatically increments Android version code in `production` profile.
+
+### Architecture consistency (DDD + polymorphism)
+
+- Application service composition remains in `src/app/mobileCompositionRoot.ts`.
+- Infrastructure gateways remain polymorphic (`mobileWordGateway`, `mobileStudyGateway`, `mobileSyncGateway`) through `MobileLearningRepositoryPort`.
+- Store-distribution settings are isolated in configuration (`app.config.ts`, `eas.json`) to keep domain/application layers clean.
 
 ## Phase D implemented use-cases
 
@@ -43,10 +72,6 @@ The mobile app currently connects shared modules from:
 - Mobile sync gateway supports backend `/api/vocab` contract.
 - Conflict handling supports both `fetch-server` and `force-local` strategies.
 - If sync env is missing, gateway falls back to local-only sync mode for prototype safety.
-
-Architecture notes:
-- Application services are resolved via `src/app/mobileCompositionRoot.ts`.
-- Infrastructure remains polymorphic (`mobileWordGateway`, `mobileStudyGateway`, `mobileSyncGateway`) via `MobileLearningRepositoryPort`.
 
 ## Next production steps
 
