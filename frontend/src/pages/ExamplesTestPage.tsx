@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { examplesApplicationService } from "../examples/examplesApplication";
 import { checkAnswer, createBlankedSentence } from "../core/examples/exampleSentencePolicy";
@@ -18,7 +18,7 @@ export function ExamplesTestPage() {
   const [example, setExample] = useState<ExampleTestItem | null>(null);
   const [blankedSentence, setBlankedSentence] = useState<string>("");
   const [actualWordInSentence, setActualWordInSentence] = useState<string | null>(null);
-  const [lastExampleId, setLastExampleId] = useState<string | null>(null);
+  const lastExampleIdRef = useRef<string | null>(null);
   const [userInput, setUserInput] = useState("");
   const [feedback, setFeedback] = useState<"correct" | "incorrect" | null>(null);
   const [showAnswer, setShowAnswer] = useState(false);
@@ -47,18 +47,19 @@ export function ExamplesTestPage() {
     }
   }, []);
 
-  const loadNext = useCallback(async () => {
+  const loadNext = useCallback(async (cursor: string | null) => {
     setError(null);
     setUserInput("");
     setFeedback(null);
     setShowAnswer(false);
 
     try {
-      const nextExample = await examplesApplicationService.fetchNextExample(appliedTags, lastExampleId);
+      const nextExample = await examplesApplicationService.fetchNextExample(appliedTags, cursor);
       if (!nextExample) {
         setExample(null);
         setBlankedSentence("");
         setActualWordInSentence(null);
+        lastExampleIdRef.current = null;
       } else {
         setExample(nextExample);
         const { blanked, actualWord, found } = createBlankedSentence(nextExample.en, nextExample.word.headword);
@@ -67,20 +68,20 @@ export function ExamplesTestPage() {
         }
         setBlankedSentence(blanked);
         setActualWordInSentence(actualWord);
-        setLastExampleId(nextExample.id);
+        lastExampleIdRef.current = nextExample.id;
       }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to load");
     }
-  }, [appliedTags, lastExampleId]);
+  }, [appliedTags]);
 
   useEffect(() => {
     void loadTags();
-    void loadNext();
-  }, [loadTags, loadNext]);
+  }, [loadTags]);
 
   useEffect(() => {
-    void loadNext();
+    lastExampleIdRef.current = null;
+    void loadNext(null);
   }, [appliedTags, loadNext]);
 
   function handleSubmitAnswer() {
@@ -101,7 +102,7 @@ export function ExamplesTestPage() {
   function handleNext() {
     setShowWordInfo(false);
     setShowTranslation(false);
-    void loadNext();
+    void loadNext(lastExampleIdRef.current);
   }
 
   function speakSentence() {
@@ -139,7 +140,7 @@ export function ExamplesTestPage() {
             />
           )}
         </>}
-        trailing={<SyncButton onSyncSuccess={() => { void loadTags(); void loadNext(); }} />}
+        trailing={<SyncButton onSyncSuccess={() => { void loadTags(); void loadNext(null); }} />}
         testID="rnw-examples-action-bar"
       />
 

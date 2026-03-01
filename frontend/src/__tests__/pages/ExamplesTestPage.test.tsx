@@ -79,4 +79,62 @@ describe("ExamplesTestPage", () => {
     expect(screen.getByTestId("rnw-study-tag-panel")).toBeInTheDocument();
     expect(screen.getByText("Filter by Tags")).toBeInTheDocument();
   });
+
+  it("does not auto-advance and requests next item only when user moves forward", async () => {
+    const user = userEvent.setup();
+    vi.mocked(examplesOffline.examplesApi.next)
+      .mockResolvedValueOnce({
+        example: {
+          id: "example-1",
+          en: "I run every morning.",
+          ja: "私は毎朝走る。",
+          source: null,
+          word: {
+            id: "word-1",
+            headword: "run",
+            pos: "verb",
+            meaningJa: "走る",
+            tags: ["work"],
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        example: {
+          id: "example-2",
+          en: "I check in at noon.",
+          ja: "正午にチェックインする。",
+          source: null,
+          word: {
+            id: "word-2",
+            headword: "check in",
+            pos: "verb",
+            meaningJa: "チェックインする",
+            tags: ["travel"],
+          },
+        },
+      });
+
+    render(
+      <MemoryRouter>
+        <AuthProvider>
+          <ExamplesTestPage />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+
+    await screen.findByTestId("rnw-examples-quiz-card");
+
+    await waitFor(() => {
+      expect(examplesOffline.examplesApi.next).toHaveBeenCalledTimes(1);
+    });
+    expect(examplesOffline.examplesApi.next).toHaveBeenNthCalledWith(1, undefined, null);
+
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    await user.click(screen.getByRole("button", { name: "Next Example" }));
+
+    await waitFor(() => {
+      expect(examplesOffline.examplesApi.next).toHaveBeenCalledTimes(2);
+    });
+    expect(examplesOffline.examplesApi.next).toHaveBeenNthCalledWith(2, undefined, "example-1");
+  });
 });
