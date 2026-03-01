@@ -18,5 +18,8 @@
     "expo-sqlite": "^15.0.7",
     "react": "^19.2.0",
     "react-native": "^0.84.0"
+  },
+  "devDependencies": {
+    "eas-cli": "^16.32.0"
   }
 }
