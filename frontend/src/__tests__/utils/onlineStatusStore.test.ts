@@ -2,8 +2,8 @@
 import { onlineStatusStore } from '../../utils/onlineStatusStore';
 
 describe('onlineStatusStore', () => {
-  it('should initialize with the value of navigator.onLine', () => {
-    expect(onlineStatusStore.getOnlineStatus()).toBe(navigator.onLine);
+  it('should initialize as offline until health check confirms online', () => {
+    expect(onlineStatusStore.getOnlineStatus()).toBe(false);
   });
 
   it('should update the status with setOnline', () => {

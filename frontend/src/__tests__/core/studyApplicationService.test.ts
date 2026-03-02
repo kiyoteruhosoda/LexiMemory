@@ -21,7 +21,7 @@ describe("StudyApplicationService", () => {
     await expect(service.getAllTags()).resolves.toEqual(["basic", "verb"]);
     await expect(service.fetchNextCard(["basic"])) .resolves.toBeNull();
 
-    expect(gateway.next).toHaveBeenCalledWith(["basic"]);
+    expect(vi.mocked(gateway.next).mock.calls[0]).toEqual([["basic"], undefined]);
   });
 
   it("delegates grading to gateway", async () => {

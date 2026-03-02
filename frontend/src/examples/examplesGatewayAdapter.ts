@@ -6,8 +6,8 @@ export const examplesGatewayAdapter: ExamplesGateway = {
     const response = await examplesApi.getTags();
     return response.tags;
   },
-  async next(tags, lastExampleId) {
-    const response = await examplesApi.next(tags, lastExampleId);
+  async next(tags, lastExampleId, preferredWordId) {
+    const response = await examplesApi.next(tags, lastExampleId, preferredWordId);
     return response.example;
   },
 };

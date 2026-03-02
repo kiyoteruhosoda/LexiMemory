@@ -12,7 +12,11 @@ export class ExamplesApplicationService {
     return this.examplesGateway.getTags();
   }
 
-  async fetchNextExample(tags?: string[], lastExampleId?: string | null): Promise<ExampleTestItem | null> {
-    return this.examplesGateway.next(tags, lastExampleId);
+  async fetchNextExample(
+    tags?: string[],
+    lastExampleId?: string | null,
+    preferredWordId?: string | null,
+  ): Promise<ExampleTestItem | null> {
+    return this.examplesGateway.next(tags, lastExampleId, preferredWordId);
   }
 }

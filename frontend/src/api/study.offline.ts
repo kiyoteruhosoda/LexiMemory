@@ -87,7 +87,18 @@ export const studyApi = {
   /**
    * Get next card for review (offline)
    */
-  next: async (tags?: string[]): Promise<NextCardResponse> => {
+  next: async (tags?: string[], preferredWordId?: string | null): Promise<NextCardResponse> => {
+    if (preferredWordId) {
+      const word = await localRepo.getWordById(preferredWordId);
+      const memory = await localRepo.getMemoryState(preferredWordId);
+      if (word && memory) {
+        return {
+          ok: true,
+          card: { word, memory },
+        };
+      }
+    }
+
     const card = await localRepo.getNextCard(tags);
     return {
       ok: true,

@@ -3,9 +3,9 @@
 type Listener = (isOnline: boolean) => void;
 type HealthCheckFn = () => Promise<boolean>;
 
-// Start with browser's navigator.onLine as an initial guess.
-// This will be updated by actual API calls.
-let isOnline = navigator.onLine;
+// Start as offline by default.
+// This becomes online only after a successful health check/API response.
+let isOnline = false;
 const listeners = new Set<Listener>();
 let healthCheckFn: HealthCheckFn | null = null;
 let retryTimeoutId: number | null = null;

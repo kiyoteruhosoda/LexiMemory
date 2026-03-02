@@ -6,8 +6,8 @@ export const studyGatewayAdapter: StudyGateway = {
     const response = await studyApi.getTags();
     return response.tags;
   },
-  async next(tags) {
-    const response = await studyApi.next(tags);
+  async next(tags, preferredWordId) {
+    const response = await studyApi.next(tags, preferredWordId);
     return response.card;
   },
   async grade(wordId, rating) {
