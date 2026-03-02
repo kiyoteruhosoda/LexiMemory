@@ -4,10 +4,6 @@
   "version": "0.0.0",
   "scripts": {
     "start": "expo start --clear",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web",
-    "android:prebuild": "expo prebuild --platform android --clean",
     "android:bundle": "eas build --platform android --profile production",
     "android:submit": "eas submit --platform android --profile production"
   },
