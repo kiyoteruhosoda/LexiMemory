@@ -1,7 +1,7 @@
 // frontend/src/pages/StudyPage.tsx
 
-import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { studyApplicationService } from "../study/studyApplication";
 import type { WordEntry, MemoryState, Rating } from "../api/types";
 import { RnwFlashCard } from "../rnw/components/RnwFlashCard";
@@ -13,6 +13,9 @@ import { CrossFeatureActionBar } from "../components/CrossFeatureActionBar";
 
 export function StudyPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preferredWordId = searchParams.get("wordId");
+  const preferredWordIdRef = useRef<string | null>(preferredWordId);
   const [word, setWord] = useState<WordEntry | null>(null);
   const [memory, setMemory] = useState<MemoryState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,10 +40,19 @@ export function StudyPage() {
     }
   }, []);
 
+  useEffect(() => {
+    preferredWordIdRef.current = preferredWordId;
+  }, [preferredWordId]);
+
   const loadNext = useCallback(async () => {
     setError(null);
     try {
-      const card = await studyApplicationService.fetchNextCard(appliedTags);
+      const preferredWordIdForFetch = preferredWordIdRef.current;
+      const card = await studyApplicationService.fetchNextCard(appliedTags, preferredWordIdForFetch);
+      if (preferredWordIdForFetch) {
+        preferredWordIdRef.current = null;
+      }
+
       if (!card) {
         setWord(null);
         setMemory(null);
@@ -53,13 +65,13 @@ export function StudyPage() {
     }
   }, [appliedTags]);
 
-  useEffect(() => { 
+  useEffect(() => {
     void loadTags();
-    void loadNext(); 
-  }, [loadTags, loadNext]);
+  }, [loadTags]);
+
   useEffect(() => {
     void loadNext();
-  }, [appliedTags, loadNext]);
+  }, [loadNext]);
 
   async function rate(rating: Rating) {
     if (!word) return;
@@ -110,7 +122,12 @@ export function StudyPage() {
           icon={<i className="fa-solid fa-circle-check" aria-hidden="true" />}
         />
       ) : (
-        <RnwFlashCard word={word} memory={memory} onRate={rate} />
+        <RnwFlashCard
+          word={word}
+          memory={memory}
+          onRate={rate}
+          onOpenExamples={(wordId) => navigate(`/examples?wordId=${encodeURIComponent(wordId)}`)}
+        />
       )}
     </div>
   );

@@ -12,8 +12,8 @@ export class StudyApplicationService {
     return this.studyGateway.getTags();
   }
 
-  async fetchNextCard(tags?: string[]): Promise<StudyCard | null> {
-    return this.studyGateway.next(tags);
+  async fetchNextCard(tags?: string[], preferredWordId?: string | null): Promise<StudyCard | null> {
+    return this.studyGateway.next(tags, preferredWordId);
   }
 
   async gradeCard(wordId: string, rating: Rating): Promise<MemoryState> {

@@ -15,7 +15,7 @@ export const examplesApi = {
    * @param tags - Filter by tags
    * @param lastExampleId - Avoid returning this example ID (unless it's the only one)
    */
-  async next(tags?: string[], lastExampleId?: string | null): Promise<NextExampleResponse> {
+  async next(tags?: string[], lastExampleId?: string | null, preferredWordId?: string | null): Promise<NextExampleResponse> {
     const result = await localRepo.getWords();
     const words = result.words;
     
@@ -37,6 +37,13 @@ export const examplesApi = {
     
     if (examplesPool.length === 0) {
       return { example: null };
+    }
+
+    if (preferredWordId) {
+      const preferredExamples = examplesPool.filter(item => item.word.id === preferredWordId);
+      if (preferredExamples.length > 0) {
+        examplesPool.splice(0, examplesPool.length, ...preferredExamples);
+      }
     }
     
     // Filter out last example if there are alternatives

@@ -127,7 +127,7 @@ describe("ExamplesTestPage", () => {
     await waitFor(() => {
       expect(examplesOffline.examplesApi.next).toHaveBeenCalledTimes(1);
     });
-    expect(examplesOffline.examplesApi.next).toHaveBeenNthCalledWith(1, undefined, null);
+    expect(examplesOffline.examplesApi.next).toHaveBeenNthCalledWith(1, undefined, null, null);
 
     await user.click(screen.getByRole("button", { name: "Check" }));
     await user.click(screen.getByRole("button", { name: "Next Example" }));
@@ -135,6 +135,103 @@ describe("ExamplesTestPage", () => {
     await waitFor(() => {
       expect(examplesOffline.examplesApi.next).toHaveBeenCalledTimes(2);
     });
-    expect(examplesOffline.examplesApi.next).toHaveBeenNthCalledWith(2, undefined, "example-1");
+    expect(examplesOffline.examplesApi.next).toHaveBeenNthCalledWith(2, undefined, "example-1", null);
   });
+
+  it("prefers query wordId only on first load", async () => {
+    const user = userEvent.setup();
+    vi.mocked(examplesOffline.examplesApi.next)
+      .mockResolvedValueOnce({
+        example: {
+          id: "example-1",
+          en: "I run every morning.",
+          ja: "私は毎朝走る。",
+          source: null,
+          word: {
+            id: "word-1",
+            headword: "run",
+            pos: "verb",
+            meaningJa: "走る",
+            tags: ["work"],
+          },
+        },
+      })
+      .mockResolvedValueOnce({ example: null });
+
+    render(
+      <MemoryRouter initialEntries={["/examples?wordId=word-1"]}>
+        <AuthProvider>
+          <ExamplesTestPage />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+
+    await screen.findByTestId("rnw-examples-quiz-card");
+    expect(examplesOffline.examplesApi.next).toHaveBeenNthCalledWith(1, undefined, null, "word-1");
+
+    await user.click(screen.getByRole("button", { name: "Check" }));
+    await user.click(screen.getByRole("button", { name: "Next Example" }));
+
+    await waitFor(() => {
+      expect(examplesOffline.examplesApi.next).toHaveBeenCalledTimes(2);
+    });
+    expect(examplesOffline.examplesApi.next).toHaveBeenNthCalledWith(2, undefined, "example-1", null);
+  });
+
+  it("consumes preferred wordId only once even when reloading with null cursor", async () => {
+    const user = userEvent.setup();
+
+    vi.mocked(examplesOffline.examplesApi.next)
+      .mockResolvedValueOnce({
+        example: {
+          id: "example-1",
+          en: "I run every morning.",
+          ja: "私は毎朝走る。",
+          source: null,
+          word: {
+            id: "word-1",
+            headword: "run",
+            pos: "verb",
+            meaningJa: "走る",
+            tags: ["work"],
+          },
+        },
+      })
+      .mockResolvedValueOnce({
+        example: {
+          id: "example-2",
+          en: "I work remotely.",
+          ja: "私はリモートで働く。",
+          source: null,
+          word: {
+            id: "word-2",
+            headword: "work",
+            pos: "verb",
+            meaningJa: "働く",
+            tags: ["work"],
+          },
+        },
+      });
+
+    render(
+      <MemoryRouter initialEntries={["/examples?wordId=word-1"]}>
+        <AuthProvider>
+          <ExamplesTestPage />
+        </AuthProvider>
+      </MemoryRouter>,
+    );
+
+    await screen.findByTestId("rnw-examples-quiz-card");
+    expect(examplesOffline.examplesApi.next).toHaveBeenNthCalledWith(1, undefined, null, "word-1");
+
+    await user.click(screen.getByTestId("rnw-examples-tags"));
+    await user.click(screen.getByLabelText("work"));
+    await user.click(screen.getByRole("button", { name: "Apply" }));
+
+    await waitFor(() => {
+      expect(examplesOffline.examplesApi.next).toHaveBeenCalledTimes(2);
+    });
+    expect(examplesOffline.examplesApi.next).toHaveBeenNthCalledWith(2, ["work"], null, null);
+  });
+
 });

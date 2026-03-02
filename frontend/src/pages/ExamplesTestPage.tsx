@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { examplesApplicationService } from "../examples/examplesApplication";
 import { checkAnswer, createBlankedSentence } from "../core/examples/exampleSentencePolicy";
 import { useTagFilterState } from "../hooks/useTagFilterState";
@@ -13,6 +13,9 @@ import { CrossFeatureActionBar } from "../components/CrossFeatureActionBar";
 
 export function ExamplesTestPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const preferredWordId = searchParams.get("wordId");
+  const preferredWordIdRef = useRef<string | null>(preferredWordId);
   const [example, setExample] = useState<ExampleTestItem | null>(null);
   const [blankedSentence, setBlankedSentence] = useState<string>("");
   const [actualWordInSentence, setActualWordInSentence] = useState<string | null>(null);
@@ -45,6 +48,11 @@ export function ExamplesTestPage() {
     }
   }, []);
 
+
+  useEffect(() => {
+    preferredWordIdRef.current = preferredWordId;
+  }, [preferredWordId]);
+
   const loadNext = useCallback(async (cursor: string | null) => {
     setError(null);
     setUserInput("");
@@ -52,7 +60,11 @@ export function ExamplesTestPage() {
     setShowAnswer(false);
 
     try {
-      const nextExample = await examplesApplicationService.fetchNextExample(appliedTags, cursor);
+      const preferred = cursor ? null : preferredWordIdRef.current;
+      const nextExample = await examplesApplicationService.fetchNextExample(appliedTags, cursor, preferred);
+      if (preferred) {
+        preferredWordIdRef.current = null;
+      }
       if (!nextExample) {
         setExample(null);
         setBlankedSentence("");
@@ -106,6 +118,16 @@ export function ExamplesTestPage() {
   function speakSentence() {
     if (!canSpeak || !example?.en) return;
     speechApplicationService.speakEnglish(example.en);
+  }
+
+  function speakAnswer() {
+    if (!canSpeak || !example) return;
+    speechApplicationService.speakEnglish(actualWordInSentence || example.word.headword);
+  }
+
+  function openStudyForCurrentWord() {
+    if (!example) return;
+    navigate(`/study?wordId=${encodeURIComponent(example.word.id)}`);
   }
 
   return (
@@ -162,6 +184,8 @@ export function ExamplesTestPage() {
           onShowWordInfo={() => setShowWordInfo(true)}
           onToggleTranslation={() => setShowTranslation(true)}
           onSpeakSentence={speakSentence}
+          onSpeakAnswer={speakAnswer}
+          onGoToStudy={openStudyForCurrentWord}
           onInputChange={setUserInput}
           onSubmitAnswer={handleSubmitAnswer}
           onNext={handleNext}

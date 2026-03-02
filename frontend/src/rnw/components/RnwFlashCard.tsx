@@ -12,6 +12,7 @@ export type RnwFlashCardProps = {
   word: WordEntry;
   memory: MemoryState;
   onRate: (rating: Rating) => Promise<void>;
+  onOpenExamples: (wordId: string) => void;
 };
 
 const cardStyle = {
@@ -55,7 +56,7 @@ const ratingPalette: Record<
   easy: { tone: "success", label: "Easy", iconClass: "fa-solid fa-face-smile", kind: "outline" },
 };
 
-export function RnwFlashCard({ word, memory, onRate }: RnwFlashCardProps) {
+export function RnwFlashCard({ word, memory, onRate, onOpenExamples }: RnwFlashCardProps) {
   const [showAnswer, setShowAnswer] = useState(false);
   const canSpeak = useMemo(() => speechApplicationService.canSpeak(), []);
 
@@ -150,6 +151,16 @@ export function RnwFlashCard({ word, memory, onRate }: RnwFlashCardProps) {
                 </div>
               </div>
             ) : null}
+
+            <RnwButton
+              type="button"
+              kind="outline"
+              tone="secondary"
+              label="Practice in Examples"
+              icon={<i className="fa-solid fa-language" aria-hidden="true" />}
+              onPress={() => onOpenExamples(word.id)}
+              fullWidth
+            />
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 8 }}>
               {(Object.keys(ratingPalette) as Rating[]).map((rating) => {

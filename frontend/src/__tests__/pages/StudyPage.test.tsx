@@ -1,6 +1,7 @@
 // src/__tests__/pages/StudyPage.test.tsx
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { StudyPage } from '../../pages/StudyPage';
 import { AuthProvider } from '../../auth/AuthContext';
@@ -117,6 +118,124 @@ describe('StudyPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Network error/i)).toBeInTheDocument();
+    });
+  });
+
+  it('uses query wordId as preferred card source', async () => {
+    const mockCard = {
+      word: {
+        id: 'w99',
+        headword: 'anchor',
+        pos: 'noun' as const,
+        meaningJa: '錨',
+        examples: [],
+        tags: [],
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z',
+      },
+      memory: {
+        wordId: 'w99',
+        dueAt: '2024-01-01T00:00:00Z',
+        memoryLevel: 1,
+        ease: 2.5,
+        intervalDays: 1,
+        reviewCount: 0,
+        lapseCount: 0,
+        lastRating: null,
+        lastReviewedAt: null,
+      },
+    };
+
+    vi.mocked(studyOffline.studyApi.getTags).mockResolvedValue({ ok: true, tags: [] });
+    vi.mocked(studyOffline.studyApi.next).mockResolvedValue({ ok: true, card: mockCard });
+
+    render(
+      <MemoryRouter initialEntries={['/study?wordId=w99']}>
+        <AuthProvider>
+          <StudyPage />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(studyOffline.studyApi.next).toHaveBeenCalledWith(undefined, 'w99');
+    });
+  });
+
+
+  it('consumes preferred wordId only on first fetch', async () => {
+    const user = userEvent.setup();
+    const firstCard = {
+      word: {
+        id: 'w99',
+        headword: 'anchor',
+        pos: 'noun' as const,
+        meaningJa: '錨',
+        examples: [],
+        tags: [],
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z',
+      },
+      memory: {
+        wordId: 'w99',
+        dueAt: '2024-01-01T00:00:00Z',
+        memoryLevel: 1,
+        ease: 2.5,
+        intervalDays: 1,
+        reviewCount: 0,
+        lapseCount: 0,
+        lastRating: null,
+        lastReviewedAt: null,
+      },
+    };
+
+    const nextCard = {
+      word: {
+        id: 'w100',
+        headword: 'bridge',
+        pos: 'noun' as const,
+        meaningJa: '橋',
+        examples: [],
+        tags: [],
+        createdAt: '2024-01-01T00:00:00Z',
+        updatedAt: '2024-01-01T00:00:00Z',
+      },
+      memory: {
+        wordId: 'w100',
+        dueAt: '2024-01-01T00:00:00Z',
+        memoryLevel: 1,
+        ease: 2.5,
+        intervalDays: 1,
+        reviewCount: 0,
+        lapseCount: 0,
+        lastRating: null,
+        lastReviewedAt: null,
+      },
+    };
+
+    vi.mocked(studyOffline.studyApi.getTags).mockResolvedValue({ ok: true, tags: [] });
+    vi.mocked(studyOffline.studyApi.next)
+      .mockResolvedValueOnce({ ok: true, card: firstCard })
+      .mockResolvedValueOnce({ ok: true, card: nextCard });
+    vi.mocked(studyOffline.studyApi.grade).mockResolvedValue({ ok: true, memory: nextCard.memory });
+
+    render(
+      <MemoryRouter initialEntries={['/study?wordId=w99']}>
+        <AuthProvider>
+          <StudyPage />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(studyOffline.studyApi.next).toHaveBeenNthCalledWith(1, undefined, 'w99');
+    });
+
+    await user.click(await screen.findByRole('button', { name: 'Show Answer' }));
+    await user.click(await screen.findByRole('button', { name: /Again/i }));
+
+    await waitFor(() => {
+      expect(studyOffline.studyApi.next).toHaveBeenNthCalledWith(2, undefined, null);
     });
   });
 });

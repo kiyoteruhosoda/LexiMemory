@@ -38,7 +38,7 @@ describe("ExamplesApplicationService", () => {
 
     const result = await service.fetchNextExample(["daily"], "ex0");
 
-    expect(gateway.next).toHaveBeenCalledWith(["daily"], "ex0");
+    expect(vi.mocked(gateway.next).mock.calls[0]).toEqual([["daily"], "ex0", undefined]);
     expect(result?.id).toBe("ex1");
   });
 });

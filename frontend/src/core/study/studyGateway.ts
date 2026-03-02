@@ -7,6 +7,6 @@ export type StudyCard = {
 
 export interface StudyGateway {
   getTags(): Promise<string[]>;
-  next(tags?: string[]): Promise<StudyCard | null>;
+  next(tags?: string[], preferredWordId?: string | null): Promise<StudyCard | null>;
   grade(wordId: string, rating: Rating): Promise<MemoryState>;
 }

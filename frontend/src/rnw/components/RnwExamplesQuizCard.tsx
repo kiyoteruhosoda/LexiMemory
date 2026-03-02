@@ -17,6 +17,8 @@ export interface RnwExamplesQuizCardProps {
   onShowWordInfo: () => void;
   onToggleTranslation: () => void;
   onSpeakSentence: () => void;
+  onSpeakAnswer: () => void;
+  onGoToStudy: () => void;
   onInputChange: (value: string) => void;
   onSubmitAnswer: () => void;
   onNext: () => void;
@@ -71,6 +73,8 @@ export function RnwExamplesQuizCard({
   onShowWordInfo,
   onToggleTranslation,
   onSpeakSentence,
+  onSpeakAnswer,
+  onGoToStudy,
   onInputChange,
   onSubmitAnswer,
   onNext,
@@ -173,14 +177,36 @@ export function RnwExamplesQuizCard({
 
           <div style={answerBoxStyle}>
             <div style={{ fontWeight: 600, marginBottom: 8 }}>Correct Answer:</div>
-            <div style={{ fontSize: 20 }}>
-              <strong>{actualWordInSentence || example.word.headword}</strong>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ fontSize: 20, flex: 1 }}>
+                <strong>{actualWordInSentence || example.word.headword}</strong>
+              </div>
+              <RnwButton
+                type="button"
+                kind="outline"
+                tone="secondary"
+                size="sm"
+                onPress={onSpeakAnswer}
+                icon={<i className="fa-solid fa-volume-high" aria-hidden="true" />}
+                title="Speak Correct Answer"
+                disabled={!canSpeak}
+              />
             </div>
             {actualWordInSentence && actualWordInSentence !== example.word.headword ? (
               <div style={{ color: "#6c757d", fontSize: 13 }}>(Base form: {example.word.headword})</div>
             ) : null}
             <div style={{ color: "#6c757d", fontSize: 13, marginTop: 8 }}>Complete sentence: {example.en}</div>
           </div>
+
+          <RnwButton
+            type="button"
+            kind="outline"
+            tone="secondary"
+            onPress={onGoToStudy}
+            icon={<i className="fa-solid fa-layer-group" aria-hidden="true" />}
+            label="Open in Study"
+            fullWidth
+          />
 
           <RnwButton
             type="button"
