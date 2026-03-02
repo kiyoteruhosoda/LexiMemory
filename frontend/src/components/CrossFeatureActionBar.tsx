@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { RnwButton } from "../rnw/components/RnwButton";
 import { RnwTagFilterButton } from "../rnw/components/RnwTagFilterButton";
-import { RnwActionBar } from "@leximemory/ui";
+import { RnwActionBar } from "@linguisticnode/ui";
 
 export type FeatureRoute = "words" | "study" | "examples";
 

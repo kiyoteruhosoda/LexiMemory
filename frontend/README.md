@@ -21,10 +21,10 @@
 - `npm run test:e2e:ci`: Chromium/Firefox 両方の visual regression をCI相当で実行
 - `npm run test:e2e:rnw-poc`: RNW PoCコンポーネントのvisual回帰のみを実行
 - `npm run test:mobile:regression`: Mobile向けE2E相当フロー（create→study→sync）の回帰テスト
-- `npm run dev --workspace @leximemory/apps-web`: apps/webスコープから既存Web開発サーバーを起動
-- `npm run start --workspace @leximemory/apps-mobile`: Expo mobile dev server
-- `npm run android --workspace @leximemory/apps-mobile`: Expo Android launcher
-- `npm run ios --workspace @leximemory/apps-mobile`: Expo iOS launcher
+- `npm run dev --workspace @linguisticnode/apps-web`: apps/webスコープから既存Web開発サーバーを起動
+- `npm run start --workspace @linguisticnode/apps-mobile`: Expo mobile dev server
+- `npm run android --workspace @linguisticnode/apps-mobile`: Expo Android launcher
+- `npm run ios --workspace @linguisticnode/apps-mobile`: Expo iOS launcher
 - `EXPO_PUBLIC_MOBILE_STORAGE_RUNTIME=native-async|native-sqlite` で mobile persistence adapter を切替
 
 ## ルーティング方式
@@ -79,7 +79,7 @@
 - RNW移行PoC
   - `react-native` + `react-native-web` を導入
   - `packages/ui` にRNコンポーネントの共通部品を新設（`RnwSurfaceCard`）
-  - `LoginPage` のカードを `@leximemory/ui` から参照して描画
+  - `LoginPage` のカードを `@linguisticnode/ui` から参照して描画
   - 既存UIは当面 `src/rnw/react-native.tsx` の互換レイヤーを併用して段階置換
 
 ## ディレクトリ方針（段階的ワークスペース）
@@ -102,10 +102,10 @@
 
 ### Additional workspace commands
 
-- `npm run dev --workspace @leximemory/apps-web`
-- `npm run build --workspace @leximemory/apps-web`
-- `npm run typecheck --workspace @leximemory/apps-web`
-- `npm run start --workspace @leximemory/apps-mobile`
+- `npm run dev --workspace @linguisticnode/apps-web`
+- `npm run build --workspace @linguisticnode/apps-web`
+- `npm run typecheck --workspace @linguisticnode/apps-web`
+- `npm run start --workspace @linguisticnode/apps-mobile`
 
 
 ## Phase E (prototype hardening)

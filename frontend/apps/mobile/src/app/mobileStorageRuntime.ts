@@ -1,4 +1,4 @@
-import { createUnimplementedStoragePort } from "@leximemory/core/storage";
+import { createUnimplementedStoragePort } from "@linguisticnode/core/storage";
 import type { StorageAdapter } from "../../../../src/core/storage";
 
 export type MobileStorageRuntime = "native-async" | "native-sqlite";

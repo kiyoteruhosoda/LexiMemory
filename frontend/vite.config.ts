@@ -15,13 +15,13 @@ export default defineConfig(({ mode }) => {
       alias: {
         "react-native": "react-native-web",
         "@": path.resolve(__dirname, "./src"),
-        "@leximemory/core": path.resolve(__dirname, "./packages/core/src"),
-        "@leximemory/core/storage": path.resolve(
+        "@linguisticnode/core": path.resolve(__dirname, "./packages/core/src"),
+        "@linguisticnode/core/storage": path.resolve(
           __dirname,
           "./packages/core/src/storage"
         ),
-        "@leximemory/ui": path.resolve(__dirname, "./packages/ui/src"),
-        "@leximemory/ui/components": path.resolve(
+        "@linguisticnode/ui": path.resolve(__dirname, "./packages/ui/src"),
+        "@linguisticnode/ui/components": path.resolve(
           __dirname,
           "./packages/ui/src/components"
         )

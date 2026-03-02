@@ -1,1 +1,1 @@
-export type { StoragePort as StorageAdapter } from "@leximemory/core/storage";
+export type { StoragePort as StorageAdapter } from "@linguisticnode/core/storage";

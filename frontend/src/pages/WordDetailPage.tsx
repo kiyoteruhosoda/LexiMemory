@@ -8,7 +8,7 @@ import { RnwWordForm } from "../rnw/components/RnwWordForm";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
 import { RnwConfirmDialog } from "../rnw/components/RnwConfirmDialog";
 import { RnwButton } from "../rnw/components/RnwButton";
-import { RnwActionGroup, RnwPageHeader, RnwPanelCard } from "@leximemory/ui";
+import { RnwActionGroup, RnwPageHeader, RnwPanelCard } from "@linguisticnode/ui";
 
 export function WordDetailPage() {
   const navigate = useNavigate();

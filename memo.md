@@ -48,7 +48,7 @@ frontend/src/
 ```
 
 ```
-cd /work/project/03.LexiMemory
+cd /work/project/03.linguisticnode
 docker compose up -d --build
 ```
 
@@ -64,7 +64,7 @@ Build
 
 
 
-cd /work/project/03.LexiMemory/frontend
+cd /work/project/03.linguisticnode/frontend
 
 # 1. TypeScriptの型チェック（エラー確認）
 npx tsc --noEmit

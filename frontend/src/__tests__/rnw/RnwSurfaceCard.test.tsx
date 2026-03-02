@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { RnwSurfaceCard } from "@leximemory/ui";
+import { RnwSurfaceCard } from "@linguisticnode/ui";
 
 describe("RnwSurfaceCard", () => {
   it("renders children and test id", () => {

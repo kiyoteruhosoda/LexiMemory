@@ -1,4 +1,4 @@
-import { createUnimplementedStoragePort } from "@leximemory/core/storage";
+import { createUnimplementedStoragePort } from "@linguisticnode/core/storage";
 import type { StorageAdapter } from "./types";
 
 /**

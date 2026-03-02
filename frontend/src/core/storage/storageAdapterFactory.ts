@@ -1,5 +1,5 @@
 import type { StorageAdapter } from "./types";
-import { createUnimplementedStoragePort } from "@leximemory/core/storage";
+import { createUnimplementedStoragePort } from "@linguisticnode/core/storage";
 import { createAsyncStorageAdapter, type AsyncStorageDriver } from "./asyncStorageAdapter";
 import { createSqliteStorageAdapter, type SqliteStorageDriver } from "./sqliteStorageAdapter";
 import { webStorageAdapter } from "./webStorageAdapter";

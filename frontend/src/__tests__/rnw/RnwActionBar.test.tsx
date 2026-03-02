@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { RnwActionBar } from "@leximemory/ui";
+import { RnwActionBar } from "@linguisticnode/ui";
 
 describe("RnwActionBar", () => {
   it("renders leading and trailing content", () => {

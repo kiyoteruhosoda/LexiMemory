@@ -8,7 +8,7 @@ import type { AuthCommand, AuthIntent } from "../core/auth/authSessionService";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
 import { RnwButton } from "../rnw/components/RnwButton";
 import { RnwTextField } from "../rnw/components/RnwTextField";
-import { RnwSurfaceCard } from "@leximemory/ui";
+import { RnwSurfaceCard } from "@linguisticnode/ui";
 import { Text, View } from "../rnw/react-native";
 import { StyleSheet } from "../rnw/stylesheet";
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { RnwActionGroup } from "@leximemory/ui";
+import { RnwActionGroup } from "@linguisticnode/ui";
 
 describe("RnwActionGroup", () => {
   it("renders children in shared action row", () => {

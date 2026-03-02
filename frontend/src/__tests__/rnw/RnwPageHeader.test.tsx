@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { RnwPageHeader } from "@leximemory/ui";
+import { RnwPageHeader } from "@linguisticnode/ui";
 
 describe("RnwPageHeader", () => {
   it("renders title and action", () => {

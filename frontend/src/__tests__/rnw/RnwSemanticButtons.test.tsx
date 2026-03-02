@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { RnwDangerButton, RnwWarningButton } from "@leximemory/ui";
+import { RnwDangerButton, RnwWarningButton } from "@linguisticnode/ui";
 
 describe("Rnw semantic buttons", () => {
   it("handles warning and danger button press", async () => {

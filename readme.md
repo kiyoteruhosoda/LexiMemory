@@ -62,7 +62,7 @@ pytest.ini             # Pytest configuration
 ## Setup & Build
 
 ```sh
-cd /work/project/03.LexiMemory
+cd /work/project/03.linguisticnode
 ./scripts/bump_version.sh && sudo docker compose up -d --build
 ```
 
@@ -282,7 +282,7 @@ VSCode では `Docker: Attach FastAPI (debugpy)` を使うと、上記 compose �
 
 ```sh
 # Backend
-cd /work/project/03.LexiMemory
+cd /work/project/03.linguisticnode
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt

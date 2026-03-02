@@ -17,13 +17,13 @@ The mobile app currently connects shared modules from:
 
 ## Commands
 
-- `npm run start --workspace @leximemory/apps-mobile`
-- `npm run android --workspace @leximemory/apps-mobile`
-- `npm run ios --workspace @leximemory/apps-mobile`
-- `npm run web --workspace @leximemory/apps-mobile`
-- `npm run android:prebuild --workspace @leximemory/apps-mobile`
-- `npm run android:bundle --workspace @leximemory/apps-mobile`
-- `npm run android:submit --workspace @leximemory/apps-mobile`
+- `npm run start --workspace @linguisticnode/apps-mobile`
+- `npm run android --workspace @linguisticnode/apps-mobile`
+- `npm run ios --workspace @linguisticnode/apps-mobile`
+- `npm run web --workspace @linguisticnode/apps-mobile`
+- `npm run android:prebuild --workspace @linguisticnode/apps-mobile`
+- `npm run android:bundle --workspace @linguisticnode/apps-mobile`
+- `npm run android:submit --workspace @linguisticnode/apps-mobile`
 - `npm run test:mobile:regression`
 
 ## Runtime env
@@ -42,14 +42,14 @@ The project is now configured for Google Play release workflow with EAS Build.
 1. Login: `npx eas login`
 2. Link project once: `npx eas init`
 3. Set project id to env: `EXPO_PUBLIC_EAS_PROJECT_ID=<project-id>`
-4. Set Android package name when needed: `EXPO_PUBLIC_ANDROID_APPLICATION_ID=com.yourcompany.leximemory`
+4. Set Android package name when needed: `EXPO_PUBLIC_ANDROID_APPLICATION_ID=com.yourcompany.linguisticnode`
 
 ### Build and submit
 
 1. Build Play Store bundle (AAB):
-   - `npm run android:bundle --workspace @leximemory/apps-mobile`
+   - `npm run android:bundle --workspace @linguisticnode/apps-mobile`
 2. Submit to Google Play internal track:
-   - `npm run android:submit --workspace @leximemory/apps-mobile`
+   - `npm run android:submit --workspace @linguisticnode/apps-mobile`
 
 EAS manages signing credentials and automatically increments Android version code in `production` profile.
 

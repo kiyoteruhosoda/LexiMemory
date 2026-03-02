@@ -38,7 +38,7 @@ export default function App() {
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f8f9fa", padding: 16 }}>
       <ScrollView contentContainerStyle={{ gap: 12, paddingBottom: 24 }}>
         <RnwSurfaceCard>
-          <RnwPageHeader title="LexiMemory Mobile" />
+          <RnwPageHeader title="linguisticnode Mobile" />
           <Text>Phase D prototype: words / study / sync use-cases on Expo.</Text>
           <View style={{ display: "flex", flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
             <TabButton label="Words" active={route === "words"} onPress={() => setRoute("words")} />

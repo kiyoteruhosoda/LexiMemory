@@ -11,10 +11,10 @@ export default defineConfig({
     alias: {
       "react-native": "react-native-web",
       "@": path.resolve(frontendRoot, "src"),
-      "@leximemory/core": path.resolve(frontendRoot, "packages/core/src"),
-      "@leximemory/core/storage": path.resolve(frontendRoot, "packages/core/src/storage"),
-      "@leximemory/ui": path.resolve(frontendRoot, "packages/ui/src"),
-      "@leximemory/ui/components": path.resolve(frontendRoot, "packages/ui/src/components"),
+      "@linguisticnode/core": path.resolve(frontendRoot, "packages/core/src"),
+      "@linguisticnode/core/storage": path.resolve(frontendRoot, "packages/core/src/storage"),
+      "@linguisticnode/ui": path.resolve(frontendRoot, "packages/ui/src"),
+      "@linguisticnode/ui/components": path.resolve(frontendRoot, "packages/ui/src/components"),
     },
   },
   server: {

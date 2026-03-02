@@ -18,7 +18,7 @@ async function initializeDatabase(db: SQLite.SQLiteDatabase): Promise<void> {
 }
 
 export async function createExpoSqliteStorageDriver(
-  databaseName = "leximemory.db"
+  databaseName = "linguisticnode.db"
 ): Promise<SqliteStorageDriver> {
   const db = await SQLite.openDatabaseAsync(databaseName);
   await initializeDatabase(db);

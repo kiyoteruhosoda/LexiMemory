@@ -7,7 +7,7 @@ import type { WordEntry } from "../api/types";
 import { RnwWordForm } from "../rnw/components/RnwWordForm";
 import { RnwInlineNotice } from "../rnw/components/RnwInlineNotice";
 import { RnwButton } from "../rnw/components/RnwButton";
-import { RnwPageHeader, RnwPanelCard } from "@leximemory/ui";
+import { RnwPageHeader, RnwPanelCard } from "@linguisticnode/ui";
 
 export function WordCreatePage() {
   const navigate = useNavigate();
