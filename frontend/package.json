@@ -8,9 +8,9 @@
     "apps/*"
   ],
   "overrides": {
-    "metro": "0.80.8",
-    "metro-resolver": "0.80.8",
-    "metro-config": "0.80.8"
+    "metro": "~0.81.0",
+    "metro-resolver": "~0.81.0",
+    "metro-config": "~0.81.0"
   },
   "scripts": {
     "dev": "vite",
