@@ -193,6 +193,33 @@ export class MobileLearningRepository implements MobileLearningRepositoryPort {
     };
   }
 
+  importVocabFile(file: VocabFile, mode: "merge" | "overwrite"): void {
+    if (mode === "overwrite") {
+      const memoryMap = file.memory.reduce<Record<string, MemoryState>>((acc, state) => {
+        acc[state.wordId] = state;
+        return acc;
+      }, {});
+      this.words = file.words;
+      this.memoryMap = memoryMap;
+    } else {
+      // merge: add only words not already present by ID
+      const existingIds = new Set(this.words.map((w) => w.id));
+      for (const word of file.words) {
+        if (!existingIds.has(word.id)) {
+          this.words.unshift(word);
+          existingIds.add(word.id);
+        }
+      }
+      const existingMemoryIds = new Set(Object.keys(this.memoryMap));
+      for (const mem of file.memory) {
+        if (!existingMemoryIds.has(mem.wordId)) {
+          this.memoryMap[mem.wordId] = mem;
+        }
+      }
+    }
+    this.markDirty();
+  }
+
   applyServerFile(file: VocabFile, serverRev: number, syncedAt: string): void {
     const memoryMap = file.memory.reduce<Record<string, MemoryState>>((acc, state) => {
       acc[state.wordId] = state;
@@ -363,6 +390,11 @@ export class PersistedMobileLearningRepository implements MobileLearningReposito
 
   exportVocabFile(): VocabFile {
     return this.repository.exportVocabFile();
+  }
+
+  importVocabFile(file: VocabFile, mode: "merge" | "overwrite"): void {
+    this.repository.importVocabFile(file, mode);
+    void this.persist();
   }
 
   applyServerFile(file: VocabFile, serverRev: number, syncedAt: string): void {

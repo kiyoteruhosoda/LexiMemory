@@ -55,7 +55,7 @@ function AppContent() {
     }
 
     if (route === "sync") {
-      return <SyncScreen syncService={compositionRoot.syncService} />;
+      return <SyncScreen syncService={compositionRoot.syncService} ioGateway={compositionRoot.ioGateway} />;
     }
 
     return <WordsScreen service={compositionRoot.wordService} />;
