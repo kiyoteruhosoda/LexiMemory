@@ -4,3 +4,4 @@ export type MobileWordService = MobileCompositionRoot["wordService"];
 export type MobileStudyService = MobileCompositionRoot["studyService"];
 export type MobileSyncService = MobileCompositionRoot["syncService"];
 export type MobileExamplesService = MobileCompositionRoot["examplesService"];
+export type MobileIoGateway = MobileCompositionRoot["ioGateway"];
