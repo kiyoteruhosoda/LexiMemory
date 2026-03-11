@@ -51,8 +51,12 @@ export class MobileLearningRepository implements MobileLearningRepositoryPort {
 
   listWords(query: WordListQuery): WordListResult {
     const q = query.q?.trim().toLowerCase();
+    const tagSet = query.tags && query.tags.length > 0 ? new Set(query.tags) : null;
     const filtered = this.words.filter((word) => {
       if (query.pos && word.pos !== query.pos) {
+        return false;
+      }
+      if (tagSet && !word.tags.some((tag) => tagSet.has(tag))) {
         return false;
       }
       if (!q) {
@@ -187,6 +191,33 @@ export class MobileLearningRepository implements MobileLearningRepositoryPort {
       memory: Object.values(this.memoryMap),
       updatedAt: nowIso(),
     };
+  }
+
+  importVocabFile(file: VocabFile, mode: "merge" | "overwrite"): void {
+    if (mode === "overwrite") {
+      const memoryMap = file.memory.reduce<Record<string, MemoryState>>((acc, state) => {
+        acc[state.wordId] = state;
+        return acc;
+      }, {});
+      this.words = file.words;
+      this.memoryMap = memoryMap;
+    } else {
+      // merge: add only words not already present by ID
+      const existingIds = new Set(this.words.map((w) => w.id));
+      for (const word of file.words) {
+        if (!existingIds.has(word.id)) {
+          this.words.unshift(word);
+          existingIds.add(word.id);
+        }
+      }
+      const existingMemoryIds = new Set(Object.keys(this.memoryMap));
+      for (const mem of file.memory) {
+        if (!existingMemoryIds.has(mem.wordId)) {
+          this.memoryMap[mem.wordId] = mem;
+        }
+      }
+    }
+    this.markDirty();
   }
 
   applyServerFile(file: VocabFile, serverRev: number, syncedAt: string): void {
@@ -359,6 +390,11 @@ export class PersistedMobileLearningRepository implements MobileLearningReposito
 
   exportVocabFile(): VocabFile {
     return this.repository.exportVocabFile();
+  }
+
+  importVocabFile(file: VocabFile, mode: "merge" | "overwrite"): void {
+    this.repository.importVocabFile(file, mode);
+    void this.persist();
   }
 
   applyServerFile(file: VocabFile, serverRev: number, syncedAt: string): void {

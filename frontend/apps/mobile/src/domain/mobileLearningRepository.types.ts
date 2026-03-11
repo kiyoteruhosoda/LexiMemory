@@ -17,6 +17,7 @@ export interface MobileLearningRepositoryPort {
   gradeCard(wordId: string, rating: Rating): MemoryState;
   getSyncStatus(): SyncStatus;
   exportVocabFile(): VocabFile;
+  importVocabFile(file: VocabFile, mode: "merge" | "overwrite"): void;
   applyServerFile(file: VocabFile, serverRev: number, syncedAt: string): void;
   markSynced(serverRev: number, syncedAt: string): void;
   sync(): SyncResult;

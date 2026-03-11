@@ -1,21 +1,37 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, SafeAreaView, StatusBar, Text, View } from "react-native";
+import { Pressable, StatusBar, Text, View } from "react-native";
+import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { createMobileCompositionRoot, type MobileCompositionRoot } from "./src/app/mobileCompositionRoot";
 import { WordsScreen } from "./src/screens/WordsScreen";
 import { StudyScreen } from "./src/screens/StudyScreen";
-import { SyncScreen } from "./src/screens/SyncScreen";
+import { DataScreen } from "./src/screens/DataScreen";
+import { ExamplesScreen } from "./src/screens/ExamplesScreen";
 
-type MobileRoute = "words" | "study" | "sync";
+// SyncScreen is kept for future server sync UI
+// import { SyncScreen } from "./src/screens/SyncScreen";
 
-const TABS: { route: MobileRoute; label: string; icon: string }[] = [
-  { route: "words", label: "単語帳", icon: "📚" },
-  { route: "study", label: "学習", icon: "🧠" },
-  { route: "sync", label: "同期", icon: "☁️" },
+type MobileRoute = "words" | "study" | "quiz" | "data";
+
+const TABS: { route: MobileRoute; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { route: "words", label: "Words", icon: "book-outline" },
+  { route: "study", label: "Study", icon: "school-outline" },
+  { route: "quiz", label: "Quiz", icon: "pencil-outline" },
+  { route: "data", label: "Data", icon: "archive-outline" },
 ];
 
 export default function App() {
+  return (
+    <SafeAreaProvider>
+      <AppContent />
+    </SafeAreaProvider>
+  );
+}
+
+function AppContent() {
   const [route, setRoute] = useState<MobileRoute>("words");
   const [compositionRoot, setCompositionRoot] = useState<MobileCompositionRoot | null>(null);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     void createMobileCompositionRoot().then((root) => {
@@ -27,8 +43,8 @@ export default function App() {
     if (!compositionRoot) {
       return (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 12 }}>
-          <Text style={{ fontSize: 32 }}>📚</Text>
-          <Text style={{ fontSize: 16, color: "#6c757d" }}>起動中...</Text>
+          <Ionicons name="book-outline" size={40} color="#6c757d" />
+          <Text style={{ fontSize: 16, color: "#6c757d" }}>Loading...</Text>
         </View>
       );
     }
@@ -37,18 +53,21 @@ export default function App() {
       return <StudyScreen studyService={compositionRoot.studyService} />;
     }
 
-    if (route === "sync") {
-      return <SyncScreen syncService={compositionRoot.syncService} />;
+    if (route === "quiz") {
+      return <ExamplesScreen examplesService={compositionRoot.examplesService} />;
+    }
+
+    if (route === "data") {
+      return <DataScreen ioGateway={compositionRoot.ioGateway} />;
     }
 
     return <WordsScreen service={compositionRoot.wordService} />;
   }, [compositionRoot, route]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["top"]}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
 
-      {/* Main Content Area */}
       <View style={{ flex: 1 }}>
         {routeContent}
       </View>
@@ -60,7 +79,7 @@ export default function App() {
           borderTopWidth: 1,
           borderTopColor: "#e9ecef",
           backgroundColor: "#fff",
-          paddingBottom: 4,
+          paddingBottom: Math.max(insets.bottom, 8),
         }}
       >
         {TABS.map((tab) => (
@@ -84,7 +103,7 @@ function BottomTab({
   onPress,
 }: {
   label: string;
-  icon: string;
+  icon: keyof typeof Ionicons.glyphMap;
   active: boolean;
   onPress: () => void;
 }) {
@@ -99,10 +118,10 @@ function BottomTab({
         gap: 4,
       }}
     >
-      <Text style={{ fontSize: 22 }}>{icon}</Text>
+      <Ionicons name={icon} size={24} color={active ? "#0d6efd" : "#6c757d"} />
       <Text
         style={{
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: active ? "700" : "400",
           color: active ? "#0d6efd" : "#6c757d",
         }}
