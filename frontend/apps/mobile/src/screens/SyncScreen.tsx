@@ -3,6 +3,7 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import type { MobileSyncService } from "../app/mobileServices";
 
 type SyncPhase = "idle" | "syncing" | "success" | "conflict" | "error";
+type ConflictResolution = "fetch-server" | "force-local";
 
 export function SyncScreen({ syncService }: { syncService: MobileSyncService }) {
   const [phase, setPhase] = useState<SyncPhase>("idle");
@@ -10,6 +11,7 @@ export function SyncScreen({ syncService }: { syncService: MobileSyncService }) 
   const [serverRev, setServerRev] = useState(0);
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [selectedResolution, setSelectedResolution] = useState<ConflictResolution>("fetch-server");
 
   const refresh = useCallback(async () => {
     try {
@@ -36,12 +38,12 @@ export function SyncScreen({ syncService }: { syncService: MobileSyncService }) 
         setServerRev(result.serverRev);
         setIsDirty(false);
         setPhase("success");
-        // Auto-reset to idle after 3 seconds
         setTimeout(() => setPhase("idle"), 3000);
         return;
       }
 
       if (result.status === "conflict") {
+        setSelectedResolution("fetch-server");
         setPhase("conflict");
         return;
       }
@@ -57,9 +59,12 @@ export function SyncScreen({ syncService }: { syncService: MobileSyncService }) 
   const resolveConflict = async () => {
     setPhase("syncing");
     try {
-      await syncService.resolve("fetch-server");
-      await refresh();
-      setPhase("idle");
+      const result = await syncService.resolve(selectedResolution);
+      setLastSyncedAt(result.updatedAt);
+      setServerRev(result.serverRev);
+      setIsDirty(false);
+      setPhase("success");
+      setTimeout(() => setPhase("idle"), 3000);
     } catch {
       setPhase("error");
       setErrorMsg("競合の解決に失敗しました");
@@ -125,13 +130,7 @@ export function SyncScreen({ syncService }: { syncService: MobileSyncService }) 
             </View>
           </View>
 
-          {/* Stats Row */}
-          <View
-            style={{
-              flexDirection: "row",
-              gap: 12,
-            }}
-          >
+          <View style={{ flexDirection: "row", gap: 12 }}>
             <StatItem label="サーバーリビジョン" value={String(serverRev)} icon="🔖" />
             {lastSyncedAt && (
               <StatItem
@@ -152,29 +151,127 @@ export function SyncScreen({ syncService }: { syncService: MobileSyncService }) 
         {phase === "conflict" && (
           <View
             style={{
-              backgroundColor: "#fff3cd",
-              borderRadius: 14,
-              padding: 16,
-              borderWidth: 1,
+              backgroundColor: "#fff",
+              borderRadius: 16,
+              borderWidth: 1.5,
               borderColor: "#ffc107",
-              gap: 12,
+              overflow: "hidden",
             }}
           >
-            <Text style={{ fontSize: 16, fontWeight: "700", color: "#856404" }}>⚔️ 競合が検出されました</Text>
-            <Text style={{ fontSize: 14, color: "#856404" }}>
-              ローカルとサーバーのデータが競合しています。サーバーのデータを使用して解決しますか？
-            </Text>
-            <Pressable
-              onPress={() => void resolveConflict()}
-              style={({ pressed }) => ({
-                backgroundColor: pressed ? "#e0a800" : "#ffc107",
-                borderRadius: 10,
-                paddingVertical: 12,
-                alignItems: "center",
-              })}
-            >
-              <Text style={{ color: "#000", fontWeight: "700", fontSize: 15 }}>サーバーのデータで解決</Text>
-            </Pressable>
+            <View style={{ backgroundColor: "#fff3cd", paddingHorizontal: 16, paddingVertical: 12 }}>
+              <Text style={{ fontSize: 16, fontWeight: "700", color: "#856404" }}>⚔️ 競合が検出されました</Text>
+              <Text style={{ fontSize: 13, color: "#856404", marginTop: 4 }}>
+                ローカルとサーバーのデータが競合しています。どちらを使用しますか？
+              </Text>
+            </View>
+
+            <View style={{ padding: 16, gap: 10 }}>
+              {/* Server option */}
+              <Pressable
+                onPress={() => setSelectedResolution("fetch-server")}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: 14,
+                  borderRadius: 12,
+                  borderWidth: 2,
+                  borderColor: selectedResolution === "fetch-server" ? "#0d6efd" : "#dee2e6",
+                  backgroundColor: selectedResolution === "fetch-server" ? "#e7f1ff" : "#f8f9fa",
+                }}
+              >
+                <View
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    borderWidth: 2,
+                    borderColor: selectedResolution === "fetch-server" ? "#0d6efd" : "#adb5bd",
+                    backgroundColor: selectedResolution === "fetch-server" ? "#0d6efd" : "#fff",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {selectedResolution === "fetch-server" && (
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#fff" }} />
+                  )}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: "700", color: "#212529" }}>☁️ サーバーのデータを使用</Text>
+                  <Text style={{ fontSize: 13, color: "#6c757d", marginTop: 2 }}>
+                    ローカルの変更を破棄し、サーバーのデータに合わせます
+                  </Text>
+                </View>
+              </Pressable>
+
+              {/* Local option */}
+              <Pressable
+                onPress={() => setSelectedResolution("force-local")}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: 14,
+                  borderRadius: 12,
+                  borderWidth: 2,
+                  borderColor: selectedResolution === "force-local" ? "#0d6efd" : "#dee2e6",
+                  backgroundColor: selectedResolution === "force-local" ? "#e7f1ff" : "#f8f9fa",
+                }}
+              >
+                <View
+                  style={{
+                    width: 20,
+                    height: 20,
+                    borderRadius: 10,
+                    borderWidth: 2,
+                    borderColor: selectedResolution === "force-local" ? "#0d6efd" : "#adb5bd",
+                    backgroundColor: selectedResolution === "force-local" ? "#0d6efd" : "#fff",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {selectedResolution === "force-local" && (
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: "#fff" }} />
+                  )}
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 15, fontWeight: "700", color: "#212529" }}>📱 ローカルのデータを維持</Text>
+                  <Text style={{ fontSize: 13, color: "#6c757d", marginTop: 2 }}>
+                    ローカルの変更でサーバーを上書きします
+                  </Text>
+                </View>
+              </Pressable>
+
+              {/* Conflict action buttons */}
+              <View style={{ flexDirection: "row", gap: 8, marginTop: 4 }}>
+                <Pressable
+                  onPress={() => setPhase("idle")}
+                  style={({ pressed }) => ({
+                    flex: 1,
+                    paddingVertical: 12,
+                    borderRadius: 10,
+                    borderWidth: 1,
+                    borderColor: "#dee2e6",
+                    backgroundColor: pressed ? "#f1f3f5" : "#fff",
+                    alignItems: "center",
+                  })}
+                >
+                  <Text style={{ fontWeight: "600", color: "#6c757d" }}>キャンセル</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => void resolveConflict()}
+                  style={({ pressed }) => ({
+                    flex: 2,
+                    paddingVertical: 12,
+                    borderRadius: 10,
+                    backgroundColor: pressed ? "#0b5ed7" : "#0d6efd",
+                    alignItems: "center",
+                  })}
+                >
+                  <Text style={{ fontWeight: "700", color: "#fff" }}>競合を解決する</Text>
+                </Pressable>
+              </View>
+            </View>
           </View>
         )}
 
@@ -213,40 +310,34 @@ export function SyncScreen({ syncService }: { syncService: MobileSyncService }) 
         )}
 
         {/* Sync Button */}
-        <Pressable
-          onPress={() => void runSync()}
-          disabled={phase === "syncing" || phase === "conflict"}
-          style={({ pressed }) => ({
-            backgroundColor:
-              phase === "syncing" || phase === "conflict"
-                ? "#a5c8ff"
-                : pressed
-                  ? "#0b5ed7"
-                  : "#0d6efd",
-            borderRadius: 14,
-            paddingVertical: 16,
-            alignItems: "center",
-            flexDirection: "row",
-            justifyContent: "center",
-            gap: 8,
-            shadowColor: "#0d6efd",
-            shadowOffset: { width: 0, height: 3 },
-            shadowOpacity: 0.25,
-            shadowRadius: 6,
-            elevation: 4,
-          })}
-        >
-          <Text style={{ fontSize: 20 }}>{phase === "syncing" ? "⏳" : "☁️"}</Text>
-          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>
-            {phase === "syncing" ? "同期中..." : "今すぐ同期"}
-          </Text>
-        </Pressable>
+        {phase !== "conflict" && (
+          <Pressable
+            onPress={() => void runSync()}
+            disabled={phase === "syncing"}
+            style={({ pressed }) => ({
+              backgroundColor: phase === "syncing" ? "#a5c8ff" : pressed ? "#0b5ed7" : "#0d6efd",
+              borderRadius: 14,
+              paddingVertical: 16,
+              alignItems: "center",
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 8,
+              shadowColor: "#0d6efd",
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: 0.25,
+              shadowRadius: 6,
+              elevation: 4,
+            })}
+          >
+            <Text style={{ fontSize: 20 }}>{phase === "syncing" ? "⏳" : "☁️"}</Text>
+            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>
+              {phase === "syncing" ? "同期中..." : "今すぐ同期"}
+            </Text>
+          </Pressable>
+        )}
 
         {/* Refresh Status */}
-        <Pressable
-          onPress={() => void refresh()}
-          style={{ alignItems: "center", paddingVertical: 8 }}
-        >
+        <Pressable onPress={() => void refresh()} style={{ alignItems: "center", paddingVertical: 8 }}>
           <Text style={{ fontSize: 13, color: "#6c757d" }}>🔄 ステータスを更新</Text>
         </Pressable>
       </ScrollView>
@@ -256,15 +347,7 @@ export function SyncScreen({ syncService }: { syncService: MobileSyncService }) 
 
 function StatItem({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: "#f8f9fa",
-        borderRadius: 10,
-        padding: 12,
-        gap: 4,
-      }}
-    >
+    <View style={{ flex: 1, backgroundColor: "#f8f9fa", borderRadius: 10, padding: 12, gap: 4 }}>
       <Text style={{ fontSize: 16 }}>{icon}</Text>
       <Text style={{ fontSize: 12, color: "#6c757d" }}>{label}</Text>
       <Text style={{ fontSize: 14, fontWeight: "700", color: "#212529" }}>{value}</Text>
