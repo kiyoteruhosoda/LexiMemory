@@ -5,16 +5,19 @@ import { Ionicons } from "@expo/vector-icons";
 import { createMobileCompositionRoot, type MobileCompositionRoot } from "./src/app/mobileCompositionRoot";
 import { WordsScreen } from "./src/screens/WordsScreen";
 import { StudyScreen } from "./src/screens/StudyScreen";
-import { SyncScreen } from "./src/screens/SyncScreen";
+import { DataScreen } from "./src/screens/DataScreen";
 import { ExamplesScreen } from "./src/screens/ExamplesScreen";
 
-type MobileRoute = "words" | "study" | "quiz" | "sync";
+// SyncScreen is kept for future server sync UI
+// import { SyncScreen } from "./src/screens/SyncScreen";
+
+type MobileRoute = "words" | "study" | "quiz" | "data";
 
 const TABS: { route: MobileRoute; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { route: "words", label: "Words", icon: "book-outline" },
   { route: "study", label: "Study", icon: "school-outline" },
   { route: "quiz", label: "Quiz", icon: "pencil-outline" },
-  { route: "sync", label: "Sync", icon: "cloud-outline" },
+  { route: "data", label: "Data", icon: "archive-outline" },
 ];
 
 export default function App() {
@@ -54,8 +57,8 @@ function AppContent() {
       return <ExamplesScreen examplesService={compositionRoot.examplesService} />;
     }
 
-    if (route === "sync") {
-      return <SyncScreen syncService={compositionRoot.syncService} ioGateway={compositionRoot.ioGateway} />;
+    if (route === "data") {
+      return <DataScreen ioGateway={compositionRoot.ioGateway} />;
     }
 
     return <WordsScreen service={compositionRoot.wordService} />;
