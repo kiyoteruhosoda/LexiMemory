@@ -3,6 +3,7 @@ import { BackHandler, Pressable, StatusBar, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { createMobileCompositionRoot, type MobileCompositionRoot } from "./src/app/mobileCompositionRoot";
+import { ThemeProvider, useTheme } from "./src/app/ThemeContext";
 import { WordsScreen } from "./src/screens/WordsScreen";
 import { StudyScreen } from "./src/screens/StudyScreen";
 import { DataScreen } from "./src/screens/DataScreen";
@@ -23,12 +24,15 @@ const TABS: { route: MobileRoute; label: string; icon: keyof typeof Ionicons.gly
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AppContent />
+      <ThemeProvider>
+        <AppContent />
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
 
 function AppContent() {
+  const { isDark, colors } = useTheme();
   const [route, setRoute] = useState<MobileRoute>("words");
   const [compositionRoot, setCompositionRoot] = useState<MobileCompositionRoot | null>(null);
   const [quizPreferredWordId, setQuizPreferredWordId] = useState<string | null>(null);
@@ -96,8 +100,8 @@ function AppContent() {
     if (!compositionRoot) {
       return (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 12 }}>
-          <Ionicons name="book-outline" size={40} color="#6c757d" />
-          <Text style={{ fontSize: 16, color: "#6c757d" }}>Loading...</Text>
+          <Ionicons name="book-outline" size={40} color={colors.textMuted} />
+          <Text style={{ fontSize: 16, color: colors.textSub }}>Loading...</Text>
         </View>
       );
     }
@@ -128,11 +132,11 @@ function AppContent() {
     }
 
     return <WordsScreen service={compositionRoot.wordService} />;
-  }, [compositionRoot, route, quizPreferredWordId, studyPreferredWordId, navigateToQuiz, navigateToStudy]);
+  }, [compositionRoot, route, quizPreferredWordId, studyPreferredWordId, navigateToQuiz, navigateToStudy, colors]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["top"]}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.surface }} edges={["top"]}>
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={colors.surface} />
 
       <View style={{ flex: 1 }}>
         {routeContent}
@@ -143,8 +147,8 @@ function AppContent() {
         style={{
           flexDirection: "row",
           borderTopWidth: 1,
-          borderTopColor: "#e9ecef",
-          backgroundColor: "#fff",
+          borderTopColor: colors.border,
+          backgroundColor: colors.surface,
           paddingBottom: Math.max(insets.bottom, 8),
         }}
       >
@@ -173,6 +177,7 @@ function BottomTab({
   active: boolean;
   onPress: () => void;
 }) {
+  const { colors } = useTheme();
   return (
     <Pressable
       onPress={onPress}
@@ -184,12 +189,12 @@ function BottomTab({
         gap: 4,
       }}
     >
-      <Ionicons name={icon} size={24} color={active ? "#0d6efd" : "#6c757d"} />
+      <Ionicons name={icon} size={24} color={active ? colors.primary : colors.textSub} />
       <Text
         style={{
           fontSize: 10,
           fontWeight: active ? "700" : "400",
-          color: active ? "#0d6efd" : "#6c757d",
+          color: active ? colors.primary : colors.textSub,
         }}
       >
         {label}
@@ -202,7 +207,7 @@ function BottomTab({
             left: "25%",
             right: "25%",
             height: 2,
-            backgroundColor: "#0d6efd",
+            backgroundColor: colors.primary,
             borderRadius: 1,
           }}
         />
