@@ -6,6 +6,7 @@ import type { ExampleTestItem } from "../../../../src/api/types";
 import { checkAnswer, createBlankedSentence } from "../../../../src/core/examples/exampleSentencePolicy";
 import type { MobileExamplesService, MobileStudyService } from "../app/mobileServices";
 import { mobileSpeechService } from "../app/mobileSpeechApplication";
+import { useTheme } from "../app/ThemeContext";
 
 type Feedback = "correct" | "incorrect" | null;
 
@@ -20,6 +21,7 @@ export function ExamplesScreen({
   preferredWordId?: string | null;
   onNavigateToStudy?: (wordId: string) => void;
 }) {
+  const { colors } = useTheme();
   const [example, setExample] = useState<ExampleTestItem | null>(null);
   const [blankedSentence, setBlankedSentence] = useState("");
   const [actualWord, setActualWord] = useState<string | null>(null);
@@ -136,21 +138,21 @@ export function ExamplesScreen({
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f8f9fa" }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Header */}
       <View
         style={{
-          backgroundColor: "#fff",
+          backgroundColor: colors.surface,
           paddingHorizontal: 16,
           paddingVertical: 14,
           borderBottomWidth: 1,
-          borderBottomColor: "#e9ecef",
+          borderBottomColor: colors.border,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
         }}
       >
-        <Text style={{ fontSize: 20, fontWeight: "700", color: "#212529" }}>Quiz</Text>
+        <Text style={{ fontSize: 20, fontWeight: "700", color: colors.text }}>Quiz</Text>
 
         {allTags.length > 0 && (
           <Pressable
@@ -166,12 +168,12 @@ export function ExamplesScreen({
               paddingHorizontal: 12,
               borderRadius: 8,
               borderWidth: 1,
-              borderColor: appliedTags.length > 0 ? "#0d6efd" : "#dee2e6",
-              backgroundColor: appliedTags.length > 0 ? "#e7f1ff" : pressed ? "#f1f3f5" : "#fff",
+              borderColor: appliedTags.length > 0 ? colors.primary : colors.borderMid,
+              backgroundColor: appliedTags.length > 0 ? colors.primaryBg : pressed ? colors.surfacePressed : colors.surface,
             })}
           >
-            <Ionicons name="pricetag-outline" size={15} color={appliedTags.length > 0 ? "#0d6efd" : "#495057"} />
-            <Text style={{ fontSize: 13, fontWeight: "600", color: appliedTags.length > 0 ? "#0d6efd" : "#495057" }}>
+            <Ionicons name="pricetag-outline" size={15} color={appliedTags.length > 0 ? colors.primary : colors.textDim} />
+            <Text style={{ fontSize: 13, fontWeight: "600", color: appliedTags.length > 0 ? colors.primary : colors.textDim }}>
               {appliedTags.length > 0 ? `Tags (${appliedTags.length})` : "Tags"}
             </Text>
           </Pressable>
@@ -182,11 +184,11 @@ export function ExamplesScreen({
       {showTagPanel && allTags.length > 0 && (
         <View
           style={{
-            backgroundColor: "#fff",
+            backgroundColor: colors.surface,
             paddingHorizontal: 16,
             paddingVertical: 12,
             borderBottomWidth: 1,
-            borderBottomColor: "#e9ecef",
+            borderBottomColor: colors.border,
             gap: 10,
           }}
         >
@@ -200,11 +202,11 @@ export function ExamplesScreen({
                   paddingHorizontal: 12,
                   borderRadius: 20,
                   borderWidth: 1,
-                  borderColor: selectedTags.includes(tag) ? "#0d6efd" : "#dee2e6",
-                  backgroundColor: selectedTags.includes(tag) ? "#e7f1ff" : "#f8f9fa",
+                  borderColor: selectedTags.includes(tag) ? colors.primary : colors.borderMid,
+                  backgroundColor: selectedTags.includes(tag) ? colors.primaryBg : colors.bg,
                 }}
               >
-                <Text style={{ fontSize: 13, fontWeight: selectedTags.includes(tag) ? "700" : "400", color: selectedTags.includes(tag) ? "#0d6efd" : "#495057" }}>
+                <Text style={{ fontSize: 13, fontWeight: selectedTags.includes(tag) ? "700" : "400", color: selectedTags.includes(tag) ? colors.primary : colors.textDim }}>
                   {selectedTags.includes(tag) ? "✓ " : ""}{tag}
                 </Text>
               </Pressable>
@@ -215,16 +217,16 @@ export function ExamplesScreen({
               onPress={clearTagFilter}
               style={({ pressed }) => ({
                 flex: 1, paddingVertical: 10, borderRadius: 8, borderWidth: 1,
-                borderColor: "#dee2e6", backgroundColor: pressed ? "#f1f3f5" : "#fff", alignItems: "center",
+                borderColor: colors.borderMid, backgroundColor: pressed ? colors.surfacePressed : colors.surface, alignItems: "center",
               })}
             >
-              <Text style={{ fontSize: 14, fontWeight: "600", color: "#6c757d" }}>Clear</Text>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.textSub }}>Clear</Text>
             </Pressable>
             <Pressable
               onPress={applyTagFilter}
               style={({ pressed }) => ({
                 flex: 1, paddingVertical: 10, borderRadius: 8,
-                backgroundColor: pressed ? "#0b5ed7" : "#0d6efd", alignItems: "center",
+                backgroundColor: pressed ? colors.primaryPressed : colors.primary, alignItems: "center",
               })}
             >
               <Text style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>Apply</Text>
@@ -236,25 +238,25 @@ export function ExamplesScreen({
       {/* Body */}
       {loading ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <Ionicons name="pencil-outline" size={40} color="#adb5bd" />
-          <Text style={{ fontSize: 15, color: "#6c757d", marginTop: 12 }}>Loading...</Text>
+          <Ionicons name="pencil-outline" size={40} color={colors.textMuted} />
+          <Text style={{ fontSize: 15, color: colors.textSub, marginTop: 12 }}>Loading...</Text>
         </View>
       ) : error ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32, gap: 12 }}>
-          <Ionicons name="warning-outline" size={40} color="#dc3545" />
-          <Text style={{ fontSize: 15, color: "#dc3545", textAlign: "center" }}>{error}</Text>
+          <Ionicons name="warning-outline" size={40} color={colors.ratingAgain.color} />
+          <Text style={{ fontSize: 15, color: colors.ratingAgain.color, textAlign: "center" }}>{error}</Text>
           <Pressable
             onPress={() => void loadNext(null)}
-            style={({ pressed }) => ({ backgroundColor: pressed ? "#0b5ed7" : "#0d6efd", borderRadius: 10, paddingVertical: 10, paddingHorizontal: 24 })}
+            style={({ pressed }) => ({ backgroundColor: pressed ? colors.primaryPressed : colors.primary, borderRadius: 10, paddingVertical: 10, paddingHorizontal: 24 })}
           >
             <Text style={{ color: "#fff", fontWeight: "700" }}>Retry</Text>
           </Pressable>
         </View>
       ) : !example ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 32 }}>
-          <Ionicons name="document-text-outline" size={48} color="#adb5bd" />
-          <Text style={{ fontSize: 16, fontWeight: "700", color: "#212529" }}>No examples available</Text>
-          <Text style={{ fontSize: 14, color: "#6c757d", textAlign: "center" }}>
+          <Ionicons name="document-text-outline" size={48} color={colors.textMuted} />
+          <Text style={{ fontSize: 16, fontWeight: "700", color: colors.text }}>No examples available</Text>
+          <Text style={{ fontSize: 14, color: colors.textSub, textAlign: "center" }}>
             Add example sentences to your words first.
           </Text>
         </View>
@@ -268,10 +270,10 @@ export function ExamplesScreen({
           {/* Quiz Card */}
           <View
             style={{
-              backgroundColor: "#fff",
+              backgroundColor: colors.surface,
               borderRadius: 16,
               borderWidth: 1,
-              borderColor: "#e9ecef",
+              borderColor: colors.border,
               overflow: "hidden",
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
@@ -288,18 +290,18 @@ export function ExamplesScreen({
                 justifyContent: "space-between",
                 paddingHorizontal: 16,
                 paddingVertical: 10,
-                backgroundColor: "#fafafa",
+                backgroundColor: colors.surfaceAlt,
                 borderBottomWidth: 1,
-                borderBottomColor: "#f1f3f5",
+                borderBottomColor: colors.borderLight,
               }}
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <View style={{ backgroundColor: "#e7f1ff", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
-                  <Text style={{ fontSize: 11, fontWeight: "700", color: "#0d6efd" }}>{example.word.pos}</Text>
+                <View style={{ backgroundColor: colors.primaryBg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
+                  <Text style={{ fontSize: 11, fontWeight: "700", color: colors.primary }}>{example.word.pos}</Text>
                 </View>
                 {example.word.tags.map((tag) => (
-                  <View key={tag} style={{ backgroundColor: "#f1f3f5", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 }}>
-                    <Text style={{ fontSize: 11, color: "#6c757d" }}>{tag}</Text>
+                  <View key={tag} style={{ backgroundColor: colors.surfacePressed, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 }}>
+                    <Text style={{ fontSize: 11, color: colors.textSub }}>{tag}</Text>
                   </View>
                 ))}
               </View>
@@ -308,11 +310,11 @@ export function ExamplesScreen({
                   onPress={() => mobileSpeechService.speakEnglish(example.en)}
                   style={({ pressed }) => ({
                     width: 32, height: 32, borderRadius: 16,
-                    backgroundColor: pressed ? "#e7f1ff" : "#f1f3f5",
+                    backgroundColor: pressed ? colors.primaryBg : colors.surfacePressed,
                     alignItems: "center", justifyContent: "center",
                   })}
                 >
-                  <Ionicons name="volume-high-outline" size={17} color="#495057" />
+                  <Ionicons name="volume-high-outline" size={17} color={colors.textDim} />
                 </Pressable>
               )}
             </View>
@@ -320,7 +322,7 @@ export function ExamplesScreen({
             {/* Card Body */}
             <View style={{ padding: 20, gap: 14 }}>
               {/* Sentence with blank */}
-              <Text style={{ fontSize: 17, color: "#212529", lineHeight: 26, textAlign: "center" }}>
+              <Text style={{ fontSize: 17, color: colors.text, lineHeight: 26, textAlign: "center" }}>
                 {blankedSentence || example.en}
               </Text>
 
@@ -337,16 +339,16 @@ export function ExamplesScreen({
                       paddingVertical: 9,
                       borderRadius: 10,
                       borderWidth: 1,
-                      borderColor: showWordInfo ? "#0d6efd" : "#dee2e6",
-                      backgroundColor: showWordInfo ? "#e7f1ff" : pressed ? "#f1f3f5" : "#fff",
+                      borderColor: showWordInfo ? colors.primary : colors.borderMid,
+                      backgroundColor: showWordInfo ? colors.primaryBg : pressed ? colors.surfacePressed : colors.surface,
                     })}
                   >
                     <Ionicons
                       name={showWordInfo ? "eye-off-outline" : "eye-outline"}
                       size={17}
-                      color={showWordInfo ? "#0d6efd" : "#495057"}
+                      color={showWordInfo ? colors.primary : colors.textDim}
                     />
-                    <Text style={{ fontSize: 14, fontWeight: "600", color: showWordInfo ? "#0d6efd" : "#495057" }}>
+                    <Text style={{ fontSize: 14, fontWeight: "600", color: showWordInfo ? colors.primary : colors.textDim }}>
                       {showWordInfo ? "Hide translation" : "Show translation"}
                     </Text>
                   </Pressable>
@@ -354,14 +356,14 @@ export function ExamplesScreen({
                   {showWordInfo && example.ja ? (
                     <View
                       style={{
-                        backgroundColor: "#f8f9fa",
+                        backgroundColor: colors.bg,
                         borderRadius: 10,
                         padding: 12,
                         borderWidth: 1,
-                        borderColor: "#e9ecef",
+                        borderColor: colors.border,
                       }}
                     >
-                      <Text style={{ fontSize: 14, color: "#6c757d", fontStyle: "italic" }}>{example.ja}</Text>
+                      <Text style={{ fontSize: 14, color: colors.textSub, fontStyle: "italic" }}>{example.ja}</Text>
                     </View>
                   ) : null}
                 </>
@@ -374,26 +376,26 @@ export function ExamplesScreen({
                     value={userInput}
                     onChangeText={setUserInput}
                     placeholder="Type the missing word..."
-                    placeholderTextColor="#adb5bd"
+                    placeholderTextColor={colors.textMuted}
                     autoCapitalize="none"
                     autoCorrect={false}
                     onSubmitEditing={handleSubmit}
                     returnKeyType="done"
                     style={{
                       borderWidth: 1.5,
-                      borderColor: "#dee2e6",
+                      borderColor: colors.borderMid,
                       borderRadius: 10,
                       paddingHorizontal: 14,
                       paddingVertical: 12,
                       fontSize: 16,
-                      color: "#212529",
-                      backgroundColor: "#f8f9fa",
+                      color: colors.text,
+                      backgroundColor: colors.bg,
                     }}
                   />
                   <Pressable
                     onPress={handleSubmit}
                     style={({ pressed }) => ({
-                      backgroundColor: pressed ? "#0b5ed7" : "#0d6efd",
+                      backgroundColor: pressed ? colors.primaryPressed : colors.primary,
                       borderRadius: 10,
                       paddingVertical: 13,
                       alignItems: "center",
@@ -412,12 +414,12 @@ export function ExamplesScreen({
                         paddingVertical: 9,
                         borderRadius: 10,
                         borderWidth: 1,
-                        borderColor: "#6c757d",
-                        backgroundColor: pressed ? "#f1f3f5" : "#fff",
+                        borderColor: colors.textSub,
+                        backgroundColor: pressed ? colors.surfacePressed : colors.surface,
                       })}
                     >
-                      <Ionicons name="school-outline" size={16} color="#6c757d" />
-                      <Text style={{ fontSize: 14, fontWeight: "600", color: "#6c757d" }}>Open in Study</Text>
+                      <Ionicons name="school-outline" size={16} color={colors.textSub} />
+                      <Text style={{ fontSize: 14, fontWeight: "600", color: colors.textSub }}>Open in Study</Text>
                     </Pressable>
                   )}
                 </View>
@@ -451,11 +453,11 @@ export function ExamplesScreen({
                   {/* Word info (always shown after answering) */}
                   <View
                     style={{
-                      backgroundColor: "#f8f9fa",
+                      backgroundColor: colors.bg,
                       borderRadius: 10,
                       padding: 14,
                       borderWidth: 1,
-                      borderColor: "#e9ecef",
+                      borderColor: colors.border,
                       gap: 6,
                     }}
                   >
@@ -468,25 +470,25 @@ export function ExamplesScreen({
                       </View>
                     ) : null}
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                      <Text style={{ fontSize: 17, fontWeight: "700", color: "#212529" }}>
+                      <Text style={{ fontSize: 17, fontWeight: "700", color: colors.text }}>
                         {actualWord || example.word.headword}
                       </Text>
                       {example.word.pronunciation ? (
-                        <Text style={{ fontSize: 14, color: "#6c757d" }}>({example.word.pronunciation})</Text>
+                        <Text style={{ fontSize: 14, color: colors.textSub }}>({example.word.pronunciation})</Text>
                       ) : null}
                       {canSpeak && (
                         <Pressable
                           onPress={() => mobileSpeechService.speakEnglish(actualWord || example.word.headword)}
                           style={{ padding: 2 }}
                         >
-                          <Ionicons name="volume-high-outline" size={17} color="#495057" />
+                          <Ionicons name="volume-high-outline" size={17} color={colors.textDim} />
                         </Pressable>
                       )}
                     </View>
                     {example.ja ? (
-                      <Text style={{ fontSize: 13, color: "#6c757d", fontStyle: "italic" }}>{example.ja}</Text>
+                      <Text style={{ fontSize: 13, color: colors.textSub, fontStyle: "italic" }}>{example.ja}</Text>
                     ) : null}
-                    <Text style={{ fontSize: 14, color: "#495057" }}>{example.word.meaningJa}</Text>
+                    <Text style={{ fontSize: 14, color: colors.textDim }}>{example.word.meaningJa}</Text>
                   </View>
 
                   {/* Retry button (incorrect only) */}
@@ -501,12 +503,12 @@ export function ExamplesScreen({
                         paddingVertical: 12,
                         borderRadius: 10,
                         borderWidth: 1.5,
-                        borderColor: "#dc3545",
-                        backgroundColor: pressed ? "#fff5f5" : "#fff",
+                        borderColor: colors.ratingAgain.color,
+                        backgroundColor: pressed ? colors.ratingAgain.bg : colors.surface,
                       })}
                     >
-                      <Ionicons name="refresh-outline" size={17} color="#dc3545" />
-                      <Text style={{ fontSize: 14, fontWeight: "700", color: "#dc3545" }}>Retry</Text>
+                      <Ionicons name="refresh-outline" size={17} color={colors.ratingAgain.color} />
+                      <Text style={{ fontSize: 14, fontWeight: "700", color: colors.ratingAgain.color }}>Retry</Text>
                     </Pressable>
                   )}
 
@@ -514,7 +516,7 @@ export function ExamplesScreen({
                   <Pressable
                     onPress={handleNext}
                     style={({ pressed }) => ({
-                      backgroundColor: pressed ? "#0b5ed7" : "#0d6efd",
+                      backgroundColor: pressed ? colors.primaryPressed : colors.primary,
                       borderRadius: 10,
                       paddingVertical: 13,
                       flexDirection: "row",
@@ -539,12 +541,12 @@ export function ExamplesScreen({
                         paddingVertical: 9,
                         borderRadius: 10,
                         borderWidth: 1,
-                        borderColor: "#6c757d",
-                        backgroundColor: pressed ? "#f1f3f5" : "#fff",
+                        borderColor: colors.textSub,
+                        backgroundColor: pressed ? colors.surfacePressed : colors.surface,
                       })}
                     >
-                      <Ionicons name="school-outline" size={16} color="#6c757d" />
-                      <Text style={{ fontSize: 14, fontWeight: "600", color: "#6c757d" }}>Open in Study</Text>
+                      <Ionicons name="school-outline" size={16} color={colors.textSub} />
+                      <Text style={{ fontSize: 14, fontWeight: "600", color: colors.textSub }}>Open in Study</Text>
                     </Pressable>
                   )}
                 </View>

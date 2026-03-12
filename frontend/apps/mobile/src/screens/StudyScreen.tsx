@@ -4,22 +4,9 @@ import { Ionicons } from "@expo/vector-icons";
 import type { Rating } from "../../../../src/api/types";
 import type { MobileStudyService } from "../app/mobileServices";
 import { mobileSpeechService } from "../app/mobileSpeechApplication";
+import { useTheme } from "../app/ThemeContext";
 
 type Card = Awaited<ReturnType<MobileStudyService["fetchNextCard"]>>;
-
-const RATINGS: { value: Rating; label: string; color: string; bg: string; icon: keyof typeof Ionicons.glyphMap }[] = [
-  { value: "again", label: "Again", icon: "refresh", color: "#dc3545", bg: "#fff5f5" },
-  { value: "hard", label: "Hard", icon: "hand-left-outline", color: "#fd7e14", bg: "#fff8f0" },
-  { value: "good", label: "Good", icon: "thumbs-up-outline", color: "#198754", bg: "#f0fff4" },
-  { value: "easy", label: "Easy", icon: "flash-outline", color: "#0d6efd", bg: "#f0f8ff" },
-];
-
-function getMemoryInfo(level: number): { label: string; color: string; bg: string } {
-  if (level === 0) return { label: "New", color: "#6c757d", bg: "#f1f3f5" };
-  if (level <= 3) return { label: "Learning", color: "#e67700", bg: "#fff3bf" };
-  if (level <= 6) return { label: "Review", color: "#1971c2", bg: "#e7f5ff" };
-  return { label: "Mastered", color: "#2b8a3e", bg: "#ebfbee" };
-}
 
 export function StudyScreen({
   studyService,
@@ -30,6 +17,7 @@ export function StudyScreen({
   preferredWordId?: string | null;
   onNavigateToQuiz?: (wordId: string) => void;
 }) {
+  const { colors } = useTheme();
   const [card, setCard] = useState<Card>(null);
   const [revealed, setRevealed] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -88,31 +76,45 @@ export function StudyScreen({
     );
   };
 
+  const RATINGS: { value: Rating; label: string; color: string; bg: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+    { value: "again", label: "Again", icon: "refresh", color: colors.ratingAgain.color, bg: colors.ratingAgain.bg },
+    { value: "hard", label: "Hard", icon: "hand-left-outline", color: colors.ratingHard.color, bg: colors.ratingHard.bg },
+    { value: "good", label: "Good", icon: "thumbs-up-outline", color: colors.ratingGood.color, bg: colors.ratingGood.bg },
+    { value: "easy", label: "Easy", icon: "flash-outline", color: colors.ratingEasy.color, bg: colors.ratingEasy.bg },
+  ];
+
+  function getMemoryInfo(level: number) {
+    if (level === 0) return colors.memNew;
+    if (level <= 3) return colors.memLearning;
+    if (level <= 6) return colors.memReview;
+    return colors.memMastered;
+  }
+
   if (loading) {
     return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "#f8f9fa" }}>
-        <Ionicons name="school-outline" size={40} color="#adb5bd" />
-        <Text style={{ fontSize: 15, color: "#6c757d", marginTop: 12 }}>Loading...</Text>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg }}>
+        <Ionicons name="school-outline" size={40} color={colors.textMuted} />
+        <Text style={{ fontSize: 15, color: colors.textSub, marginTop: 12 }}>Loading...</Text>
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f8f9fa" }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Header */}
       <View
         style={{
-          backgroundColor: "#fff",
+          backgroundColor: colors.surface,
           paddingHorizontal: 16,
           paddingVertical: 14,
           borderBottomWidth: 1,
-          borderBottomColor: "#e9ecef",
+          borderBottomColor: colors.border,
           flexDirection: "row",
           alignItems: "center",
           justifyContent: "space-between",
         }}
       >
-        <Text style={{ fontSize: 20, fontWeight: "700", color: "#212529" }}>Study</Text>
+        <Text style={{ fontSize: 20, fontWeight: "700", color: colors.text }}>Study</Text>
 
         {allTags.length > 0 && (
           <Pressable
@@ -128,12 +130,12 @@ export function StudyScreen({
               paddingHorizontal: 12,
               borderRadius: 8,
               borderWidth: 1,
-              borderColor: appliedTags.length > 0 ? "#0d6efd" : "#dee2e6",
-              backgroundColor: appliedTags.length > 0 ? "#e7f1ff" : pressed ? "#f1f3f5" : "#fff",
+              borderColor: appliedTags.length > 0 ? colors.primary : colors.borderMid,
+              backgroundColor: appliedTags.length > 0 ? colors.primaryBg : pressed ? colors.surfacePressed : colors.surface,
             })}
           >
-            <Ionicons name="pricetag-outline" size={15} color={appliedTags.length > 0 ? "#0d6efd" : "#495057"} />
-            <Text style={{ fontSize: 13, fontWeight: "600", color: appliedTags.length > 0 ? "#0d6efd" : "#495057" }}>
+            <Ionicons name="pricetag-outline" size={15} color={appliedTags.length > 0 ? colors.primary : colors.textDim} />
+            <Text style={{ fontSize: 13, fontWeight: "600", color: appliedTags.length > 0 ? colors.primary : colors.textDim }}>
               {appliedTags.length > 0 ? `Tags (${appliedTags.length})` : "Tags"}
             </Text>
           </Pressable>
@@ -144,11 +146,11 @@ export function StudyScreen({
       {showTagPanel && (
         <View
           style={{
-            backgroundColor: "#fff",
+            backgroundColor: colors.surface,
             paddingHorizontal: 16,
             paddingVertical: 12,
             borderBottomWidth: 1,
-            borderBottomColor: "#e9ecef",
+            borderBottomColor: colors.border,
             gap: 10,
           }}
         >
@@ -162,11 +164,11 @@ export function StudyScreen({
                   paddingHorizontal: 12,
                   borderRadius: 20,
                   borderWidth: 1,
-                  borderColor: selectedTags.includes(tag) ? "#0d6efd" : "#dee2e6",
-                  backgroundColor: selectedTags.includes(tag) ? "#e7f1ff" : "#f8f9fa",
+                  borderColor: selectedTags.includes(tag) ? colors.primary : colors.borderMid,
+                  backgroundColor: selectedTags.includes(tag) ? colors.primaryBg : colors.bg,
                 }}
               >
-                <Text style={{ fontSize: 13, fontWeight: selectedTags.includes(tag) ? "700" : "400", color: selectedTags.includes(tag) ? "#0d6efd" : "#495057" }}>
+                <Text style={{ fontSize: 13, fontWeight: selectedTags.includes(tag) ? "700" : "400", color: selectedTags.includes(tag) ? colors.primary : colors.textDim }}>
                   {selectedTags.includes(tag) ? "✓ " : ""}{tag}
                 </Text>
               </Pressable>
@@ -180,12 +182,12 @@ export function StudyScreen({
                 paddingVertical: 10,
                 borderRadius: 8,
                 borderWidth: 1,
-                borderColor: "#dee2e6",
-                backgroundColor: pressed ? "#f1f3f5" : "#fff",
+                borderColor: colors.borderMid,
+                backgroundColor: pressed ? colors.surfacePressed : colors.surface,
                 alignItems: "center",
               })}
             >
-              <Text style={{ fontSize: 14, fontWeight: "600", color: "#6c757d" }}>Clear</Text>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.textSub }}>Clear</Text>
             </Pressable>
             <Pressable
               onPress={applyTagFilter}
@@ -193,7 +195,7 @@ export function StudyScreen({
                 flex: 1,
                 paddingVertical: 10,
                 borderRadius: 8,
-                backgroundColor: pressed ? "#0b5ed7" : "#0d6efd",
+                backgroundColor: pressed ? colors.primaryPressed : colors.primary,
                 alignItems: "center",
               })}
             >
@@ -206,9 +208,9 @@ export function StudyScreen({
       {/* No card state */}
       {!card ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 12, padding: 32 }}>
-          <Ionicons name="checkmark-circle-outline" size={56} color="#2b8a3e" />
-          <Text style={{ fontSize: 20, fontWeight: "700", color: "#212529", textAlign: "center" }}>All done!</Text>
-          <Text style={{ fontSize: 15, color: "#6c757d", textAlign: "center" }}>
+          <Ionicons name="checkmark-circle-outline" size={56} color={colors.memMastered.color} />
+          <Text style={{ fontSize: 20, fontWeight: "700", color: colors.text, textAlign: "center" }}>All done!</Text>
+          <Text style={{ fontSize: 15, color: colors.textSub, textAlign: "center" }}>
             {appliedTags.length > 0
               ? "No cards due for the selected tags."
               : "No cards due. Add new words or come back later."}
@@ -217,7 +219,7 @@ export function StudyScreen({
             onPress={() => void loadNext()}
             style={({ pressed }) => ({
               marginTop: 8,
-              backgroundColor: pressed ? "#0b5ed7" : "#0d6efd",
+              backgroundColor: pressed ? colors.primaryPressed : colors.primary,
               borderRadius: 12,
               paddingVertical: 12,
               paddingHorizontal: 24,
@@ -235,10 +237,10 @@ export function StudyScreen({
           {/* Flash Card */}
           <View
             style={{
-              backgroundColor: "#fff",
+              backgroundColor: colors.surface,
               borderRadius: 20,
               borderWidth: 1,
-              borderColor: "#e9ecef",
+              borderColor: colors.border,
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.08,
@@ -255,8 +257,8 @@ export function StudyScreen({
                 paddingHorizontal: 16,
                 paddingVertical: 10,
                 borderBottomWidth: 1,
-                borderBottomColor: "#f1f3f5",
-                backgroundColor: "#fafafa",
+                borderBottomColor: colors.borderLight,
+                backgroundColor: colors.surfaceAlt,
               }}
             >
               {(() => {
@@ -266,7 +268,7 @@ export function StudyScreen({
                     <View style={{ backgroundColor: info.bg, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 }}>
                       <Text style={{ fontSize: 12, fontWeight: "700", color: info.color }}>{info.label}</Text>
                     </View>
-                    <Text style={{ fontSize: 12, color: "#adb5bd" }}>Lv.{card.memory.memoryLevel}</Text>
+                    <Text style={{ fontSize: 12, color: colors.textMuted }}>Lv.{card.memory.memoryLevel}</Text>
                   </View>
                 );
               })()}
@@ -277,41 +279,41 @@ export function StudyScreen({
                     width: 34,
                     height: 34,
                     borderRadius: 17,
-                    backgroundColor: pressed ? "#e7f1ff" : "#f1f3f5",
+                    backgroundColor: pressed ? colors.primaryBg : colors.surfacePressed,
                     alignItems: "center",
                     justifyContent: "center",
                   })}
                 >
-                  <Ionicons name="volume-high-outline" size={18} color="#495057" />
+                  <Ionicons name="volume-high-outline" size={18} color={colors.textDim} />
                 </Pressable>
               )}
             </View>
 
             <View style={{ padding: 28, alignItems: "center", gap: 10 }}>
-              <Text style={{ fontSize: 34, fontWeight: "800", color: "#212529", textAlign: "center" }}>
+              <Text style={{ fontSize: 34, fontWeight: "800", color: colors.text, textAlign: "center" }}>
                 {card.word.headword}
               </Text>
-              <View style={{ backgroundColor: "#e7f1ff", borderRadius: 8, paddingHorizontal: 10, paddingVertical: 3 }}>
-                <Text style={{ fontSize: 12, fontWeight: "600", color: "#0d6efd" }}>{card.word.pos}</Text>
+              <View style={{ backgroundColor: colors.primaryBg, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 3 }}>
+                <Text style={{ fontSize: 12, fontWeight: "600", color: colors.primary }}>{card.word.pos}</Text>
               </View>
 
-              <View style={{ width: "60%", height: 1, backgroundColor: "#e9ecef", marginVertical: 4 }} />
+              <View style={{ width: "60%", height: 1, backgroundColor: colors.border, marginVertical: 4 }} />
 
               {revealed ? (
                 <View style={{ alignItems: "center", gap: 10, width: "100%" }}>
-                  <Text style={{ fontSize: 22, fontWeight: "700", color: "#198754", textAlign: "center" }}>
+                  <Text style={{ fontSize: 22, fontWeight: "700", color: colors.memMastered.color, textAlign: "center" }}>
                     {card.word.meaningJa}
                   </Text>
                   {card.word.memo ? (
-                    <Text style={{ fontSize: 14, color: "#6c757d", textAlign: "center", fontStyle: "italic" }}>
+                    <Text style={{ fontSize: 14, color: colors.textSub, textAlign: "center", fontStyle: "italic" }}>
                       {card.word.memo}
                     </Text>
                   ) : null}
                   {card.word.tags.length > 0 && (
                     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, justifyContent: "center" }}>
                       {card.word.tags.map((tag) => (
-                        <View key={tag} style={{ backgroundColor: "#f1f3f5", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 }}>
-                          <Text style={{ fontSize: 12, color: "#6c757d" }}>{tag}</Text>
+                        <View key={tag} style={{ backgroundColor: colors.surfacePressed, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 }}>
+                          <Text style={{ fontSize: 12, color: colors.textSub }}>{tag}</Text>
                         </View>
                       ))}
                     </View>
@@ -321,7 +323,7 @@ export function StudyScreen({
                 <Pressable
                   onPress={() => setRevealed(true)}
                   style={({ pressed }) => ({
-                    backgroundColor: pressed ? "#0b5ed7" : "#0d6efd",
+                    backgroundColor: pressed ? colors.primaryPressed : colors.primary,
                     borderRadius: 12,
                     paddingVertical: 12,
                     paddingHorizontal: 32,
@@ -338,21 +340,21 @@ export function StudyScreen({
           {revealed && card.word.examples.length > 0 && (
             <View
               style={{
-                backgroundColor: "#fff",
+                backgroundColor: colors.surface,
                 borderRadius: 14,
                 borderWidth: 1,
-                borderColor: "#e9ecef",
+                borderColor: colors.border,
                 overflow: "hidden",
               }}
             >
-              <View style={{ paddingHorizontal: 14, paddingVertical: 10, backgroundColor: "#fafafa", borderBottomWidth: 1, borderBottomColor: "#f1f3f5" }}>
-                <Text style={{ fontSize: 13, fontWeight: "700", color: "#495057" }}>Examples</Text>
+              <View style={{ paddingHorizontal: 14, paddingVertical: 10, backgroundColor: colors.surfaceAlt, borderBottomWidth: 1, borderBottomColor: colors.borderLight }}>
+                <Text style={{ fontSize: 13, fontWeight: "700", color: colors.textDim }}>Examples</Text>
               </View>
               <View style={{ padding: 14, gap: 12 }}>
                 {card.word.examples.map((ex) => (
-                  <View key={ex.id} style={{ borderLeftWidth: 3, borderLeftColor: "#0d6efd", paddingLeft: 12, gap: 4 }}>
+                  <View key={ex.id} style={{ borderLeftWidth: 3, borderLeftColor: colors.primary, paddingLeft: 12, gap: 4 }}>
                     <View style={{ flexDirection: "row", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-                      <Text style={{ fontSize: 14, color: "#212529", flex: 1, lineHeight: 20 }}>{ex.en}</Text>
+                      <Text style={{ fontSize: 14, color: colors.text, flex: 1, lineHeight: 20 }}>{ex.en}</Text>
                       {canSpeak && (
                         <Pressable
                           onPress={() => ex.en.trim() && mobileSpeechService.speakEnglish(ex.en)}
@@ -360,17 +362,17 @@ export function StudyScreen({
                             width: 30,
                             height: 30,
                             borderRadius: 15,
-                            backgroundColor: pressed ? "#e7f1ff" : "#f1f3f5",
+                            backgroundColor: pressed ? colors.primaryBg : colors.surfacePressed,
                             alignItems: "center",
                             justifyContent: "center",
                           })}
                         >
-                          <Ionicons name="volume-high-outline" size={15} color="#495057" />
+                          <Ionicons name="volume-high-outline" size={15} color={colors.textDim} />
                         </Pressable>
                       )}
                     </View>
                     {ex.ja ? (
-                      <Text style={{ fontSize: 13, color: "#6c757d" }}>{ex.ja}</Text>
+                      <Text style={{ fontSize: 13, color: colors.textSub }}>{ex.ja}</Text>
                     ) : null}
                   </View>
                 ))}
@@ -390,19 +392,19 @@ export function StudyScreen({
                 paddingVertical: 12,
                 borderRadius: 12,
                 borderWidth: 1.5,
-                borderColor: "#0d6efd",
-                backgroundColor: pressed ? "#e7f1ff" : "#fff",
+                borderColor: colors.primary,
+                backgroundColor: pressed ? colors.primaryBg : colors.surface,
               })}
             >
-              <Ionicons name="pencil-outline" size={18} color="#0d6efd" />
-              <Text style={{ fontSize: 14, fontWeight: "700", color: "#0d6efd" }}>Practice in Quiz</Text>
+              <Ionicons name="pencil-outline" size={18} color={colors.primary} />
+              <Text style={{ fontSize: 14, fontWeight: "700", color: colors.primary }}>Practice in Quiz</Text>
             </Pressable>
           )}
 
           {/* Rating Buttons */}
           {revealed && (
             <View>
-              <Text style={{ fontSize: 13, color: "#6c757d", textAlign: "center", marginBottom: 12 }}>
+              <Text style={{ fontSize: 13, color: colors.textSub, textAlign: "center", marginBottom: 12 }}>
                 How well did you remember?
               </Text>
               <View style={{ flexDirection: "row", gap: 8 }}>
@@ -432,19 +434,19 @@ export function StudyScreen({
           {/* Due date info */}
           <View
             style={{
-              backgroundColor: "#fff",
+              backgroundColor: colors.surface,
               borderRadius: 12,
               padding: 12,
               borderWidth: 1,
-              borderColor: "#e9ecef",
+              borderColor: colors.border,
               flexDirection: "row",
               alignItems: "center",
               gap: 8,
             }}
           >
-            <Ionicons name="calendar-outline" size={18} color="#6c757d" />
+            <Ionicons name="calendar-outline" size={18} color={colors.textSub} />
             <View style={{ flex: 1 }}>
-              <Text style={{ fontSize: 12, color: "#6c757d" }}>
+              <Text style={{ fontSize: 12, color: colors.textSub }}>
                 Due:{" "}
                 {new Date(card.memory.dueAt).toLocaleString("en-US", {
                   month: "short",
@@ -454,7 +456,7 @@ export function StudyScreen({
                 })}
               </Text>
               {card.memory.reviewCount > 0 && (
-                <Text style={{ fontSize: 12, color: "#adb5bd", marginTop: 2 }}>
+                <Text style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
                   Reviews: {card.memory.reviewCount}
                 </Text>
               )}

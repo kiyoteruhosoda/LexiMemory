@@ -17,6 +17,7 @@ import type { MemoryState, Pos } from "../../../../src/api/types";
 import type { WordDraft } from "../../../../src/core/word/wordGateway";
 import type { MobileWordService } from "../app/mobileServices";
 import { mobileSpeechService } from "../app/mobileSpeechApplication";
+import { useTheme } from "../app/ThemeContext";
 
 type WordItem = Awaited<ReturnType<MobileWordService["listWords"]>>["items"][number];
 type SubRoute = "list" | "create" | "edit";
@@ -32,15 +33,6 @@ const EMPTY_DRAFT: WordDraft = {
   tags: [],
   memo: "",
 };
-
-// ─── Memory level helpers ─────────────────────────────────────────────────────
-
-function getMemoryInfo(level: number): { label: string; color: string; bg: string } {
-  if (level === 0) return { label: "New", color: "#6c757d", bg: "#f1f3f5" };
-  if (level <= 3) return { label: "Learning", color: "#e67700", bg: "#fff3bf" };
-  if (level <= 6) return { label: "Review", color: "#1971c2", bg: "#e7f5ff" };
-  return { label: "Mastered", color: "#2b8a3e", bg: "#ebfbee" };
-}
 
 // ─── WordsScreen (root) ───────────────────────────────────────────────────────
 
@@ -386,10 +378,18 @@ function WordListView({
   onBulkResetMemory: () => void;
   onBulkChangeTags: (tags: string[], mode: "add" | "replace") => void;
 }) {
+  const { colors } = useTheme();
   const [bulkConfirm, setBulkConfirm] = useState<"delete" | "reset" | null>(null);
   const [showTagModal, setShowTagModal] = useState(false);
   const [tagInput, setTagInput] = useState("");
   const [tagMode, setTagMode] = useState<"add" | "replace">("add");
+
+  function getMemoryInfo(level: number) {
+    if (level === 0) return colors.memNew;
+    if (level <= 3) return colors.memLearning;
+    if (level <= 6) return colors.memReview;
+    return colors.memMastered;
+  }
 
   const handleBulkConfirm = () => {
     if (bulkConfirm === "delete") onBulkDelete();
@@ -406,21 +406,21 @@ function WordListView({
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#f8f9fa" }}>
+    <View style={{ flex: 1, backgroundColor: colors.bg }}>
       {/* Header */}
       <View
         style={{
-          backgroundColor: "#fff",
+          backgroundColor: colors.surface,
           paddingHorizontal: 16,
           paddingTop: 16,
           paddingBottom: 12,
           borderBottomWidth: 1,
-          borderBottomColor: "#e9ecef",
+          borderBottomColor: colors.border,
         }}
       >
         {selectionMode ? (
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-            <Text style={{ fontSize: 16, fontWeight: "700", color: "#212529" }}>
+            <Text style={{ fontSize: 16, fontWeight: "700", color: colors.text }}>
               {selectedIds.length} selected
             </Text>
             <View style={{ flexDirection: "row", gap: 8 }}>
@@ -430,10 +430,10 @@ function WordListView({
                   paddingVertical: 6,
                   paddingHorizontal: 12,
                   borderRadius: 8,
-                  backgroundColor: pressed ? "#e7f1ff" : "#f1f3f5",
+                  backgroundColor: pressed ? colors.primaryBg : colors.surfacePressed,
                 })}
               >
-                <Text style={{ fontSize: 13, fontWeight: "600", color: "#0d6efd" }}>All</Text>
+                <Text style={{ fontSize: 13, fontWeight: "600", color: colors.primary }}>All</Text>
               </Pressable>
               <Pressable
                 onPress={onCancelSelection}
@@ -441,18 +441,18 @@ function WordListView({
                   paddingVertical: 6,
                   paddingHorizontal: 12,
                   borderRadius: 8,
-                  backgroundColor: pressed ? "#f1f3f5" : "#fff",
+                  backgroundColor: pressed ? colors.surfacePressed : colors.surface,
                   borderWidth: 1,
-                  borderColor: "#dee2e6",
+                  borderColor: colors.borderMid,
                 })}
               >
-                <Text style={{ fontSize: 13, fontWeight: "600", color: "#495057" }}>Cancel</Text>
+                <Text style={{ fontSize: 13, fontWeight: "600", color: colors.textDim }}>Cancel</Text>
               </Pressable>
             </View>
           </View>
         ) : (
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-            <Text style={{ fontSize: 20, fontWeight: "700", color: "#212529" }}>Words</Text>
+            <Text style={{ fontSize: 20, fontWeight: "700", color: colors.text }}>Words</Text>
             <View style={{ flexDirection: "row", gap: 8 }}>
               {allTags.length > 0 && (
                 <Pressable
@@ -461,14 +461,14 @@ function WordListView({
                     width: 36,
                     height: 36,
                     borderRadius: 18,
-                    backgroundColor: appliedTags.length > 0 ? "#e7f1ff" : "#f1f3f5",
+                    backgroundColor: appliedTags.length > 0 ? colors.primaryBg : colors.surfacePressed,
                     alignItems: "center",
                     justifyContent: "center",
                     borderWidth: appliedTags.length > 0 ? 1 : 0,
-                    borderColor: "#0d6efd",
+                    borderColor: colors.primary,
                   }}
                 >
-                  <Ionicons name="pricetag-outline" size={17} color={appliedTags.length > 0 ? "#0d6efd" : "#495057"} />
+                  <Ionicons name="pricetag-outline" size={17} color={appliedTags.length > 0 ? colors.primary : colors.textDim} />
                 </Pressable>
               )}
               <Pressable
@@ -477,12 +477,12 @@ function WordListView({
                   width: 36,
                   height: 36,
                   borderRadius: 18,
-                  backgroundColor: showSearch ? "#e7f1ff" : "#f1f3f5",
+                  backgroundColor: showSearch ? colors.primaryBg : colors.surfacePressed,
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
-                <Ionicons name={showSearch ? "close" : "search"} size={18} color={showSearch ? "#0d6efd" : "#495057"} />
+                <Ionicons name={showSearch ? "close" : "search"} size={18} color={showSearch ? colors.primary : colors.textDim} />
               </Pressable>
             </View>
           </View>
@@ -493,18 +493,18 @@ function WordListView({
             value={query}
             onChangeText={onQueryChange}
             placeholder="Search words"
-            placeholderTextColor="#adb5bd"
+            placeholderTextColor={colors.textMuted}
             autoFocus
             style={{
               marginTop: 10,
               borderWidth: 1,
-              borderColor: "#dee2e6",
+              borderColor: colors.borderMid,
               borderRadius: 10,
               paddingHorizontal: 12,
               paddingVertical: 9,
               fontSize: 15,
-              backgroundColor: "#f8f9fa",
-              color: "#212529",
+              backgroundColor: colors.bg,
+              color: colors.text,
             }}
           />
         )}
@@ -514,11 +514,11 @@ function WordListView({
       {!selectionMode && showTagPanel && allTags.length > 0 && (
         <View
           style={{
-            backgroundColor: "#fff",
+            backgroundColor: colors.surface,
             paddingHorizontal: 16,
             paddingVertical: 12,
             borderBottomWidth: 1,
-            borderBottomColor: "#e9ecef",
+            borderBottomColor: colors.border,
             gap: 10,
           }}
         >
@@ -532,11 +532,11 @@ function WordListView({
                   paddingHorizontal: 12,
                   borderRadius: 20,
                   borderWidth: 1,
-                  borderColor: selectedTags.includes(tag) ? "#0d6efd" : "#dee2e6",
-                  backgroundColor: selectedTags.includes(tag) ? "#e7f1ff" : "#f8f9fa",
+                  borderColor: selectedTags.includes(tag) ? colors.primary : colors.borderMid,
+                  backgroundColor: selectedTags.includes(tag) ? colors.primaryBg : colors.bg,
                 }}
               >
-                <Text style={{ fontSize: 13, fontWeight: selectedTags.includes(tag) ? "700" : "400", color: selectedTags.includes(tag) ? "#0d6efd" : "#495057" }}>
+                <Text style={{ fontSize: 13, fontWeight: selectedTags.includes(tag) ? "700" : "400", color: selectedTags.includes(tag) ? colors.primary : colors.textDim }}>
                   {selectedTags.includes(tag) ? "✓ " : ""}{tag}
                 </Text>
               </Pressable>
@@ -550,12 +550,12 @@ function WordListView({
                 paddingVertical: 10,
                 borderRadius: 8,
                 borderWidth: 1,
-                borderColor: "#dee2e6",
-                backgroundColor: pressed ? "#f1f3f5" : "#fff",
+                borderColor: colors.borderMid,
+                backgroundColor: pressed ? colors.surfacePressed : colors.surface,
                 alignItems: "center",
               })}
             >
-              <Text style={{ fontSize: 14, fontWeight: "600", color: "#6c757d" }}>Clear</Text>
+              <Text style={{ fontSize: 14, fontWeight: "600", color: colors.textSub }}>Clear</Text>
             </Pressable>
             <Pressable
               onPress={onApplyTags}
@@ -563,7 +563,7 @@ function WordListView({
                 flex: 1,
                 paddingVertical: 10,
                 borderRadius: 8,
-                backgroundColor: pressed ? "#0b5ed7" : "#0d6efd",
+                backgroundColor: pressed ? colors.primaryPressed : colors.primary,
                 alignItems: "center",
               })}
             >
@@ -574,16 +574,16 @@ function WordListView({
       )}
 
       <View style={{ paddingHorizontal: 16, paddingVertical: 8 }}>
-        <Text style={{ fontSize: 13, color: "#6c757d" }}>
+        <Text style={{ fontSize: 13, color: colors.textSub }}>
           {busy ? "Loading..." : `${words.length} word${words.length !== 1 ? "s" : ""}`}
         </Text>
       </View>
 
       {words.length === 0 && !busy ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", gap: 12, paddingBottom: 80 }}>
-          <Ionicons name="file-tray-outline" size={48} color="#adb5bd" />
-          <Text style={{ fontSize: 15, color: "#6c757d" }}>No words yet</Text>
-          <Text style={{ fontSize: 13, color: "#adb5bd" }}>Tap + to add your first word</Text>
+          <Ionicons name="file-tray-outline" size={48} color={colors.textMuted} />
+          <Text style={{ fontSize: 15, color: colors.textSub }}>No words yet</Text>
+          <Text style={{ fontSize: 13, color: colors.textMuted }}>Tap + to add your first word</Text>
         </View>
       ) : (
         <FlatList
@@ -606,11 +606,11 @@ function WordListView({
                 onLongPress={() => onLongPressWord(item.id)}
                 delayLongPress={400}
                 style={({ pressed }) => ({
-                  backgroundColor: isSelected ? "#e7f1ff" : pressed ? "#e7f1ff" : "#fff",
+                  backgroundColor: isSelected ? colors.primaryBg : pressed ? colors.primaryBg : colors.surface,
                   borderRadius: 12,
                   padding: 14,
                   borderWidth: isSelected ? 2 : 1,
-                  borderColor: isSelected ? "#0d6efd" : "#e9ecef",
+                  borderColor: isSelected ? colors.primary : colors.border,
                   shadowColor: "#000",
                   shadowOffset: { width: 0, height: 1 },
                   shadowOpacity: 0.06,
@@ -626,8 +626,8 @@ function WordListView({
                         height: 22,
                         borderRadius: 11,
                         borderWidth: 2,
-                        borderColor: isSelected ? "#0d6efd" : "#adb5bd",
-                        backgroundColor: isSelected ? "#0d6efd" : "#fff",
+                        borderColor: isSelected ? colors.primary : colors.textMuted,
+                        backgroundColor: isSelected ? colors.primary : colors.surface,
                         alignItems: "center",
                         justifyContent: "center",
                         marginRight: 10,
@@ -638,8 +638,8 @@ function WordListView({
                     </View>
                   )}
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 17, fontWeight: "700", color: "#212529" }}>{item.headword}</Text>
-                    <Text style={{ fontSize: 15, color: "#495057", marginTop: 4 }}>{item.meaningJa}</Text>
+                    <Text style={{ fontSize: 17, fontWeight: "700", color: colors.text }}>{item.headword}</Text>
+                    <Text style={{ fontSize: 15, color: colors.textDim, marginTop: 4 }}>{item.meaningJa}</Text>
                   </View>
                   <View style={{ alignItems: "flex-end", gap: 4 }}>
                     <PosBadge pos={item.pos} />
@@ -654,14 +654,14 @@ function WordListView({
                   {item.tags.length > 0 ? (
                     <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 4, flex: 1 }}>
                       {item.tags.map((tag) => (
-                        <View key={tag} style={{ backgroundColor: "#f1f3f5", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 }}>
-                          <Text style={{ fontSize: 11, color: "#6c757d" }}>{tag}</Text>
+                        <View key={tag} style={{ backgroundColor: colors.surfacePressed, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 }}>
+                          <Text style={{ fontSize: 11, color: colors.textSub }}>{tag}</Text>
                         </View>
                       ))}
                     </View>
                   ) : <View style={{ flex: 1 }} />}
                   {item.examples.length > 0 && (
-                    <Text style={{ fontSize: 11, color: "#adb5bd" }}>{item.examples.length} example{item.examples.length !== 1 ? "s" : ""}</Text>
+                    <Text style={{ fontSize: 11, color: colors.textMuted }}>{item.examples.length} example{item.examples.length !== 1 ? "s" : ""}</Text>
                   )}
                 </View>
               </Pressable>
@@ -681,10 +681,10 @@ function WordListView({
             width: 56,
             height: 56,
             borderRadius: 28,
-            backgroundColor: pressed ? "#0b5ed7" : "#0d6efd",
+            backgroundColor: pressed ? colors.primaryPressed : colors.primary,
             alignItems: "center",
             justifyContent: "center",
-            shadowColor: "#0d6efd",
+            shadowColor: colors.primary,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.35,
             shadowRadius: 8,
@@ -704,9 +704,9 @@ function WordListView({
             left: 0,
             right: 0,
             flexDirection: "row",
-            backgroundColor: "#fff",
+            backgroundColor: colors.surface,
             borderTopWidth: 1,
-            borderTopColor: "#e9ecef",
+            borderTopColor: colors.border,
             paddingVertical: 10,
             paddingHorizontal: 12,
             gap: 8,
@@ -724,14 +724,14 @@ function WordListView({
               paddingVertical: 10,
               borderRadius: 10,
               borderWidth: 1,
-              borderColor: selectedIds.length === 0 ? "#dee2e6" : "#0d6efd",
-              backgroundColor: pressed && selectedIds.length > 0 ? "#e7f1ff" : "#fff",
+              borderColor: selectedIds.length === 0 ? colors.borderMid : colors.primary,
+              backgroundColor: pressed && selectedIds.length > 0 ? colors.primaryBg : colors.surface,
               alignItems: "center",
               gap: 4,
             })}
           >
-            <Ionicons name="pricetag-outline" size={18} color={selectedIds.length === 0 ? "#adb5bd" : "#0d6efd"} />
-            <Text style={{ fontSize: 11, fontWeight: "600", color: selectedIds.length === 0 ? "#adb5bd" : "#0d6efd" }}>Tags</Text>
+            <Ionicons name="pricetag-outline" size={18} color={selectedIds.length === 0 ? colors.textMuted : colors.primary} />
+            <Text style={{ fontSize: 11, fontWeight: "600", color: selectedIds.length === 0 ? colors.textMuted : colors.primary }}>Tags</Text>
           </Pressable>
           <Pressable
             onPress={() => setBulkConfirm("reset")}
@@ -741,14 +741,14 @@ function WordListView({
               paddingVertical: 10,
               borderRadius: 10,
               borderWidth: 1,
-              borderColor: selectedIds.length === 0 ? "#dee2e6" : "#fd7e14",
-              backgroundColor: pressed && selectedIds.length > 0 ? "#fff4e6" : "#fff",
+              borderColor: selectedIds.length === 0 ? colors.borderMid : colors.ratingHard.color,
+              backgroundColor: pressed && selectedIds.length > 0 ? colors.ratingHard.bg : colors.surface,
               alignItems: "center",
               gap: 4,
             })}
           >
-            <Ionicons name="refresh-outline" size={18} color={selectedIds.length === 0 ? "#adb5bd" : "#fd7e14"} />
-            <Text style={{ fontSize: 11, fontWeight: "600", color: selectedIds.length === 0 ? "#adb5bd" : "#fd7e14" }}>Reset</Text>
+            <Ionicons name="refresh-outline" size={18} color={selectedIds.length === 0 ? colors.textMuted : colors.ratingHard.color} />
+            <Text style={{ fontSize: 11, fontWeight: "600", color: selectedIds.length === 0 ? colors.textMuted : colors.ratingHard.color }}>Reset</Text>
           </Pressable>
           <Pressable
             onPress={() => setBulkConfirm("delete")}
@@ -758,14 +758,14 @@ function WordListView({
               paddingVertical: 10,
               borderRadius: 10,
               borderWidth: 1,
-              borderColor: selectedIds.length === 0 ? "#dee2e6" : "#dc3545",
-              backgroundColor: pressed && selectedIds.length > 0 ? "#fff5f5" : "#fff",
+              borderColor: selectedIds.length === 0 ? colors.borderMid : colors.ratingAgain.color,
+              backgroundColor: pressed && selectedIds.length > 0 ? colors.ratingAgain.bg : colors.surface,
               alignItems: "center",
               gap: 4,
             })}
           >
-            <Ionicons name="trash-outline" size={18} color={selectedIds.length === 0 ? "#adb5bd" : "#dc3545"} />
-            <Text style={{ fontSize: 11, fontWeight: "600", color: selectedIds.length === 0 ? "#adb5bd" : "#dc3545" }}>Delete</Text>
+            <Ionicons name="trash-outline" size={18} color={selectedIds.length === 0 ? colors.textMuted : colors.ratingAgain.color} />
+            <Text style={{ fontSize: 11, fontWeight: "600", color: selectedIds.length === 0 ? colors.textMuted : colors.ratingAgain.color }}>Delete</Text>
           </Pressable>
         </View>
       )}
@@ -780,17 +780,17 @@ function WordListView({
             : "Learning progress for the selected words will be reset."
         }
         confirmLabel={bulkConfirm === "delete" ? "Delete" : "Reset"}
-        confirmColor={bulkConfirm === "delete" ? "#dc3545" : "#fd7e14"}
+        confirmColor={bulkConfirm === "delete" ? colors.ratingAgain.color : colors.ratingHard.color}
         onConfirm={handleBulkConfirm}
         onCancel={() => setBulkConfirm(null)}
       />
 
       {/* Tag modal */}
       <Modal visible={showTagModal} transparent animationType="slide" onRequestClose={() => setShowTagModal(false)}>
-        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" }}>
+        <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.55)", justifyContent: "flex-end" }}>
           <View
             style={{
-              backgroundColor: "#fff",
+              backgroundColor: colors.surface,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               padding: 24,
@@ -798,16 +798,16 @@ function WordListView({
             }}
           >
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <Text style={{ fontSize: 18, fontWeight: "700", color: "#212529" }}>
+              <Text style={{ fontSize: 18, fontWeight: "700", color: colors.text }}>
                 Change Tags ({selectedIds.length} words)
               </Text>
               <Pressable onPress={() => setShowTagModal(false)} hitSlop={8}>
-                <Ionicons name="close" size={24} color="#6c757d" />
+                <Ionicons name="close" size={24} color={colors.textSub} />
               </Pressable>
             </View>
 
             <View style={{ gap: 8 }}>
-              <Text style={{ fontSize: 13, fontWeight: "600", color: "#6c757d" }}>Mode</Text>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.textSub }}>Mode</Text>
               {(["add", "replace"] as const).map((m) => (
                 <Pressable
                   key={m}
@@ -819,8 +819,8 @@ function WordListView({
                     padding: 12,
                     borderRadius: 10,
                     borderWidth: 2,
-                    borderColor: tagMode === m ? "#0d6efd" : "#dee2e6",
-                    backgroundColor: tagMode === m ? "#e7f1ff" : "#f8f9fa",
+                    borderColor: tagMode === m ? colors.primary : colors.borderMid,
+                    backgroundColor: tagMode === m ? colors.primaryBg : colors.bg,
                   }}
                 >
                   <View
@@ -829,8 +829,8 @@ function WordListView({
                       height: 18,
                       borderRadius: 9,
                       borderWidth: 2,
-                      borderColor: tagMode === m ? "#0d6efd" : "#adb5bd",
-                      backgroundColor: tagMode === m ? "#0d6efd" : "#fff",
+                      borderColor: tagMode === m ? colors.primary : colors.textMuted,
+                      backgroundColor: tagMode === m ? colors.primary : colors.surface,
                       alignItems: "center",
                       justifyContent: "center",
                     }}
@@ -838,10 +838,10 @@ function WordListView({
                     {tagMode === m && <View style={{ width: 7, height: 7, borderRadius: 3.5, backgroundColor: "#fff" }} />}
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={{ fontSize: 14, fontWeight: "700", color: "#212529" }}>
+                    <Text style={{ fontSize: 14, fontWeight: "700", color: colors.text }}>
                       {m === "add" ? "Add tags" : "Replace tags"}
                     </Text>
-                    <Text style={{ fontSize: 12, color: "#6c757d", marginTop: 2 }}>
+                    <Text style={{ fontSize: 12, color: colors.textSub, marginTop: 2 }}>
                       {m === "add" ? "Add to existing tags" : "Replace all existing tags"}
                     </Text>
                   </View>
@@ -850,23 +850,23 @@ function WordListView({
             </View>
 
             <View>
-              <Text style={{ fontSize: 13, fontWeight: "600", color: "#6c757d", marginBottom: 6 }}>
+              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.textSub, marginBottom: 6 }}>
                 Tags (comma-separated)
               </Text>
               <TextInput
                 value={tagInput}
                 onChangeText={setTagInput}
                 placeholder="e.g. TOEFL, important"
-                placeholderTextColor="#adb5bd"
+                placeholderTextColor={colors.textMuted}
                 style={{
                   borderWidth: 1,
-                  borderColor: "#dee2e6",
+                  borderColor: colors.borderMid,
                   borderRadius: 10,
                   paddingHorizontal: 12,
                   paddingVertical: 10,
                   fontSize: 15,
-                  color: "#212529",
-                  backgroundColor: "#f8f9fa",
+                  color: colors.text,
+                  backgroundColor: colors.bg,
                 }}
               />
             </View>
@@ -879,12 +879,12 @@ function WordListView({
                   paddingVertical: 13,
                   borderRadius: 10,
                   borderWidth: 1,
-                  borderColor: "#dee2e6",
-                  backgroundColor: pressed ? "#f1f3f5" : "#fff",
+                  borderColor: colors.borderMid,
+                  backgroundColor: pressed ? colors.surfacePressed : colors.surface,
                   alignItems: "center",
                 })}
               >
-                <Text style={{ fontWeight: "600", color: "#495057" }}>Cancel</Text>
+                <Text style={{ fontWeight: "600", color: colors.textDim }}>Cancel</Text>
               </Pressable>
               <Pressable
                 onPress={handleApplyTags}
@@ -892,7 +892,7 @@ function WordListView({
                   flex: 2,
                   paddingVertical: 13,
                   borderRadius: 10,
-                  backgroundColor: pressed ? "#0b5ed7" : "#0d6efd",
+                  backgroundColor: pressed ? colors.primaryPressed : colors.primary,
                   alignItems: "center",
                 })}
               >
@@ -931,8 +931,22 @@ function WordFormView({
   busy: boolean;
   errorMsg: string | null;
 }) {
+  const { colors } = useTheme();
   const [confirmAction, setConfirmAction] = useState<"delete" | "reset" | null>(null);
   const canSpeak = mobileSpeechService.canSpeak();
+
+  const labelStyle = {
+    fontSize: 12,
+    fontWeight: "600" as const,
+    color: colors.textSub,
+    marginBottom: 4,
+  };
+
+  const fieldInputStyle = {
+    fontSize: 15,
+    color: colors.text,
+    paddingVertical: 2,
+  };
 
   const set = <K extends keyof WordDraft>(key: K, value: WordDraft[K]) =>
     onChangeDraft({ ...draft, [key]: value });
@@ -976,40 +990,40 @@ function WordFormView({
       {/* Header */}
       <View
         style={{
-          backgroundColor: "#fff",
+          backgroundColor: colors.surface,
           paddingHorizontal: 16,
           paddingVertical: 14,
           borderBottomWidth: 1,
-          borderBottomColor: "#e9ecef",
+          borderBottomColor: colors.border,
           flexDirection: "row",
           alignItems: "center",
           gap: 12,
         }}
       >
         <Pressable onPress={onBack} hitSlop={8} style={{ padding: 4 }}>
-          <Ionicons name="arrow-back" size={24} color="#0d6efd" />
+          <Ionicons name="arrow-back" size={24} color={colors.primary} />
         </Pressable>
-        <Text style={{ fontSize: 18, fontWeight: "700", color: "#212529", flex: 1 }}>
+        <Text style={{ fontSize: 18, fontWeight: "700", color: colors.text, flex: 1 }}>
           {mode === "create" ? "Add Word" : "Edit Word"}
         </Text>
       </View>
 
       <ScrollView
-        style={{ flex: 1, backgroundColor: "#f8f9fa" }}
+        style={{ flex: 1, backgroundColor: colors.bg }}
         contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
       >
         {errorMsg ? (
-          <View style={{ backgroundColor: "#fff3f3", borderWidth: 1, borderColor: "#f5c2c7", borderRadius: 10, padding: 12 }}>
+          <View style={{ backgroundColor: colors.ratingAgain.bg, borderWidth: 1, borderColor: colors.ratingAgain.color, borderRadius: 10, padding: 12 }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-              <Ionicons name="warning-outline" size={16} color="#842029" />
-              <Text style={{ color: "#842029", fontSize: 14 }}>{errorMsg}</Text>
+              <Ionicons name="warning-outline" size={16} color={colors.ratingAgain.color} />
+              <Text style={{ color: colors.ratingAgain.color, fontSize: 14 }}>{errorMsg}</Text>
             </View>
           </View>
         ) : null}
 
         {/* Required Fields */}
-        <View style={{ backgroundColor: "#fff", borderRadius: 14, borderWidth: 1, borderColor: "#e9ecef", overflow: "hidden" }}>
+        <View style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, overflow: "hidden" }}>
           {/* Headword + Speak */}
           <View style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
             <Text style={labelStyle}>Headword *</Text>
@@ -1018,7 +1032,7 @@ function WordFormView({
                 value={draft.headword}
                 onChangeText={(v) => set("headword", v)}
                 placeholder="e.g. ephemeral"
-                placeholderTextColor="#adb5bd"
+                placeholderTextColor={colors.textMuted}
                 style={[fieldInputStyle, { flex: 1 }]}
               />
               {canSpeak && (
@@ -1029,25 +1043,25 @@ function WordFormView({
                     width: 36,
                     height: 36,
                     borderRadius: 18,
-                    backgroundColor: !draft.headword.trim() ? "#f1f3f5" : pressed ? "#e7f1ff" : "#f8f9fa",
+                    backgroundColor: !draft.headword.trim() ? colors.surfacePressed : pressed ? colors.primaryBg : colors.bg,
                     borderWidth: 1,
-                    borderColor: !draft.headword.trim() ? "#dee2e6" : "#0d6efd",
+                    borderColor: !draft.headword.trim() ? colors.borderMid : colors.primary,
                     alignItems: "center",
                     justifyContent: "center",
                   })}
                 >
-                  <Ionicons name="volume-high-outline" size={18} color={!draft.headword.trim() ? "#adb5bd" : "#0d6efd"} />
+                  <Ionicons name="volume-high-outline" size={18} color={!draft.headword.trim() ? colors.textMuted : colors.primary} />
                 </Pressable>
               )}
             </View>
           </View>
-          <Divider />
-          <FieldRow label="Meaning (JA) *">
+          <Divider colors={colors} />
+          <FieldRow label="Meaning (JA) *" labelStyle={labelStyle}>
             <TextInput
               value={draft.meaningJa}
               onChangeText={(v) => set("meaningJa", v)}
               placeholder="e.g. 短命の、はかない"
-              placeholderTextColor="#adb5bd"
+              placeholderTextColor={colors.textMuted}
               style={fieldInputStyle}
             />
           </FieldRow>
@@ -1066,11 +1080,11 @@ function WordFormView({
                   paddingHorizontal: 14,
                   borderRadius: 20,
                   borderWidth: 1.5,
-                  borderColor: draft.pos === pos ? "#0d6efd" : "#dee2e6",
-                  backgroundColor: draft.pos === pos ? "#e7f1ff" : "#fff",
+                  borderColor: draft.pos === pos ? colors.primary : colors.borderMid,
+                  backgroundColor: draft.pos === pos ? colors.primaryBg : colors.surface,
                 }}
               >
-                <Text style={{ fontSize: 13, fontWeight: draft.pos === pos ? "700" : "400", color: draft.pos === pos ? "#0d6efd" : "#495057" }}>
+                <Text style={{ fontSize: 13, fontWeight: draft.pos === pos ? "700" : "400", color: draft.pos === pos ? colors.primary : colors.textDim }}>
                   {pos}
                 </Text>
               </Pressable>
@@ -1079,23 +1093,23 @@ function WordFormView({
         </View>
 
         {/* Tags + Memo */}
-        <View style={{ backgroundColor: "#fff", borderRadius: 14, borderWidth: 1, borderColor: "#e9ecef", overflow: "hidden" }}>
-          <FieldRow label="Tags (comma-separated)">
+        <View style={{ backgroundColor: colors.surface, borderRadius: 14, borderWidth: 1, borderColor: colors.border, overflow: "hidden" }}>
+          <FieldRow label="Tags (comma-separated)" labelStyle={labelStyle}>
             <TextInput
               value={(draft.tags ?? []).join(", ")}
               onChangeText={(v) => set("tags", v.split(",").map((t) => t.trim()).filter(Boolean))}
               placeholder="e.g. TOEFL, important"
-              placeholderTextColor="#adb5bd"
+              placeholderTextColor={colors.textMuted}
               style={fieldInputStyle}
             />
           </FieldRow>
-          <Divider />
-          <FieldRow label="Memo">
+          <Divider colors={colors} />
+          <FieldRow label="Memo" labelStyle={labelStyle}>
             <TextInput
               value={draft.memo ?? ""}
               onChangeText={(v) => set("memo", v)}
               placeholder="Optional note"
-              placeholderTextColor="#adb5bd"
+              placeholderTextColor={colors.textMuted}
               multiline
               numberOfLines={2}
               style={[fieldInputStyle, { minHeight: 44 }]}
@@ -1117,17 +1131,17 @@ function WordFormView({
                 paddingHorizontal: 12,
                 borderRadius: 8,
                 borderWidth: 1,
-                borderColor: "#0d6efd",
-                backgroundColor: pressed ? "#e7f1ff" : "#fff",
+                borderColor: colors.primary,
+                backgroundColor: pressed ? colors.primaryBg : colors.surface,
               })}
             >
-              <Text style={{ fontSize: 14, color: "#0d6efd", fontWeight: "700" }}>+ Add</Text>
+              <Text style={{ fontSize: 14, color: colors.primary, fontWeight: "700" }}>+ Add</Text>
             </Pressable>
           </View>
 
           {draftExamples.length === 0 ? (
-            <View style={{ backgroundColor: "#fff", borderRadius: 12, borderWidth: 1, borderColor: "#e9ecef", padding: 16, alignItems: "center" }}>
-              <Text style={{ fontSize: 13, color: "#adb5bd" }}>No examples yet</Text>
+            <View style={{ backgroundColor: colors.surface, borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 16, alignItems: "center" }}>
+              <Text style={{ fontSize: 13, color: colors.textMuted }}>No examples yet</Text>
             </View>
           ) : (
             <View style={{ gap: 10 }}>
@@ -1135,21 +1149,21 @@ function WordFormView({
                 <View
                   key={ex.id}
                   style={{
-                    backgroundColor: "#fff",
+                    backgroundColor: colors.surface,
                     borderRadius: 12,
                     borderWidth: 1,
-                    borderColor: "#e9ecef",
+                    borderColor: colors.border,
                     overflow: "hidden",
                   }}
                 >
                   {/* Example header */}
-                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingVertical: 8, backgroundColor: "#f8f9fa", borderBottomWidth: 1, borderBottomColor: "#e9ecef" }}>
-                    <Text style={{ fontSize: 12, fontWeight: "600", color: "#6c757d" }}>Example {index + 1}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.bg, borderBottomWidth: 1, borderBottomColor: colors.border }}>
+                    <Text style={{ fontSize: 12, fontWeight: "600", color: colors.textSub }}>Example {index + 1}</Text>
                     <Pressable
                       onPress={() => removeExample(ex.id)}
                       hitSlop={8}
                     >
-                      <Text style={{ fontSize: 13, color: "#dc3545", fontWeight: "600" }}>Remove</Text>
+                      <Text style={{ fontSize: 13, color: colors.ratingAgain.color, fontWeight: "600" }}>Remove</Text>
                     </Pressable>
                   </View>
 
@@ -1161,7 +1175,7 @@ function WordFormView({
                         value={ex.en}
                         onChangeText={(v) => updateExample(ex.id, "en", v)}
                         placeholder="English sentence"
-                        placeholderTextColor="#adb5bd"
+                        placeholderTextColor={colors.textMuted}
                         style={[fieldInputStyle, { flex: 1 }]}
                       />
                       {canSpeak && (
@@ -1172,26 +1186,26 @@ function WordFormView({
                             width: 32,
                             height: 32,
                             borderRadius: 16,
-                            backgroundColor: !ex.en.trim() ? "#f1f3f5" : pressed ? "#e7f1ff" : "#f8f9fa",
+                            backgroundColor: !ex.en.trim() ? colors.surfacePressed : pressed ? colors.primaryBg : colors.bg,
                             borderWidth: 1,
-                            borderColor: !ex.en.trim() ? "#dee2e6" : "#0d6efd",
+                            borderColor: !ex.en.trim() ? colors.borderMid : colors.primary,
                             alignItems: "center",
                             justifyContent: "center",
                           })}
                         >
-                          <Ionicons name="volume-high-outline" size={16} color={!ex.en.trim() ? "#adb5bd" : "#0d6efd"} />
+                          <Ionicons name="volume-high-outline" size={16} color={!ex.en.trim() ? colors.textMuted : colors.primary} />
                         </Pressable>
                       )}
                     </View>
                   </View>
-                  <Divider />
+                  <Divider colors={colors} />
                   {/* Japanese */}
-                  <FieldRow label="Japanese (optional)">
+                  <FieldRow label="Japanese (optional)" labelStyle={labelStyle}>
                     <TextInput
                       value={ex.ja}
                       onChangeText={(v) => updateExample(ex.id, "ja", v)}
                       placeholder="Japanese translation"
-                      placeholderTextColor="#adb5bd"
+                      placeholderTextColor={colors.textMuted}
                       style={fieldInputStyle}
                     />
                   </FieldRow>
@@ -1206,7 +1220,7 @@ function WordFormView({
           onPress={() => void onSubmit()}
           disabled={busy || !isValid}
           style={({ pressed }) => ({
-            backgroundColor: busy || !isValid ? "#a5c8ff" : pressed ? "#0b5ed7" : "#0d6efd",
+            backgroundColor: busy || !isValid ? colors.primaryBg : pressed ? colors.primaryPressed : colors.primary,
             borderRadius: 12,
             paddingVertical: 15,
             alignItems: "center",
@@ -1220,8 +1234,8 @@ function WordFormView({
         {/* Danger Zone (edit only) */}
         {mode === "edit" && (
           <View style={{ gap: 10 }}>
-            <View style={{ height: 1, backgroundColor: "#e9ecef" }} />
-            <Text style={{ fontSize: 12, color: "#adb5bd", textAlign: "center" }}>Danger Zone</Text>
+            <View style={{ height: 1, backgroundColor: colors.border }} />
+            <Text style={{ fontSize: 12, color: colors.textMuted, textAlign: "center" }}>Danger Zone</Text>
 
             <Pressable
               onPress={() => setConfirmAction("reset")}
@@ -1231,13 +1245,13 @@ function WordFormView({
                 paddingVertical: 13,
                 alignItems: "center",
                 borderWidth: 1.5,
-                borderColor: "#fd7e14",
-                backgroundColor: pressed ? "#fff4e6" : "#fff",
+                borderColor: colors.ratingHard.color,
+                backgroundColor: pressed ? colors.ratingHard.bg : colors.surface,
               })}
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Ionicons name="refresh-outline" size={18} color="#fd7e14" />
-                <Text style={{ color: "#fd7e14", fontWeight: "700", fontSize: 15 }}>Reset Memory</Text>
+                <Ionicons name="refresh-outline" size={18} color={colors.ratingHard.color} />
+                <Text style={{ color: colors.ratingHard.color, fontWeight: "700", fontSize: 15 }}>Reset Memory</Text>
               </View>
             </Pressable>
 
@@ -1249,13 +1263,13 @@ function WordFormView({
                 paddingVertical: 13,
                 alignItems: "center",
                 borderWidth: 1.5,
-                borderColor: "#dc3545",
-                backgroundColor: pressed ? "#fff5f5" : "#fff",
+                borderColor: colors.ratingAgain.color,
+                backgroundColor: pressed ? colors.ratingAgain.bg : colors.surface,
               })}
             >
               <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                <Ionicons name="trash-outline" size={18} color="#dc3545" />
-                <Text style={{ color: "#dc3545", fontWeight: "700", fontSize: 15 }}>Delete Word</Text>
+                <Ionicons name="trash-outline" size={18} color={colors.ratingAgain.color} />
+                <Text style={{ color: colors.ratingAgain.color, fontWeight: "700", fontSize: 15 }}>Delete Word</Text>
               </View>
             </Pressable>
           </View>
@@ -1272,7 +1286,7 @@ function WordFormView({
             : "Learning progress for this word will be reset."
         }
         confirmLabel={confirmAction === "delete" ? "Delete" : "Reset"}
-        confirmColor={confirmAction === "delete" ? "#dc3545" : "#fd7e14"}
+        confirmColor={confirmAction === "delete" ? colors.ratingAgain.color : colors.ratingHard.color}
         onConfirm={handleConfirm}
         onCancel={() => setConfirmAction(null)}
       />
@@ -1299,12 +1313,13 @@ function ConfirmModal({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
+  const { colors } = useTheme();
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onCancel}>
-      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", alignItems: "center", justifyContent: "center", padding: 32 }}>
-        <View style={{ backgroundColor: "#fff", borderRadius: 16, padding: 24, width: "100%", maxWidth: 340, gap: 16 }}>
-          <Text style={{ fontSize: 17, fontWeight: "700", color: "#212529" }}>{title}</Text>
-          <Text style={{ fontSize: 14, color: "#6c757d" }}>{message}</Text>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.55)", alignItems: "center", justifyContent: "center", padding: 32 }}>
+        <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 24, width: "100%", maxWidth: 340, gap: 16 }}>
+          <Text style={{ fontSize: 17, fontWeight: "700", color: colors.text }}>{title}</Text>
+          <Text style={{ fontSize: 14, color: colors.textSub }}>{message}</Text>
           <View style={{ flexDirection: "row", gap: 10 }}>
             <Pressable
               onPress={onCancel}
@@ -1313,12 +1328,12 @@ function ConfirmModal({
                 paddingVertical: 12,
                 borderRadius: 10,
                 borderWidth: 1,
-                borderColor: "#dee2e6",
-                backgroundColor: pressed ? "#f1f3f5" : "#fff",
+                borderColor: colors.borderMid,
+                backgroundColor: pressed ? colors.surfacePressed : colors.surface,
                 alignItems: "center",
               })}
             >
-              <Text style={{ fontWeight: "600", color: "#495057" }}>Cancel</Text>
+              <Text style={{ fontWeight: "600", color: colors.textDim }}>Cancel</Text>
             </Pressable>
             <Pressable
               onPress={onConfirm}
@@ -1339,7 +1354,8 @@ function ConfirmModal({
   );
 }
 
-const POS_COLORS: Record<Pos, { bg: string; text: string }> = {
+// POS colors — semantic colors kept consistent in both light/dark
+const POS_COLORS_LIGHT: Record<Pos, { bg: string; text: string }> = {
   noun: { bg: "#e7f5ff", text: "#1971c2" },
   verb: { bg: "#fff3bf", text: "#e67700" },
   adj: { bg: "#ebfbee", text: "#2b8a3e" },
@@ -1352,16 +1368,31 @@ const POS_COLORS: Record<Pos, { bg: string; text: string }> = {
   other: { bg: "#f1f3f5", text: "#495057" },
 };
 
+const POS_COLORS_DARK: Record<Pos, { bg: string; text: string }> = {
+  noun: { bg: "#0d1f3d", text: "#74b4ff" },
+  verb: { bg: "#3d2a00", text: "#ffc046" },
+  adj: { bg: "#0d2f1a", text: "#5cd97d" },
+  adv: { bg: "#1e1640", text: "#9d7fe8" },
+  prep: { bg: "#2d0a1e", text: "#e8749a" },
+  conj: { bg: "#2d1800", text: "#ffa040" },
+  pron: { bg: "#0a2030", text: "#4dc8d4" },
+  det: { bg: "#252c30", text: "#9ba5b0" },
+  interj: { bg: "#2a0f2d", text: "#c97fd4" },
+  other: { bg: "#252c30", text: "#9ba5b0" },
+};
+
 function PosBadge({ pos }: { pos: Pos }) {
-  const colors = POS_COLORS[pos] ?? { bg: "#f1f3f5", text: "#495057" };
+  const { isDark } = useTheme();
+  const palette = isDark ? POS_COLORS_DARK : POS_COLORS_LIGHT;
+  const c = palette[pos] ?? (isDark ? { bg: "#252c30", text: "#9ba5b0" } : { bg: "#f1f3f5", text: "#495057" });
   return (
-    <View style={{ backgroundColor: colors.bg, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 }}>
-      <Text style={{ fontSize: 11, fontWeight: "600", color: colors.text }}>{pos}</Text>
+    <View style={{ backgroundColor: c.bg, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 3 }}>
+      <Text style={{ fontSize: 11, fontWeight: "600", color: c.text }}>{pos}</Text>
     </View>
   );
 }
 
-function FieldRow({ label, children }: { label: string; children: ReactNode }) {
+function FieldRow({ label, children, labelStyle }: { label: string; children: ReactNode; labelStyle: object }) {
   return (
     <View style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
       <Text style={labelStyle}>{label}</Text>
@@ -1370,19 +1401,6 @@ function FieldRow({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function Divider() {
-  return <View style={{ height: 1, backgroundColor: "#f1f3f5" }} />;
+function Divider({ colors }: { colors: { borderLight: string } }) {
+  return <View style={{ height: 1, backgroundColor: colors.borderLight }} />;
 }
-
-const labelStyle = {
-  fontSize: 12,
-  fontWeight: "600" as const,
-  color: "#6c757d",
-  marginBottom: 4,
-};
-
-const fieldInputStyle = {
-  fontSize: 15,
-  color: "#212529",
-  paddingVertical: 2,
-} as const;
