@@ -116,6 +116,7 @@ function AppContent() {
       return (
         <ExamplesScreen
           examplesService={compositionRoot.examplesService}
+          studyService={compositionRoot.studyService}
           preferredWordId={quizPreferredWordId}
           onNavigateToStudy={navigateToStudy}
         />
