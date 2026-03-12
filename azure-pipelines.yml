@@ -180,11 +180,15 @@ stages:
               EXPO_PUBLIC_APP_VERSION: $(Build.BuildNumber)
               EXPO_PUBLIC_ANDROID_VERSION_CODE: $(Build.BuildId)
               EXPO_PUBLIC_ANDROID_APPLICATION_ID: com.linguisticnode.app
+              EXPO_PUBLIC_GIT_COMMIT: $(Build.SourceVersion)
 
           - script: |
               ./gradlew assembleDebug
             workingDirectory: frontend/apps/mobile/android
             displayName: 'Gradle assembleDebug (APK)'
+            env:
+              EXPO_PUBLIC_APP_VERSION: $(Build.BuildNumber)
+              EXPO_PUBLIC_GIT_COMMIT: $(Build.SourceVersion)
 
           - task: PublishPipelineArtifact@1
             inputs:
@@ -233,6 +237,7 @@ stages:
               EXPO_PUBLIC_APP_VERSION: $(Build.BuildNumber)
               EXPO_PUBLIC_ANDROID_VERSION_CODE: $(Build.BuildId)
               EXPO_PUBLIC_ANDROID_APPLICATION_ID: com.linguisticnode.app
+              EXPO_PUBLIC_GIT_COMMIT: $(Build.SourceVersion)
 
           - task: DownloadSecureFile@1
             name: androidKeystore
@@ -254,6 +259,8 @@ stages:
               KEY_PASSWORD: $(KEY_PASSWORD)
               NODE_ENV: production
               NODE_PATH: $(Build.SourcesDirectory)/frontend/node_modules
+              EXPO_PUBLIC_APP_VERSION: $(Build.BuildNumber)
+              EXPO_PUBLIC_GIT_COMMIT: $(Build.SourceVersion)
 
           - task: PublishPipelineArtifact@1
             inputs:
@@ -303,6 +310,7 @@ stages:
               EXPO_PUBLIC_APP_VERSION: $(Build.BuildNumber)
               EXPO_PUBLIC_ANDROID_VERSION_CODE: $(Build.BuildId)
               EXPO_PUBLIC_ANDROID_APPLICATION_ID: com.linguisticnode.app
+              EXPO_PUBLIC_GIT_COMMIT: $(Build.SourceVersion)
 
           # キーストアファイルを Secure Files からダウンロード
           # 事前に Pipelines → Library → Secure files へ keystore を登録してください
@@ -326,6 +334,8 @@ stages:
               KEY_PASSWORD: $(KEY_PASSWORD)
               NODE_ENV: production
               NODE_PATH: $(Build.SourcesDirectory)/frontend/node_modules
+              EXPO_PUBLIC_APP_VERSION: $(Build.BuildNumber)
+              EXPO_PUBLIC_GIT_COMMIT: $(Build.SourceVersion)
 
           - task: PublishPipelineArtifact@1
             inputs:

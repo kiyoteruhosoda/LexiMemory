@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Pressable, StatusBar, Text, View } from "react-native";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BackHandler, Pressable, StatusBar, Text, View } from "react-native";
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { createMobileCompositionRoot, type MobileCompositionRoot } from "./src/app/mobileCompositionRoot";
@@ -17,7 +17,7 @@ const TABS: { route: MobileRoute; label: string; icon: keyof typeof Ionicons.gly
   { route: "words", label: "Words", icon: "book-outline" },
   { route: "study", label: "Study", icon: "school-outline" },
   { route: "quiz", label: "Quiz", icon: "pencil-outline" },
-  { route: "data", label: "Data", icon: "archive-outline" },
+  { route: "data", label: "Settings", icon: "settings-outline" },
 ];
 
 export default function App() {
@@ -31,6 +31,9 @@ export default function App() {
 function AppContent() {
   const [route, setRoute] = useState<MobileRoute>("words");
   const [compositionRoot, setCompositionRoot] = useState<MobileCompositionRoot | null>(null);
+  const [quizPreferredWordId, setQuizPreferredWordId] = useState<string | null>(null);
+  const [studyPreferredWordId, setStudyPreferredWordId] = useState<string | null>(null);
+  const routeHistoryRef = useRef<Array<{ route: MobileRoute; wordId: string | null }>>([]);
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
@@ -38,6 +41,56 @@ function AppContent() {
       setCompositionRoot(root);
     });
   }, []);
+
+  // Android hardware back button:
+  // 1. If cross-feature history exists → go back to previous feature (restoring same word)
+  // 2. Otherwise, if not on words tab → go to words list first
+  // 3. On words list with no history → allow app close
+  useEffect(() => {
+    const onBackPress = () => {
+      const history = routeHistoryRef.current;
+      if (history.length > 0) {
+        const entry = history[history.length - 1];
+        routeHistoryRef.current = history.slice(0, -1);
+        // Restore the word that was being worked on in the destination screen
+        if (entry.route === "study") setStudyPreferredWordId(entry.wordId);
+        else if (entry.route === "quiz") setQuizPreferredWordId(entry.wordId);
+        setRoute(entry.route);
+        return true;
+      }
+      if (route !== "words") {
+        setRoute("words");
+        return true;
+      }
+      return false; // on words list with no history → allow app close
+    };
+    const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+    return () => subscription.remove();
+  }, [route]);
+
+  // Tab bar press: clear navigation history and preferred word state
+  const navigateToTab = useCallback((tab: MobileRoute) => {
+    routeHistoryRef.current = [];
+    setQuizPreferredWordId(null);
+    setStudyPreferredWordId(null);
+    setRoute(tab);
+  }, []);
+
+  // Cross-feature navigation: Study → Quiz for a specific word
+  // Store {route: "study", wordId} so pressing back restores Study with same word
+  const navigateToQuiz = useCallback((wordId: string) => {
+    routeHistoryRef.current = [...routeHistoryRef.current, { route, wordId }];
+    setQuizPreferredWordId(wordId);
+    setRoute("quiz");
+  }, [route]);
+
+  // Cross-feature navigation: Quiz → Study for a specific word
+  // Store {route: "quiz", wordId} so pressing back restores Quiz with same word
+  const navigateToStudy = useCallback((wordId: string) => {
+    routeHistoryRef.current = [...routeHistoryRef.current, { route, wordId }];
+    setStudyPreferredWordId(wordId);
+    setRoute("study");
+  }, [route]);
 
   const routeContent = useMemo(() => {
     if (!compositionRoot) {
@@ -50,11 +103,24 @@ function AppContent() {
     }
 
     if (route === "study") {
-      return <StudyScreen studyService={compositionRoot.studyService} />;
+      return (
+        <StudyScreen
+          studyService={compositionRoot.studyService}
+          preferredWordId={studyPreferredWordId}
+          onNavigateToQuiz={navigateToQuiz}
+        />
+      );
     }
 
     if (route === "quiz") {
-      return <ExamplesScreen examplesService={compositionRoot.examplesService} />;
+      return (
+        <ExamplesScreen
+          examplesService={compositionRoot.examplesService}
+          studyService={compositionRoot.studyService}
+          preferredWordId={quizPreferredWordId}
+          onNavigateToStudy={navigateToStudy}
+        />
+      );
     }
 
     if (route === "data") {
@@ -62,7 +128,7 @@ function AppContent() {
     }
 
     return <WordsScreen service={compositionRoot.wordService} />;
-  }, [compositionRoot, route]);
+  }, [compositionRoot, route, quizPreferredWordId, studyPreferredWordId, navigateToQuiz, navigateToStudy]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }} edges={["top"]}>
@@ -88,7 +154,7 @@ function AppContent() {
             label={tab.label}
             icon={tab.icon}
             active={route === tab.route}
-            onPress={() => setRoute(tab.route)}
+            onPress={() => navigateToTab(tab.route)}
           />
         ))}
       </View>

@@ -8,9 +8,9 @@ export function createMobileExamplesGateway(repository: MobileLearningRepository
       return repository.listTags();
     },
 
-    async next(tags, lastExampleId) {
+    async next(tags, lastExampleId, preferredWordId) {
       const result = repository.listWords({ tags: tags && tags.length > 0 ? tags : undefined });
-      const items: ExampleTestItem[] = result.words.flatMap((word) =>
+      let items: ExampleTestItem[] = result.words.flatMap((word) =>
         (word.examples ?? []).map((ex) => ({
           id: ex.id,
           en: ex.en,
@@ -19,6 +19,7 @@ export function createMobileExamplesGateway(repository: MobileLearningRepository
           word: {
             id: word.id,
             headword: word.headword,
+            pronunciation: word.pronunciation,
             pos: word.pos,
             meaningJa: word.meaningJa,
             tags: word.tags,
@@ -27,6 +28,12 @@ export function createMobileExamplesGateway(repository: MobileLearningRepository
       );
 
       if (items.length === 0) return null;
+
+      // If a specific word is requested, restrict to that word's examples
+      if (preferredWordId) {
+        const preferred = items.filter((it) => it.word.id === preferredWordId);
+        if (preferred.length > 0) items = preferred;
+      }
 
       if (lastExampleId) {
         const currentIdx = items.findIndex((it) => it.id === lastExampleId);
