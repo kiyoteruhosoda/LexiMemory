@@ -83,11 +83,11 @@ export function StudyScreen({
     { value: "easy", label: "Easy", icon: "flash-outline", color: colors.ratingEasy.color, bg: colors.ratingEasy.bg },
   ];
 
-  function getMemoryInfo(level: number) {
-    if (level === 0) return colors.memNew;
-    if (level <= 3) return colors.memLearning;
-    if (level <= 6) return colors.memReview;
-    return colors.memMastered;
+  function getMemoryInfo(level: number): { color: string; bg: string; label: string } {
+    if (level === 0) return { ...colors.memNew, label: "New" };
+    if (level <= 3) return { ...colors.memLearning, label: "Learning" };
+    if (level <= 6) return { ...colors.memReview, label: "Review" };
+    return { ...colors.memMastered, label: "Mastered" };
   }
 
   if (loading) {
