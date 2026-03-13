@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Keyboard, Pressable, ScrollView, Text, TextInput, View } from "react-native";
-import { AntDesign, Ionicons } from "@expo/vector-icons";
+import { AntDesign, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import type { Rating } from "../../../../src/api/types";
 import type { ExampleTestItem } from "../../../../src/api/types";
 import { checkAnswer, createBlankedSentence } from "../../../../src/core/examples/exampleSentencePolicy";
@@ -172,7 +172,7 @@ export function ExamplesScreen({
               backgroundColor: appliedTags.length > 0 ? colors.primaryBg : pressed ? colors.surfacePressed : colors.surface,
             })}
           >
-            <Ionicons name="funnel-outline" size={15} color={appliedTags.length > 0 ? colors.primary : colors.textDim} />
+            <FontAwesome6 name="tag" size={13} color={appliedTags.length > 0 ? colors.primary : colors.textDim} />
             <Text style={{ fontSize: 13, fontWeight: "600", color: appliedTags.length > 0 ? colors.primary : colors.textDim }}>
               {appliedTags.length > 0 ? `Tags (${appliedTags.length})` : "Tags"}
             </Text>
@@ -238,7 +238,7 @@ export function ExamplesScreen({
       {/* Body */}
       {loading ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-          <AntDesign name="form" size={40} color={colors.textMuted} />
+          <FontAwesome6 name="edit" size={40} color={colors.textMuted} />
           <Text style={{ fontSize: 15, color: colors.textSub, marginTop: 12 }}>Loading...</Text>
         </View>
       ) : error ? (

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
-import { AntDesign, Ionicons } from "@expo/vector-icons";
+import { AntDesign, FontAwesome6, Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import type { Rating } from "../../../../src/api/types";
 import type { MobileStudyService } from "../app/mobileServices";
 import { mobileSpeechService } from "../app/mobileSpeechApplication";
@@ -93,7 +93,7 @@ export function StudyScreen({
   if (loading) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg }}>
-        <Ionicons name="layers-outline" size={40} color={colors.textMuted} />
+        <MaterialCommunityIcons name="card-multiple-outline" size={40} color={colors.textMuted} />
         <Text style={{ fontSize: 15, color: colors.textSub, marginTop: 12 }}>Loading...</Text>
       </View>
     );
@@ -134,7 +134,7 @@ export function StudyScreen({
               backgroundColor: appliedTags.length > 0 ? colors.primaryBg : pressed ? colors.surfacePressed : colors.surface,
             })}
           >
-            <Ionicons name="funnel-outline" size={15} color={appliedTags.length > 0 ? colors.primary : colors.textDim} />
+            <FontAwesome6 name="tag" size={13} color={appliedTags.length > 0 ? colors.primary : colors.textDim} />
             <Text style={{ fontSize: 13, fontWeight: "600", color: appliedTags.length > 0 ? colors.primary : colors.textDim }}>
               {appliedTags.length > 0 ? `Tags (${appliedTags.length})` : "Tags"}
             </Text>
